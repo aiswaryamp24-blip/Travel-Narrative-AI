@@ -1,7 +1,8 @@
-import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey } from '@workspace/api-client-react';
+import { useState } from 'react';
+import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe } from 'lucide-react';
+import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -30,6 +31,7 @@ export default function Trip() {
   const deleteTrip = useDeleteTrip();
   const processTrip = useProcessTrip();
   const updatePrivacy = useUpdateTripPrivacy();
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const { data: trip, isLoading, isError } = useGetTrip(tripId, {
     query: {
@@ -83,6 +85,24 @@ export default function Trip() {
       toast.success("Visibility updated.");
     } catch (err) {
       toast.error("Failed to update visibility.");
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const blob = await exportTripPdf(tripId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${trip!.title.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'trip'}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("PDF downloaded.");
+    } catch (err) {
+      toast.error("Failed to export PDF.");
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -166,6 +186,16 @@ export default function Trip() {
           </Select>
         )}
         <ShareCard trip={trip} />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary"
+          onClick={handleExportPdf}
+          disabled={isExportingPdf}
+          title="Export PDF"
+        >
+          {isExportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+        </Button>
         {trip.isOwner && (
         <AlertDialog>
           <AlertDialogTrigger asChild>

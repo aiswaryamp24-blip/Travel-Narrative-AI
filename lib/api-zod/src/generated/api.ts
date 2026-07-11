@@ -234,6 +234,20 @@ export const DeleteTripResponse = zod.void()
 
 
 /**
+ * Streams back a multi-page PDF: a cover with the trip title/cover
+ * photo, a stats page (days, distance, locations, temperature range),
+ * and one section per day with headline, narrative, and photos.
+ * Respects the same visibility rules as GET /trips/{tripId}.
+ * @summary Export a ready trip as a downloadable PDF keepsake
+ */
+export const ExportTripPdfParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const ExportTripPdfResponse = zod.unknown()
+
+
+/**
  * @summary Update a trip's visibility (owner only)
  */
 export const UpdateTripPrivacyParams = zod.object({

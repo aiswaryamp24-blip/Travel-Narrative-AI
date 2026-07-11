@@ -664,6 +664,87 @@ export const useDeleteTrip = <TError = ErrorType<ErrorEnvelope>,
       return useMutation(getDeleteTripMutationOptions(options));
     }
 
+export const getExportTripPdfUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/export.pdf`
+}
+
+/**
+ * Streams back a multi-page PDF: a cover with the trip title/cover
+ * photo, a stats page (days, distance, locations, temperature range),
+ * and one section per day with headline, narrative, and photos.
+ * Respects the same visibility rules as GET /trips/{tripId}.
+ * @summary Export a ready trip as a downloadable PDF keepsake
+ */
+export const exportTripPdf = async (tripId: number, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getExportTripPdfUrl(tripId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportTripPdfQueryKey = (tripId: number,) => {
+    return [
+    `/api/trips/${tripId}/export.pdf`
+    ] as const;
+    }
+
+
+export const getExportTripPdfQueryOptions = <TData = Awaited<ReturnType<typeof exportTripPdf>>, TError = ErrorType<ErrorEnvelope>>(tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportTripPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportTripPdfQueryKey(tripId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTripPdf>>> = ({ signal }) => exportTripPdf(tripId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: tripId !== null && tripId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportTripPdf>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ExportTripPdfQueryResult = NonNullable<Awaited<ReturnType<typeof exportTripPdf>>>
+export type ExportTripPdfQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary Export a ready trip as a downloadable PDF keepsake
+ */
+
+export function useExportTripPdf<TData = Awaited<ReturnType<typeof exportTripPdf>>, TError = ErrorType<ErrorEnvelope>>(
+ tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportTripPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getExportTripPdfQueryOptions(tripId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getUpdateTripPrivacyUrl = (tripId: number,) => {
 
 

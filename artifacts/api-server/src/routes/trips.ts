@@ -16,6 +16,7 @@ import { requireAuth, optionalAuth } from '../middlewares/auth';
 import { synthesizeDayNarration } from '../lib/audioNarration';
 import { processTrip } from '../lib/tripProcessor';
 import { canViewTrip } from '../lib/tripAccess';
+import { generateTripPdf } from '../lib/pdfExport';
 
 const router: IRouter = Router();
 
@@ -151,6 +152,49 @@ router.get('/trips/:tripId', optionalAuth, async (req: Request, res: Response) =
     })),
   });
 });
+
+router.get(
+  '/trips/:tripId/export.pdf',
+  optionalAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    if (!Number.isInteger(tripId)) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip || !canViewTrip(trip, req.userId)) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    if (trip.status !== 'ready') {
+      res.status(400).json({ error: 'Trip is not ready to export yet' });
+      return;
+    }
+
+    const [days, photos] = await Promise.all([
+      db
+        .select()
+        .from(tripDaysTable)
+        .where(eq(tripDaysTable.tripId, tripId))
+        .orderBy(asc(tripDaysTable.dayIndex)),
+      db.select().from(photosTable).where(eq(photosTable.tripId, tripId)),
+    ]);
+
+    try {
+      const pdfBuffer = await generateTripPdf(trip, days, photos);
+      const filename = `${trip.title.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'trip'}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      req.log.error({ err: error, tripId }, 'Error generating trip PDF export');
+      res.status(500).json({ error: 'Failed to generate PDF export' });
+    }
+  },
+);
 
 router.patch('/trips/:tripId/privacy', requireAuth, async (req: Request, res: Response) => {
   const tripId = Number(req.params.tripId);

@@ -204,6 +204,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/export.pdf:
+    get:
+      tags: [Trips]
+      operationId: exportTripPdf
+      summary: Export a ready trip as a downloadable PDF keepsake
+      description: |
+        Streams back a multi-page PDF: a cover with the trip title/cover
+        photo, a stats page (days, distance, locations, temperature range),
+        and one section per day with headline, narrative, and photos.
+        Respects the same visibility rules as GET /trips/{tripId}.
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PDF generated.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Trip is not ready to export yet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to generate PDF export.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /trips/{tripId}/privacy:
     patch:
       tags: [Trips]
