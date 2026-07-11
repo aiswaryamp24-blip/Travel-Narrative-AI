@@ -49,9 +49,22 @@ export const TripStatus = {
   error: 'error',
 } as const;
 
+export type TripPrivacy = typeof TripPrivacy[keyof typeof TripPrivacy];
+
+
+export const TripPrivacy = {
+  private: 'private',
+  friends: 'friends',
+  public: 'public',
+} as const;
+
 export interface TripInput {
   /** @minLength 1 */
   title: string;
+}
+
+export interface UpdateTripPrivacyInput {
+  privacy: TripPrivacy;
 }
 
 export interface TripSummary {
@@ -64,6 +77,9 @@ export interface TripSummary {
   summary?: string | null;
   /** @nullable */
   errorMessage?: string | null;
+  privacy: TripPrivacy;
+  /** Whether the requesting viewer owns this trip. */
+  isOwner: boolean;
   /** @nullable */
   startDate: string | null;
   /** @nullable */

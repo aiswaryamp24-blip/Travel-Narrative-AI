@@ -1,3 +1,5 @@
 - [Orval zod format:uri bug](orval-zod-uri-format.md) — `format: uri` in openapi.yaml breaks typecheck when zod is pinned to v3; avoid it.
 - [Claude agentic tool-calling for research pipelines](claude-tool-research-pipeline.md) — pattern for grounding DB facts in exactly what tool calls returned, not separate fetches.
 - [OpenAI TTS via AI Integrations for server-side narration](openai-tts-integration-pattern.md) — media-generation TTS is sandbox-only; live in-app speech needs the OpenAI AI Integration server template instead.
+- [Express Request augmentation with restricted `types`](express-request-augmentation.md) — use `declare global { namespace Express { interface Request } }`, not `declare module "express-serve-static-core"`.
+- [Testing subagent blocked by Clerk bot-check on sign-up](testing-subagent-clerk-signup-block.md) — Cloudflare human-verification blocks automated sign-up; verify auth gating via curl/API instead.

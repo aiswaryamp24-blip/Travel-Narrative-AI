@@ -4,12 +4,35 @@ import { Link } from 'wouter';
 import { format } from 'date-fns';
 import { Map, AlertCircle, FileText, Calendar } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useClerk } from '@clerk/react';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const { data: trips, isLoading } = useListTrips();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <div className="min-h-screen pb-24">
+      <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
+        <span className="font-serif italic text-lg">Trip Correspondent</span>
+        <div className="flex items-center gap-3">
+          {user && (
+            <span className="text-sm text-muted-foreground font-mono hidden sm:inline">
+              {user.firstName ?? user.username ?? 'Correspondent'}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-none font-mono text-xs uppercase tracking-widest"
+            onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })}
+          >
+            Sign Out
+          </Button>
+        </div>
+      </nav>
+
       {/* Masthead */}
       <header className="py-12 px-6 border-b border-border bg-card text-card-foreground">
         <div className="max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">

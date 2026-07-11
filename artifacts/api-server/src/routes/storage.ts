@@ -9,6 +9,8 @@ import {
   ObjectNotFoundError,
   ObjectStorageService,
 } from '../lib/objectStorage';
+import { optionalAuth, requireAuth } from '../middlewares/auth';
+import { canViewTrip, findTripForObjectPath } from '../lib/tripAccess';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -20,13 +22,12 @@ const objectStorageService = new ObjectStorageService();
  * The client sends JSON metadata (name, size, contentType) — NOT the file.
  * Then uploads the file directly to the returned presigned URL.
  *
- * This app has no user accounts (single-owner trip correspondent tool), so
- * the upload endpoint is intentionally left open rather than gated behind
- * auth. If multi-user accounts are added later, guard this with auth
- * middleware and scope ACL policies per user.
+ * Requires auth: only a signed-in user should be able to mint upload slots
+ * that later become their (potentially private) trip's photos/audio.
  */
 router.post(
   '/storage/uploads/request-url',
+  requireAuth,
   async (req: Request, res: Response) => {
     const parsed = RequestUploadUrlBody.safeParse(req.body);
     if (!parsed.success) {
@@ -101,28 +102,35 @@ router.get(
  * These are served from a separate path from /public-objects and can optionally
  * be protected with authentication or ACL checks based on the use case.
  */
-router.get('/storage/objects/*path', async (req: Request, res: Response) => {
+router.get(
+  '/storage/objects/*path',
+  optionalAuth,
+  async (req: Request, res: Response) => {
   try {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join('/') : raw;
     const objectPath = `/objects/${wildcardPath}`;
+
+    // Every object we ever hand out belongs to a trip (cover photo, day
+    // photo, or day narration audio) — resolve it and apply the same
+    // private/friends/public visibility rules as the trip API itself, so a
+    // trip's privacy setting actually protects its media, not just its
+    // metadata. An object not yet linked to any trip (mid-upload, before the
+    // client calls POST /trips/:id/photos) is only visible to the signed-in
+    // uploader who just requested it.
+    const owningTrip = await findTripForObjectPath(objectPath);
+    if (owningTrip) {
+      if (!canViewTrip(owningTrip, req.userId)) {
+        res.status(404).json({ error: 'Object not found' });
+        return;
+      }
+    } else if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const objectFile =
       await objectStorageService.getObjectEntityFile(objectPath);
-
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
 
     const response = await objectStorageService.downloadObject(objectFile);
 

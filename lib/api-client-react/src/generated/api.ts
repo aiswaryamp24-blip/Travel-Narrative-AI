@@ -28,6 +28,7 @@ import type {
   TripDay,
   TripInput,
   TripSummary,
+  UpdateTripPrivacyInput,
   UploadUrlRequest,
   UploadUrlResponse
 } from './api.schemas';
@@ -661,6 +662,78 @@ export const useDeleteTrip = <TError = ErrorType<ErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteTripMutationOptions(options));
+    }
+
+export const getUpdateTripPrivacyUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/privacy`
+}
+
+/**
+ * @summary Update a trip's visibility (owner only)
+ */
+export const updateTripPrivacy = async (tripId: number,
+    updateTripPrivacyInput: UpdateTripPrivacyInput, options?: RequestInit): Promise<TripSummary> => {
+
+  return customFetch<TripSummary>(getUpdateTripPrivacyUrl(tripId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateTripPrivacyInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateTripPrivacyMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripPrivacy>>, TError,{tripId: number;data: BodyType<UpdateTripPrivacyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTripPrivacy>>, TError,{tripId: number;data: BodyType<UpdateTripPrivacyInput>}, TContext> => {
+
+const mutationKey = ['updateTripPrivacy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTripPrivacy>>, {tripId: number;data: BodyType<UpdateTripPrivacyInput>}> = (props) => {
+          const {tripId,data} = props ?? {};
+
+          return  updateTripPrivacy(tripId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTripPrivacyMutationResult = NonNullable<Awaited<ReturnType<typeof updateTripPrivacy>>>
+    export type UpdateTripPrivacyMutationBody = BodyType<UpdateTripPrivacyInput>
+    export type UpdateTripPrivacyMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Update a trip's visibility (owner only)
+ */
+export const useUpdateTripPrivacy = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripPrivacy>>, TError,{tripId: number;data: BodyType<UpdateTripPrivacyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTripPrivacy>>,
+        TError,
+        {tripId: number;data: BodyType<UpdateTripPrivacyInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateTripPrivacyMutationOptions(options));
     }
 
 export const getAddTripPhotosUrl = (tripId: number,) => {

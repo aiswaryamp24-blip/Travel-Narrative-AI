@@ -82,6 +82,8 @@ export const ListTripsResponseItem = zod.object({
   "coverObjectPath": zod.string().nullable(),
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
@@ -107,6 +109,8 @@ export const CreateTripResponse = zod.object({
   "coverObjectPath": zod.string().nullable(),
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
@@ -169,6 +173,8 @@ export const GetTripResponse = zod.object({
   "coverObjectPath": zod.string().nullable(),
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
@@ -228,6 +234,33 @@ export const DeleteTripResponse = zod.void()
 
 
 /**
+ * @summary Update a trip's visibility (owner only)
+ */
+export const UpdateTripPrivacyParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const UpdateTripPrivacyBody = zod.object({
+  "privacy": zod.enum(['private', 'friends', 'public'])
+})
+
+export const UpdateTripPrivacyResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Attach uploaded photos (with EXIF metadata) to a trip
  */
 export const AddTripPhotosParams = zod.object({
@@ -278,6 +311,8 @@ export const ProcessTripResponse = zod.object({
   "coverObjectPath": zod.string().nullable(),
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),

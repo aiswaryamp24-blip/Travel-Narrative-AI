@@ -204,6 +204,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/privacy:
+    patch:
+      tags: [Trips]
+      operationId: updateTripPrivacy
+      summary: Update a trip's visibility (owner only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTripPrivacyInput"
+      responses:
+        "200":
+          description: Privacy updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripSummary"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip not found, or the requester does not own it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /trips/{tripId}/photos:
     post:
       tags: [Trips]
@@ -362,6 +398,9 @@ components:
     TripStatus:
       type: string
       enum: [pending, processing, ready, error]
+    TripPrivacy:
+      type: string
+      enum: [private, friends, public]
     TripInput:
       type: object
       required: [title]
@@ -369,9 +408,15 @@ components:
         title:
           type: string
           minLength: 1
+    UpdateTripPrivacyInput:
+      type: object
+      required: [privacy]
+      properties:
+        privacy:
+          $ref: "#/components/schemas/TripPrivacy"
     TripSummary:
       type: object
-      required: [id, title, status, coverObjectPath, startDate, endDate, createdAt]
+      required: [id, title, status, coverObjectPath, privacy, isOwner, startDate, endDate, createdAt]
       properties:
         id:
           type: integer
@@ -385,6 +430,11 @@ components:
           type: ["string", "null"]
         errorMessage:
           type: ["string", "null"]
+        privacy:
+          $ref: "#/components/schemas/TripPrivacy"
+        isOwner:
+          type: boolean
+          description: Whether the requesting viewer owns this trip.
         startDate:
           type: ["string", "null"]
         endDate:

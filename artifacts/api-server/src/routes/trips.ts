@@ -1,6 +1,7 @@
 import {
   AddTripPhotosBody,
   CreateTripBody,
+  UpdateTripPrivacyBody,
 } from '@workspace/api-zod';
 import {
   db,
@@ -11,8 +12,10 @@ import {
 } from '@workspace/db';
 import { asc, desc, eq } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
+import { requireAuth, optionalAuth } from '../middlewares/auth';
 import { synthesizeDayNarration } from '../lib/audioNarration';
 import { processTrip } from '../lib/tripProcessor';
+import { canViewTrip } from '../lib/tripAccess';
 
 const router: IRouter = Router();
 
@@ -24,6 +27,8 @@ function toTripSummary(trip: Trip) {
     coverObjectPath: trip.coverObjectPath,
     summary: trip.summary,
     errorMessage: trip.errorMessage,
+    privacy: trip.privacy,
+    isOwner: false,
     startDate: null as string | null,
     endDate: null as string | null,
     totalDistanceKm: null as number | null,
@@ -31,8 +36,12 @@ function toTripSummary(trip: Trip) {
   };
 }
 
-router.get('/trips', async (_req: Request, res: Response) => {
-  const trips = await db.select().from(tripsTable).orderBy(desc(tripsTable.createdAt));
+router.get('/trips', requireAuth, async (req: Request, res: Response) => {
+  const trips = await db
+    .select()
+    .from(tripsTable)
+    .where(eq(tripsTable.userId, req.userId!))
+    .orderBy(desc(tripsTable.createdAt));
 
   const results = await Promise.all(
     trips.map(async (trip) => {
@@ -50,6 +59,7 @@ router.get('/trips', async (_req: Request, res: Response) => {
 
       return {
         ...toTripSummary(trip),
+        isOwner: true,
         startDate: dates[0] ?? null,
         endDate: dates[dates.length - 1] ?? null,
         totalDistanceKm,
@@ -60,7 +70,7 @@ router.get('/trips', async (_req: Request, res: Response) => {
   res.json(results);
 });
 
-router.post('/trips', async (req: Request, res: Response) => {
+router.post('/trips', requireAuth, async (req: Request, res: Response) => {
   const parsed = CreateTripBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Missing or invalid required fields' });
@@ -69,17 +79,18 @@ router.post('/trips', async (req: Request, res: Response) => {
 
   const [trip] = await db
     .insert(tripsTable)
-    .values({ title: parsed.data.title })
+    .values({ title: parsed.data.title, userId: req.userId! })
     .returning();
 
   res.status(201).json({
     ...toTripSummary(trip),
+    isOwner: true,
     days: [],
     photos: [],
   });
 });
 
-router.get('/trips/:tripId', async (req: Request, res: Response) => {
+router.get('/trips/:tripId', optionalAuth, async (req: Request, res: Response) => {
   const tripId = Number(req.params.tripId);
   if (!Number.isInteger(tripId)) {
     res.status(404).json({ error: 'Trip not found' });
@@ -87,7 +98,7 @@ router.get('/trips/:tripId', async (req: Request, res: Response) => {
   }
 
   const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-  if (!trip) {
+  if (!trip || !canViewTrip(trip, req.userId)) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
@@ -107,6 +118,7 @@ router.get('/trips/:tripId', async (req: Request, res: Response) => {
 
   res.json({
     ...toTripSummary(trip),
+    isOwner: !!req.userId && req.userId === trip.userId,
     startDate: dates[0] ?? null,
     endDate: dates[dates.length - 1] ?? null,
     totalDistanceKm,
@@ -140,27 +152,41 @@ router.get('/trips/:tripId', async (req: Request, res: Response) => {
   });
 });
 
-router.delete('/trips/:tripId', async (req: Request, res: Response) => {
+router.patch('/trips/:tripId/privacy', requireAuth, async (req: Request, res: Response) => {
   const tripId = Number(req.params.tripId);
   if (!Number.isInteger(tripId)) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
 
-  const deleted = await db
-    .delete(tripsTable)
-    .where(eq(tripsTable.id, tripId))
-    .returning({ id: tripsTable.id });
+  const parsed = UpdateTripPrivacyBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Missing or invalid required fields' });
+    return;
+  }
 
-  if (deleted.length === 0) {
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+  if (!trip || trip.userId !== req.userId) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
 
-  res.status(204).end();
+  const [updated] = await db
+    .update(tripsTable)
+    .set({ privacy: parsed.data.privacy })
+    .where(eq(tripsTable.id, tripId))
+    .returning();
+
+  res.json({
+    ...toTripSummary(updated),
+    isOwner: true,
+    startDate: null,
+    endDate: null,
+    totalDistanceKm: null,
+  });
 });
 
-router.post('/trips/:tripId/photos', async (req: Request, res: Response) => {
+router.delete('/trips/:tripId', requireAuth, async (req: Request, res: Response) => {
   const tripId = Number(req.params.tripId);
   if (!Number.isInteger(tripId)) {
     res.status(404).json({ error: 'Trip not found' });
@@ -168,7 +194,25 @@ router.post('/trips/:tripId/photos', async (req: Request, res: Response) => {
   }
 
   const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-  if (!trip) {
+  if (!trip || trip.userId !== req.userId) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  await db.delete(tripsTable).where(eq(tripsTable.id, tripId));
+
+  res.status(204).end();
+});
+
+router.post('/trips/:tripId/photos', requireAuth, async (req: Request, res: Response) => {
+  const tripId = Number(req.params.tripId);
+  if (!Number.isInteger(tripId)) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+  if (!trip || trip.userId !== req.userId) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
@@ -207,7 +251,7 @@ router.post('/trips/:tripId/photos', async (req: Request, res: Response) => {
   );
 });
 
-router.post('/trips/:tripId/process', async (req: Request, res: Response) => {
+router.post('/trips/:tripId/process', requireAuth, async (req: Request, res: Response) => {
   const tripId = Number(req.params.tripId);
   if (!Number.isInteger(tripId)) {
     res.status(404).json({ error: 'Trip not found' });
@@ -215,7 +259,7 @@ router.post('/trips/:tripId/process', async (req: Request, res: Response) => {
   }
 
   const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-  if (!trip) {
+  if (!trip || trip.userId !== req.userId) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
@@ -245,6 +289,7 @@ router.post('/trips/:tripId/process', async (req: Request, res: Response) => {
 
   res.status(202).json({
     ...toTripSummary(updated),
+    isOwner: true,
     startDate: null,
     endDate: null,
     totalDistanceKm: null,
@@ -255,10 +300,17 @@ router.post('/trips/:tripId/process', async (req: Request, res: Response) => {
 
 router.post(
   '/trips/:tripId/days/:dayId/narration',
+  optionalAuth,
   async (req: Request, res: Response) => {
     const tripId = Number(req.params.tripId);
     const dayId = Number(req.params.dayId);
     if (!Number.isInteger(tripId) || !Number.isInteger(dayId)) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip || !canViewTrip(trip, req.userId)) {
       res.status(404).json({ error: 'Trip or day not found' });
       return;
     }

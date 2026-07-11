@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const tripStatusValues = [
   "pending",
@@ -19,6 +20,9 @@ export const tripStatusValues = [
 ] as const;
 export type TripStatusValue = (typeof tripStatusValues)[number];
 
+export const tripPrivacyValues = ["private", "friends", "public"] as const;
+export type TripPrivacyValue = (typeof tripPrivacyValues)[number];
+
 export const tripsTable = pgTable("trips", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -26,6 +30,11 @@ export const tripsTable = pgTable("trips", {
   coverObjectPath: text("cover_object_path"),
   summary: text("summary"),
   errorMessage: text("error_message"),
+  // Nullable so pre-existing trips created before accounts existed don't
+  // break — they simply have no owner and stay hidden from every listing
+  // until the app associates them with a real signed-in user.
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
+  privacy: text("privacy", { enum: tripPrivacyValues }).notNull().default("private"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -35,6 +44,8 @@ export const insertTripSchema = createInsertSchema(tripsTable).omit({
   coverObjectPath: true,
   summary: true,
   errorMessage: true,
+  userId: true,
+  privacy: true,
   createdAt: true,
 });
 export type InsertTrip = z.infer<typeof insertTripSchema>;

@@ -1,9 +1,10 @@
-import { useGetTrip, useDeleteTrip, useProcessTrip } from '@workspace/api-client-react';
+import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey } from '@workspace/api-client-react';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw } from 'lucide-react';
+import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -28,9 +29,11 @@ export default function Trip() {
   const [, setLocation] = useLocation();
   const deleteTrip = useDeleteTrip();
   const processTrip = useProcessTrip();
+  const updatePrivacy = useUpdateTripPrivacy();
 
   const { data: trip, isLoading, isError } = useGetTrip(tripId, {
     query: {
+      queryKey: getGetTripQueryKey(tripId),
       enabled: !!tripId,
       // The hook definition automatically polls if status is pending/processing
     }
@@ -74,6 +77,15 @@ export default function Trip() {
     }
   };
 
+  const handlePrivacyChange = async (privacy: 'private' | 'friends' | 'public') => {
+    try {
+      await updatePrivacy.mutateAsync({ tripId, data: { privacy } });
+      toast.success("Visibility updated.");
+    } catch (err) {
+      toast.error("Failed to update visibility.");
+    }
+  };
+
   if (trip.status === 'error') {
     return (
       <div className="min-h-screen bg-card p-6 md:p-12 flex flex-col max-w-3xl mx-auto space-y-8">
@@ -90,7 +102,9 @@ export default function Trip() {
           </div>
           <div className="flex items-center justify-center gap-4 pt-4">
             <Button variant="outline" onClick={() => setLocation('/')} className="rounded-none">Cancel</Button>
-            <Button onClick={handleRetry} className="rounded-none gap-2"><RefreshCw className="h-4 w-4" /> Retry Assignment</Button>
+            {trip.isOwner && (
+              <Button onClick={handleRetry} className="rounded-none gap-2"><RefreshCw className="h-4 w-4" /> Retry Assignment</Button>
+            )}
           </div>
         </div>
       </div>
@@ -133,7 +147,26 @@ export default function Trip() {
         <span className="font-serif italic text-sm md:text-base">Trip Correspondent</span>
         
         <div className="flex items-center gap-1">
+        {trip.isOwner && (
+          <Select value={trip.privacy} onValueChange={handlePrivacyChange}>
+            <SelectTrigger className="w-[130px] h-9 rounded-none border-border font-mono text-xs uppercase tracking-widest">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-none">
+              <SelectItem value="private">
+                <span className="flex items-center gap-2"><Lock className="h-3 w-3" /> Private</span>
+              </SelectItem>
+              <SelectItem value="friends">
+                <span className="flex items-center gap-2"><Users className="h-3 w-3" /> Friends</span>
+              </SelectItem>
+              <SelectItem value="public">
+                <span className="flex items-center gap-2"><Globe className="h-3 w-3" /> Public</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <ShareCard trip={trip} />
+        {trip.isOwner && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
@@ -153,6 +186,7 @@ export default function Trip() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        )}
         </div>
       </nav>
 

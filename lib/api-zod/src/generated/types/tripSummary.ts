@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { TripPrivacy } from './tripPrivacy';
 import type { TripStatus } from './tripStatus';
 
 export interface TripSummary {
@@ -17,6 +18,9 @@ export interface TripSummary {
   summary?: string | null;
   /** @nullable */
   errorMessage?: string | null;
+  privacy: TripPrivacy;
+  /** Whether the requesting viewer owns this trip. */
+  isOwner: boolean;
   /** @nullable */
   startDate: string | null;
   /** @nullable */
