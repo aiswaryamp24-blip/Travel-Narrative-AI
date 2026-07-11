@@ -1,0 +1,2 @@
+- [Orval zod format:uri bug](orval-zod-uri-format.md) — `format: uri` in openapi.yaml breaks typecheck when zod is pinned to v3; avoid it.
+- [Claude agentic tool-calling for research pipelines](claude-tool-research-pipeline.md) — pattern for grounding DB facts in exactly what tool calls returned, not separate fetches.

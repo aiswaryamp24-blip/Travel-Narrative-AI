@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Trip Correspondent"
+version = "1.0.0"
+id = "artifacts/trip-correspondent"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25222
+
+[services.development]
+run = "pnpm --filter @workspace/trip-correspondent run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trip-correspondent", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/trip-correspondent/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25222"
+BASE_PATH = "/"

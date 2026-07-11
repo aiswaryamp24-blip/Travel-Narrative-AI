@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+  - name: Trips
+    description: Trip correspondent — photo trips, clustering, and AI-researched narratives.
 paths:
   /healthz:
     get:
@@ -24,6 +28,249 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      description: |
+        Returns a presigned GCS URL for direct upload. The client sends JSON
+        metadata here, then uploads the file directly to the returned URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      description: |
+        Unconditionally public — no authentication or ACL checks.
+        Searches PUBLIC_OBJECT_SEARCH_PATHS for the given file path.
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Relative file path within the public search paths.
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve public object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      description: |
+        Serves object entities uploaded via presigned URLs.
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Object path within the private object dir (e.g. `uploads/some-uuid`).
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips:
+    get:
+      tags: [Trips]
+      operationId: listTrips
+      summary: List trips
+      responses:
+        "200":
+          description: List of trips (summary form, no days/photos).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripSummary"
+    post:
+      tags: [Trips]
+      operationId: createTrip
+      summary: Create a new trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "201":
+          description: Trip created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+  /trips/{tripId}:
+    get:
+      tags: [Trips]
+      operationId: getTrip
+      summary: Get a trip with its days and photos
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "404":
+          description: Trip not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      tags: [Trips]
+      operationId: deleteTrip
+      summary: Delete a trip and its photos/days
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Trip deleted.
+        "404":
+          description: Trip not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/photos:
+    post:
+      tags: [Trips]
+      operationId: addTripPhotos
+      summary: Attach uploaded photos (with EXIF metadata) to a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoBatchInput"
+      responses:
+        "201":
+          description: Photos attached.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Photo"
+        "404":
+          description: Trip not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/process:
+    post:
+      tags: [Trips]
+      operationId: processTrip
+      summary: Cluster photos into days and dispatch the AI correspondent research pipeline
+      description: |
+        Groups photos into day-clusters by date and location, then asynchronously
+        reverse-geocodes, fetches historical weather, fetches nearby landmarks, and
+        has Claude write a magazine-style narrative for each day. Returns
+        immediately with status "processing" — poll GET /trips/{tripId} for progress.
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Processing started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "404":
+          description: Trip not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          description: Trip has no photos to process.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +280,198 @@ components:
           type: string
       required:
         - status
-
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Original file name.
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes.
+        contentType:
+          type: string
+          minLength: 1
+          description: MIME type of the file (e.g. `image/jpeg`).
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          description: Presigned GCS URL for PUT upload.
+        objectPath:
+          type: string
+          description: Normalized object path (e.g. `/objects/uploads/uuid`). Store this in your database.
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    TripStatus:
+      type: string
+      enum: [pending, processing, ready, error]
+    TripInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+    TripSummary:
+      type: object
+      required: [id, title, status, coverObjectPath, startDate, endDate, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          $ref: "#/components/schemas/TripStatus"
+        coverObjectPath:
+          type: ["string", "null"]
+        summary:
+          type: ["string", "null"]
+        errorMessage:
+          type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        totalDistanceKm:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+    Trip:
+      allOf:
+        - $ref: "#/components/schemas/TripSummary"
+        - type: object
+          required: [days, photos]
+          properties:
+            days:
+              type: array
+              items:
+                $ref: "#/components/schemas/TripDay"
+            photos:
+              type: array
+              items:
+                $ref: "#/components/schemas/Photo"
+    PhotoInput:
+      type: object
+      required: [objectPath, filename]
+      properties:
+        objectPath:
+          type: string
+        filename:
+          type: string
+        lat:
+          type: ["number", "null"]
+        lon:
+          type: ["number", "null"]
+        takenAt:
+          type: ["string", "null"]
+          format: date-time
+    PhotoBatchInput:
+      type: object
+      required: [photos]
+      properties:
+        photos:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PhotoInput"
+    Photo:
+      type: object
+      required: [id, tripId, objectPath, filename, lat, lon, takenAt, tripDayId]
+      properties:
+        id:
+          type: integer
+        tripId:
+          type: integer
+        objectPath:
+          type: string
+        filename:
+          type: string
+        lat:
+          type: ["number", "null"]
+        lon:
+          type: ["number", "null"]
+        takenAt:
+          type: ["string", "null"]
+          format: date-time
+        tripDayId:
+          type: ["integer", "null"]
+    WeatherSummary:
+      type: object
+      properties:
+        tempMaxC:
+          type: ["number", "null"]
+        tempMinC:
+          type: ["number", "null"]
+        precipitationMm:
+          type: ["number", "null"]
+        windSpeedMaxKmh:
+          type: ["number", "null"]
+        weatherCode:
+          type: ["integer", "null"]
+        conditions:
+          type: ["string", "null"]
+    Landmark:
+      type: object
+      required: [name, kind]
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        distanceMeters:
+          type: ["number", "null"]
+        lat:
+          type: number
+        lon:
+          type: number
+    TripDay:
+      type: object
+      required: [id, tripId, dayIndex, date, locationName, lat, lon, distanceKm, weather, landmarks, headline, narrative, heroPhotoId]
+      properties:
+        id:
+          type: integer
+        tripId:
+          type: integer
+        dayIndex:
+          type: integer
+        date:
+          type: string
+          description: Calendar date (YYYY-MM-DD) for this cluster.
+        locationName:
+          type: ["string", "null"]
+        lat:
+          type: number
+        lon:
+          type: number
+        elevationMeters:
+          type: ["number", "null"]
+        distanceKm:
+          type: ["number", "null"]
+          description: Distance travelled from the previous day's location.
+        weather:
+          oneOf:
+            - $ref: "#/components/schemas/WeatherSummary"
+            - type: "null"
+        landmarks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Landmark"
+        headline:
+          type: ["string", "null"]
+        narrative:
+          type: ["string", "null"]
+        heroPhotoId:
+          type: ["integer", "null"]
