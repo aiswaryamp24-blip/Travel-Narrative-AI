@@ -25,6 +25,7 @@ import type {
   Photo,
   PhotoBatchInput,
   Trip,
+  TripDay,
   TripInput,
   TripSummary,
   UploadUrlRequest,
@@ -807,5 +808,81 @@ export const useProcessTrip = <TError = ErrorType<ErrorEnvelope>,
         TContext
       > => {
       return useMutation(getProcessTripMutationOptions(options));
+    }
+
+export const getGenerateDayNarrationUrl = (tripId: number,
+    dayId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/days/${dayId}/narration`
+}
+
+/**
+ * Synthesizes the day's narrative text into speech via text-to-speech
+ * and stores it in object storage. If audio was already generated for
+ * this day, returns the cached result instead of re-synthesizing.
+ * @summary Generate (or return cached) spoken-word audio for a day's narrative
+ */
+export const generateDayNarration = async (tripId: number,
+    dayId: number, options?: RequestInit): Promise<TripDay> => {
+
+  return customFetch<TripDay>(getGenerateDayNarrationUrl(tripId,dayId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getGenerateDayNarrationMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDayNarration>>, TError,{tripId: number;dayId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateDayNarration>>, TError,{tripId: number;dayId: number}, TContext> => {
+
+const mutationKey = ['generateDayNarration'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateDayNarration>>, {tripId: number;dayId: number}> = (props) => {
+          const {tripId,dayId} = props ?? {};
+
+          return  generateDayNarration(tripId,dayId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateDayNarrationMutationResult = NonNullable<Awaited<ReturnType<typeof generateDayNarration>>>
+
+    export type GenerateDayNarrationMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Generate (or return cached) spoken-word audio for a day's narrative
+ */
+export const useGenerateDayNarration = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDayNarration>>, TError,{tripId: number;dayId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateDayNarration>>,
+        TError,
+        {tripId: number;dayId: number},
+        TContext
+      > => {
+      return useMutation(getGenerateDayNarrationMutationOptions(options));
     }
 

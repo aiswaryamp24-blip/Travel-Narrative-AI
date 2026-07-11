@@ -17,6 +17,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import ReactMarkdown from 'react-markdown';
+import { TripStats } from '@/components/trip-stats';
+import { TripRouteMap } from '@/components/trip-route-map';
+import { DayAudioPlayer } from '@/components/day-audio-player';
+import { ShareCard } from '@/components/share-card';
 
 export default function Trip() {
   const { id } = useParams();
@@ -128,6 +132,8 @@ export default function Trip() {
         </Link>
         <span className="font-serif italic text-sm md:text-base">Trip Correspondent</span>
         
+        <div className="flex items-center gap-1">
+        <ShareCard trip={trip} />
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
@@ -147,6 +153,7 @@ export default function Trip() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       </nav>
 
       <main>
@@ -191,6 +198,9 @@ export default function Trip() {
             )}
           </div>
         </header>
+
+        <TripStats trip={trip} />
+        <TripRouteMap trip={trip} />
 
         {/* Day by Day Sections */}
         <div className="divide-y divide-border border-b border-border">
@@ -247,6 +257,8 @@ export default function Trip() {
                     </div>
                   )}
                 </div>
+
+                <DayAudioPlayer tripId={tripId} day={day} />
 
                 {day.landmarks && day.landmarks.length > 0 && (
                   <div>

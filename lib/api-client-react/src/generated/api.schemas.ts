@@ -122,6 +122,11 @@ export interface TripDay {
   narrative: string | null;
   /** @nullable */
   heroPhotoId: number | null;
+  /**
+     * Object path of the synthesized narration audio for this day, if generated.
+     * @nullable
+     */
+  audioObjectPath: string | null;
 }
 
 export interface Photo {

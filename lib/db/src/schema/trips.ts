@@ -95,6 +95,7 @@ export const tripDaysTable = pgTable("trip_days", {
   headline: text("headline"),
   narrative: text("narrative"),
   heroPhotoId: integer("hero_photo_id"),
+  audioObjectPath: text("audio_object_path"),
 });
 
 export const insertTripDaySchema = createInsertSchema(tripDaysTable).omit({

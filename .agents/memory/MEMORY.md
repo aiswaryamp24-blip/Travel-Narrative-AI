@@ -1,2 +1,3 @@
 - [Orval zod format:uri bug](orval-zod-uri-format.md) — `format: uri` in openapi.yaml breaks typecheck when zod is pinned to v3; avoid it.
 - [Claude agentic tool-calling for research pipelines](claude-tool-research-pipeline.md) — pattern for grounding DB facts in exactly what tool calls returned, not separate fetches.
+- [OpenAI TTS via AI Integrations for server-side narration](openai-tts-integration-pattern.md) — media-generation TTS is sandbox-only; live in-app speech needs the OpenAI AI Integration server template instead.

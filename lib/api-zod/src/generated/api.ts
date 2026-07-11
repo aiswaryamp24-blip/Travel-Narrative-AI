@@ -139,7 +139,8 @@ export const CreateTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
-  "heroPhotoId": zod.number().nullable()
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
   "photos": zod.array(zod.object({
   "id": zod.number(),
@@ -200,7 +201,8 @@ export const GetTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
-  "heroPhotoId": zod.number().nullable()
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
   "photos": zod.array(zod.object({
   "id": zod.number(),
@@ -308,7 +310,8 @@ export const ProcessTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
-  "heroPhotoId": zod.number().nullable()
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
   "photos": zod.array(zod.object({
   "id": zod.number(),
@@ -321,5 +324,48 @@ export const ProcessTripResponse = zod.object({
   "tripDayId": zod.number().nullable()
 }))
 }))
+
+
+/**
+ * Synthesizes the day's narrative text into speech via text-to-speech
+ * and stores it in object storage. If audio was already generated for
+ * this day, returns the cached result instead of re-synthesizing.
+ * @summary Generate (or return cached) spoken-word audio for a day's narrative
+ */
+export const GenerateDayNarrationParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "dayId": zod.coerce.number()
+})
+
+export const GenerateDayNarrationResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "dayIndex": zod.number(),
+  "date": zod.string().describe('Calendar date (YYYY-MM-DD) for this cluster.'),
+  "locationName": zod.string().nullable(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "elevationMeters": zod.number().nullish(),
+  "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "weather": zod.union([zod.object({
+  "tempMaxC": zod.number().nullish(),
+  "tempMinC": zod.number().nullish(),
+  "precipitationMm": zod.number().nullish(),
+  "windSpeedMaxKmh": zod.number().nullish(),
+  "weatherCode": zod.number().nullish(),
+  "conditions": zod.string().nullish()
+}),zod.null()]),
+  "landmarks": zod.array(zod.object({
+  "name": zod.string(),
+  "kind": zod.string(),
+  "distanceMeters": zod.number().nullish(),
+  "lat": zod.number().optional(),
+  "lon": zod.number().optional()
+})),
+  "headline": zod.string().nullable(),
+  "narrative": zod.string().nullable(),
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
+})
 
 

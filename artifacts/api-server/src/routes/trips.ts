@@ -11,6 +11,7 @@ import {
 } from '@workspace/db';
 import { asc, desc, eq } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
+import { synthesizeDayNarration } from '../lib/audioNarration';
 import { processTrip } from '../lib/tripProcessor';
 
 const router: IRouter = Router();
@@ -124,6 +125,7 @@ router.get('/trips/:tripId', async (req: Request, res: Response) => {
       headline: d.headline,
       narrative: d.narrative,
       heroPhotoId: d.heroPhotoId,
+      audioObjectPath: d.audioObjectPath,
     })),
     photos: photos.map((p) => ({
       id: p.id,
@@ -250,5 +252,87 @@ router.post('/trips/:tripId/process', async (req: Request, res: Response) => {
     photos: [],
   });
 });
+
+router.post(
+  '/trips/:tripId/days/:dayId/narration',
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const dayId = Number(req.params.dayId);
+    if (!Number.isInteger(tripId) || !Number.isInteger(dayId)) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const [day] = await db
+      .select()
+      .from(tripDaysTable)
+      .where(eq(tripDaysTable.id, dayId));
+
+    if (!day || day.tripId !== tripId) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    if (day.audioObjectPath) {
+      res.json({
+        id: day.id,
+        tripId: day.tripId,
+        dayIndex: day.dayIndex,
+        date: day.date,
+        locationName: day.locationName,
+        lat: day.lat,
+        lon: day.lon,
+        elevationMeters: day.elevationMeters,
+        distanceKm: day.distanceKm,
+        weather: day.weather,
+        landmarks: day.landmarks,
+        headline: day.headline,
+        narrative: day.narrative,
+        heroPhotoId: day.heroPhotoId,
+        audioObjectPath: day.audioObjectPath,
+      });
+      return;
+    }
+
+    if (!day.headline || !day.narrative) {
+      res.status(400).json({ error: 'Day has no narrative to narrate yet' });
+      return;
+    }
+
+    try {
+      const audioObjectPath = await synthesizeDayNarration(
+        day.headline,
+        day.narrative,
+      );
+
+      const [updated] = await db
+        .update(tripDaysTable)
+        .set({ audioObjectPath })
+        .where(eq(tripDaysTable.id, dayId))
+        .returning();
+
+      res.json({
+        id: updated.id,
+        tripId: updated.tripId,
+        dayIndex: updated.dayIndex,
+        date: updated.date,
+        locationName: updated.locationName,
+        lat: updated.lat,
+        lon: updated.lon,
+        elevationMeters: updated.elevationMeters,
+        distanceKm: updated.distanceKm,
+        weather: updated.weather,
+        landmarks: updated.landmarks,
+        headline: updated.headline,
+        narrative: updated.narrative,
+        heroPhotoId: updated.heroPhotoId,
+        audioObjectPath: updated.audioObjectPath,
+      });
+    } catch (error) {
+      req.log.error({ err: error, tripId, dayId }, 'Error synthesizing narration');
+      res.status(500).json({ error: 'Failed to synthesize narration' });
+    }
+  },
+);
 
 export default router;

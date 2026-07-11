@@ -271,6 +271,51 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/days/{dayId}/narration:
+    post:
+      tags: [Trips]
+      operationId: generateDayNarration
+      summary: Generate (or return cached) spoken-word audio for a day's narrative
+      description: |
+        Synthesizes the day's narrative text into speech via text-to-speech
+        and stores it in object storage. If audio was already generated for
+        this day, returns the cached result instead of re-synthesizing.
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Narration audio ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripDay"
+        "404":
+          description: Trip or day not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          description: Day has no narrative to narrate yet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to synthesize narration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
@@ -439,7 +484,7 @@ components:
           type: number
     TripDay:
       type: object
-      required: [id, tripId, dayIndex, date, locationName, lat, lon, distanceKm, weather, landmarks, headline, narrative, heroPhotoId]
+      required: [id, tripId, dayIndex, date, locationName, lat, lon, distanceKm, weather, landmarks, headline, narrative, heroPhotoId, audioObjectPath]
       properties:
         id:
           type: integer
@@ -475,3 +520,6 @@ components:
           type: ["string", "null"]
         heroPhotoId:
           type: ["integer", "null"]
+        audioObjectPath:
+          type: ["string", "null"]
+          description: Object path of the synthesized narration audio for this day, if generated.
