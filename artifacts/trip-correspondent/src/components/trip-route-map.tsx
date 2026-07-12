@@ -1,5 +1,5 @@
 import type { Trip } from '@workspace/api-client-react';
-import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -28,16 +28,27 @@ export function TripRouteMap({ trip }: { trip: Trip }) {
 
   if (days.length === 0) return null;
 
-  const positions: [number, number][] = days.map((d) => [d.lat, d.lon]);
+  // Prefer the actual chronological trail of geotagged photos for the
+  // drawn route — a straight line between day centroids collapses an
+  // entire day of movement (e.g. touring a city) into a single point and
+  // badly misrepresents where the travelers actually went. Fall back to
+  // the day's centroid for any day that has no route points of its own.
+  const positions: [number, number][] = days.flatMap((d) => {
+    const points = (d.routePoints ?? []) as Array<{ lat: number; lon: number }>;
+    if (points.length > 0) {
+      return points.map((p): [number, number] => [p.lat, p.lon]);
+    }
+    return [[d.lat, d.lon]] as [number, number][];
+  });
   const center = positions[Math.floor(positions.length / 2)];
 
   return (
     <section className="border-b border-border">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
-          <h3 className="text-2xl font-serif">Where You Were</h3>
+          <h3 className="text-2xl font-serif">The Route</h3>
           <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest mt-2">
-            Approximate location per day, from photo GPS data
+            Traced from your photos&rsquo; GPS data
           </p>
         </div>
         <div className="h-[400px] md:h-[480px] border border-border overflow-hidden">
@@ -51,6 +62,9 @@ export function TripRouteMap({ trip }: { trip: Trip }) {
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            {positions.length > 1 && (
+              <Polyline positions={positions} pathOptions={{ color: 'currentColor', weight: 3, opacity: 0.7 }} />
+            )}
             {days.map((day) => (
               <Marker key={day.id} position={[day.lat, day.lon]} icon={dayIcon(day.dayIndex)}>
                 <Tooltip>

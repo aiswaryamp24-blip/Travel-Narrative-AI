@@ -83,6 +83,13 @@ export const tripDaysTable = pgTable("trip_days", {
   lon: doublePrecision("lon").notNull(),
   elevationMeters: doublePrecision("elevation_meters"),
   distanceKm: doublePrecision("distance_km"),
+  // Chronologically-ordered GPS points from this day's own geotagged
+  // photos, used to draw an accurate route through the day (rather than
+  // collapsing it to a single centroid) and to measure real movement.
+  routePoints: jsonb("route_points")
+    .$type<Array<{ lat: number; lon: number }>>()
+    .notNull()
+    .default([]),
   weather: jsonb("weather").$type<{
     tempMaxC: number | null;
     tempMinC: number | null;

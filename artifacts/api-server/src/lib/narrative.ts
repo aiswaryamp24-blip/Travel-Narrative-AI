@@ -64,6 +64,11 @@ const TOOLS: ToolUnion[] = [
           type: "string",
           description: "Human-readable place name for this day, e.g. 'Kyoto, Japan'.",
         },
+        visualObservations: {
+          type: "string",
+          description:
+            "Required scratchpad, written BEFORE the narrative. For EACH photo provided, note literally and specifically: how many people are visible (and any distinguishing appearance/clothing you can actually see), what they are physically doing, the concrete setting/backdrop (street, trail, beach, building, interior, etc.), and any weather/light actually visible in the frame (sunny, overcast, wet ground, etc.). Do not guess or embellish beyond what's visibly there — if a detail isn't visible, don't include it. This is for your own grounding, not shown to the reader.",
+        },
         headline: {
           type: "string",
           description: "A short, evocative magazine-style headline for this day (under 12 words).",
@@ -71,10 +76,10 @@ const TOOLS: ToolUnion[] = [
         narrative: {
           type: "string",
           description:
-            "2-4 paragraphs of vivid, specific, magazine-style travel journalism about this day. Ground every claim in either (a) what is genuinely visible in the attached photos, or (b) facts returned by the research tools (weather, landmarks) — never invent details, people, or events that aren't supported by one of those two sources. Must explicitly name the city/town and country at least once. Write in third person about 'the travelers'. No markdown headers.",
+            "2 tight paragraphs (roughly 90-150 words total) of vivid, specific travel journalism about this day. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting) or the researched facts (weather, location, landmarks) — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers.",
         },
       },
-      required: ["locationName", "headline", "narrative"],
+      required: ["locationName", "visualObservations", "headline", "narrative"],
     },
   },
 ];
@@ -145,9 +150,20 @@ export async function researchAndWriteDay(
 
 You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}${hasPhotos ? `, plus ${ctx.photoImages.length} of the actual photos taken that day (attached below, in roughly chronological order).` : ", but none of that day's photos could be loaded for you to view."}
 
-${hasPhotos ? `Look closely at the attached photos before writing. Describe only what you can genuinely see: who appears to be present (described generically — e.g. "a couple", "a group of friends" — never invent names, ages, or identities you can't actually know), what they appear to be doing, the setting, and any concrete visual detail that grounds the scene. If the photos don't show something (a specific activity, a specific place), do not claim it happened — write around what's actually visible instead of inventing filler.` : "You have no photos to look at for this day, so keep the narrative grounded strictly in the researched facts below rather than inventing scenes or activity you can't verify."}
+Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.
 
-Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Your finished narrative must explicitly name the city/town and country you found (not just imply a region) at least once. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.`;
+Accuracy rules — follow these strictly, since real people will read this as a factual account of their own trip:
+${
+  hasPhotos
+    ? `- First, fill in visualObservations by literally describing each provided photo: how many people are visible (described generically — e.g. "a couple", "a group of friends" — never invent names, ages, or identities you can't actually know), what they're doing, the setting, and any weather/light actually visible. This is mandatory grounding work, not optional — do it even if it feels repetitive.`
+    : `- You have no photos to look at for this day. Note that in visualObservations, and keep the narrative grounded strictly in the researched facts below rather than inventing scenes or activity you can't verify.`
+}
+- Weather in the narrative is ground truth ONLY from get_historical_weather's "conditions" and "precipitationMm" fields — never mention rain, drizzle, showers, snow, or storms unless precipitationMm is greater than 0 or "conditions" explicitly names that precipitation type. If precipitationMm is 0 or null, describe the day as dry. Do not upgrade "partly cloudy" into anything wetter than what the tool returned, and do not invent atmospheric details (fog, humidity, wind chill, etc.) that aren't in the tool's data. You may describe visible light/sky (golden hour, bright midday sun) if it's actually visible in a photo and doesn't contradict the tool's data.
+- The narrative must be built from visualObservations plus the researched facts (place, weather, landmarks) — every sentence should trace back to one of those two sources. No stock travel-writing filler ("wandered the charming streets", "a tapestry of culture", "as the sun dipped below the horizon") unless it's literally what a photo shows.
+- The narrative text itself (not just the locationName field) must explicitly name the city/town and country visited that day at least once, in prose — don't leave the reader to infer it only from the headline or metadata.
+- If people are visible in photos, describe what they're actually doing (the action) rather than just noting their presence — specificity here is what makes the story feel true to the day.
+- Do not describe activities, objects, or people that aren't visible in the provided photos, and don't state a numeric distance traveled in the narrative — the app displays that separately.
+- Keep it succinct and compelling: two tight, information-dense paragraphs beat four padded ones. Cut any sentence that isn't doing real work.`;
 
   const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
 Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}
@@ -171,7 +187,7 @@ Research this day and write the story.`;
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 2048,
+      max_tokens: 3072,
       system: systemPrompt,
       tools: TOOLS,
       messages,
@@ -184,6 +200,7 @@ Research this day and write the story.`;
     if (finalCall && finalCall.type === "tool_use") {
       const input = finalCall.input as {
         locationName: string;
+        visualObservations: string;
         headline: string;
         narrative: string;
       };

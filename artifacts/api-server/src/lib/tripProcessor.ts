@@ -1,7 +1,6 @@
 import { db, photosTable, tripDaysTable, tripsTable, type Photo } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
-import { clusterPhotosByDay } from "./geo";
-import { haversineKm } from "./geo";
+import { clusterPhotosByDay, computeDayDistanceKm, type RoutePoint } from "./geo";
 import { researchAndWriteDay, type DayStoryResult } from "./narrative";
 import { loadPhotoImageBlocks } from "./photoContent";
 import { logger } from "./logger";
@@ -82,17 +81,19 @@ export async function processTrip(tripId: number): Promise<void> {
 
     const tripTitle = (await getTripTitle(tripId)) ?? "Untitled trip";
 
-    // Distances only depend on cluster centroids, which are already known,
-    // so compute them upfront (cheap, synchronous) rather than inside the
-    // research loop. Still stored per-day (not surfaced in the UI — see
-    // trip-stats.tsx/trip.tsx — since day-centroid-to-day-centroid haversine
-    // isn't a real travel distance).
-    let previousCentroid: { lat: number; lon: number } | null = null;
+    // Distance is estimated from the actual chronological trail of
+    // geotagged photos (intra-day movement + the arrival leg from the
+    // previous day's last point), not a single centroid-to-centroid hop per
+    // day — that collapsed an entire day of sightseeing into one averaged
+    // point and badly understated real movement.
+    let previousLastPoint: RoutePoint | null = null;
+    let totalDistanceKm = 0;
     const distancesKm: (number | null)[] = clusters.map((cluster) => {
-      const distanceKm = previousCentroid
-        ? haversineKm(previousCentroid.lat, previousCentroid.lon, cluster.lat, cluster.lon)
-        : null;
-      previousCentroid = { lat: cluster.lat, lon: cluster.lon };
+      const distanceKm = computeDayDistanceKm(previousLastPoint, cluster.routePoints);
+      if (distanceKm) totalDistanceKm += distanceKm;
+      if (cluster.routePoints.length > 0) {
+        previousLastPoint = cluster.routePoints[cluster.routePoints.length - 1];
+      }
       return distanceKm;
     });
 
@@ -144,6 +145,7 @@ export async function processTrip(tripId: number): Promise<void> {
             lon: cluster.lon,
             elevationMeters: story.elevationMeters,
             distanceKm: distancesKm[i],
+            routePoints: cluster.routePoints,
             weather: story.weather,
             landmarks: story.landmarks,
             headline: story.headline,
@@ -170,7 +172,7 @@ export async function processTrip(tripId: number): Promise<void> {
     const summary =
       clusters.length === 1
         ? `A single day in ${firstLocationName ?? "an unknown location"}.`
-        : `${clusters.length} days, starting in ${firstLocationName ?? "an unknown location"}.`;
+        : `${clusters.length} days across ${totalDistanceKm.toFixed(0)} km, starting in ${firstLocationName ?? "an unknown location"}.`;
 
     await db
       .update(tripsTable)

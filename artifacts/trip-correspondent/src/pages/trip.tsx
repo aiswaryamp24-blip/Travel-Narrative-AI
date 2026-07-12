@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, CloudRain, Wind, Mountain, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
+import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -260,6 +260,14 @@ export default function Trip() {
                 </p>
               </div>
             )}
+
+            {trip.totalDistanceKm && (
+              <div className="pt-12 flex justify-center">
+                <div className="border border-secondary-foreground/20 px-6 py-3 font-mono text-sm uppercase tracking-widest backdrop-blur-sm bg-black/20">
+                  Total Distance: {Math.round(trip.totalDistanceKm)} km
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
@@ -311,6 +319,15 @@ export default function Trip() {
                     </div>
                   )}
 
+                  {day.distanceKm !== null && day.distanceKm > 0 && (
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Traveled</div>
+                      <div className="flex items-center gap-2">
+                        <Navigation className="h-4 w-4 text-primary" />
+                        {day.distanceKm < 1 ? '< 1' : Math.round(day.distanceKm)} km
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <DayAudioPlayer tripId={tripId} day={day} />

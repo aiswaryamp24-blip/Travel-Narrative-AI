@@ -126,6 +126,10 @@ export const CreateTripResponse = zod.object({
   "lon": zod.number(),
   "elevationMeters": zod.number().nullish(),
   "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
   "weather": zod.union([zod.object({
   "tempMaxC": zod.number().nullish(),
   "tempMinC": zod.number().nullish(),
@@ -190,6 +194,10 @@ export const GetTripResponse = zod.object({
   "lon": zod.number(),
   "elevationMeters": zod.number().nullish(),
   "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
   "weather": zod.union([zod.object({
   "tempMaxC": zod.number().nullish(),
   "tempMinC": zod.number().nullish(),
@@ -342,6 +350,10 @@ export const ProcessTripResponse = zod.object({
   "lon": zod.number(),
   "elevationMeters": zod.number().nullish(),
   "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
   "weather": zod.union([zod.object({
   "tempMaxC": zod.number().nullish(),
   "tempMinC": zod.number().nullish(),
@@ -396,6 +408,10 @@ export const GenerateDayNarrationResponse = zod.object({
   "lon": zod.number(),
   "elevationMeters": zod.number().nullish(),
   "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
   "weather": zod.union([zod.object({
   "tempMaxC": zod.number().nullish(),
   "tempMinC": zod.number().nullish(),
