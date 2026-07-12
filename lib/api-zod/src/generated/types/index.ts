@@ -18,6 +18,7 @@ export * from './photoBatchInput';
 export * from './photoInput';
 export * from './trip';
 export * from './tripDay';
+export * from './tripDayRoutePointsItem';
 export * from './tripInput';
 export * from './tripPrivacy';
 export * from './tripStatus';

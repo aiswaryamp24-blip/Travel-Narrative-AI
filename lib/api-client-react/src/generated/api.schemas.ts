@@ -164,6 +164,11 @@ export interface Landmark {
   lon?: number;
 }
 
+export type TripDayRoutePointsItem = {
+  lat: number;
+  lon: number;
+};
+
 export interface TripDay {
   id: number;
   tripId: number;
@@ -181,6 +186,8 @@ export interface TripDay {
      * @nullable
      */
   distanceKm: number | null;
+  /** Chronologically-ordered GPS points from this day's own geotagged photos, for drawing an accurate route through the day. */
+  routePoints?: TripDayRoutePointsItem[];
   weather: WeatherSummary | null;
   landmarks: Landmark[];
   /** @nullable */

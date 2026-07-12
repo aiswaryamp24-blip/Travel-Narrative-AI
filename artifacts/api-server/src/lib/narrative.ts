@@ -78,6 +78,11 @@ const TOOLS: ToolUnion[] = [
   },
 ];
 
+export interface PhotoImage {
+  base64: string;
+  mediaType: string;
+}
+
 export interface DayResearchContext {
   dayIndex: number;
   date: string;
@@ -86,6 +91,9 @@ export interface DayResearchContext {
   locationInferred: boolean;
   distanceKm: number | null;
   photoCount: number;
+  /** A handful of this day's actual photos, so the story can be grounded in
+   * what's really depicted rather than guessed purely from GPS/metadata. */
+  photoImages: PhotoImage[];
   tripTitle: string;
 }
 
@@ -137,16 +145,39 @@ export async function researchAndWriteDay(
 ): Promise<DayStoryResult> {
   const systemPrompt = `You are a travel correspondent for a magazine-style trip journal. You are researching day ${ctx.dayIndex + 1} of a trip titled "${ctx.tripTitle}".
 
-You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}. Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.`;
+You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}, and a sample of the travelers' actual photos from that day. Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.
+
+Accuracy rules — follow these strictly, since real people will read this as a factual account of their own trip:
+- Weather is ground truth ONLY from get_historical_weather's "conditions" and "precipitationMm" fields. Never mention rain, drizzle, showers, snow, or storms unless precipitationMm is greater than 0 or "conditions" explicitly names that precipitation type. If precipitationMm is 0 or null, describe the day as dry. Do not upgrade "partly cloudy" into anything wetter than what the tool returned, and do not invent atmospheric details (fog, humidity, wind chill, etc.) that aren't in the tool's data.
+- The narrative text itself (not just the locationName field) must explicitly name the city/town and country visited that day at least once, in prose — don't leave the reader to infer it only from the headline or metadata.
+- If photos were provided, ground specific visual details (what the travelers are doing, what's around them, the scenery, the light) in what is actually visible in those photos rather than inventing generic travel-magazine imagery. Don't describe activities, objects, or people that aren't visible in the provided photos.
+- Do not state a numeric distance traveled in the narrative — the app displays that separately and it's easy to get subtly wrong in prose.`;
 
   const userContent = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
 Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}
-Photos taken that day: ${ctx.photoCount}
-Distance traveled from the previous day: ${ctx.distanceKm != null ? `${ctx.distanceKm.toFixed(1)} km` : "N/A (first day)"}
+Photos taken that day: ${ctx.photoCount}${ctx.photoImages.length > 0 ? ` (${ctx.photoImages.length} shown below for visual reference)` : " (none available for visual reference)"}
 
 Research this day and write the story.`;
 
-  const messages: MessageParam[] = [{ role: "user", content: userContent }];
+  const initialContent: MessageParam["content"] =
+    ctx.photoImages.length > 0
+      ? [
+          { type: "text", text: userContent },
+          ...ctx.photoImages.map(
+            (img) =>
+              ({
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: img.mediaType as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+                  data: img.base64,
+                },
+              }) as const,
+          ),
+        ]
+      : userContent;
+
+  const messages: MessageParam[] = [{ role: "user", content: initialContent }];
 
   let capturedWeather: WeatherResult | null = null;
   let capturedLandmarks: LandmarkResult[] = [];

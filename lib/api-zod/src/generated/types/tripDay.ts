@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Landmark } from './landmark';
+import type { TripDayRoutePointsItem } from './tripDayRoutePointsItem';
 import type { WeatherSummary } from './weatherSummary';
 
 export interface TripDay {
@@ -25,6 +26,8 @@ export interface TripDay {
      * @nullable
      */
   distanceKm: number | null;
+  /** Chronologically-ordered GPS points from this day's own geotagged photos, for drawing an accurate route through the day. */
+  routePoints?: TripDayRoutePointsItem[];
   weather: WeatherSummary | null;
   landmarks: Landmark[];
   /** @nullable */

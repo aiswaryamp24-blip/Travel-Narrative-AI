@@ -23,6 +23,11 @@ export interface ClusterablePhoto {
   takenAt: Date | null;
 }
 
+export interface RoutePoint {
+  lat: number;
+  lon: number;
+}
+
 export interface DayCluster {
   date: string; // YYYY-MM-DD
   lat: number;
@@ -30,6 +35,12 @@ export interface DayCluster {
   /** true when the centroid was inferred (no geotagged photo in this day's own bucket) */
   locationInferred: boolean;
   photoIds: number[];
+  /**
+   * This day's own geotagged photos, in chronological order. Used to draw
+   * an accurate route through the day (rather than just its centroid) and
+   * to measure how far the travelers actually moved that day.
+   */
+  routePoints: RoutePoint[];
 }
 
 /**
@@ -99,14 +110,50 @@ export function clusterPhotosByDay(photos: ClusterablePhoto[]): DayCluster[] {
     }
 
     lastKnownCentroid = { lat, lon };
+
+    // Sort this day's own geotagged photos chronologically so the route
+    // through the day reflects the actual order the travelers moved
+    // through it, not just a single averaged point.
+    const routePoints: RoutePoint[] = [...dayGeotagged]
+      .sort((a, b) => (a.takenAt?.getTime() ?? 0) - (b.takenAt?.getTime() ?? 0))
+      .map((p) => ({ lat: p.lat!, lon: p.lon! }));
+
     clusters.push({
       date,
       lat,
       lon,
       locationInferred,
       photoIds: dayPhotos.map((p) => p.id),
+      routePoints,
     });
   }
 
   return clusters;
+}
+
+/**
+ * Estimates how far the travelers actually moved during a single day: the
+ * sum of consecutive point-to-point distances between that day's own
+ * geotagged photos (in capture order), plus the "arrival leg" from the last
+ * point of the previous day to the first point of this day. This is far
+ * closer to the real path traveled than a single centroid-to-centroid hop,
+ * which collapses an entire day of movement (e.g. touring a city) into one
+ * average point and misses it entirely.
+ *
+ * Returns null when there isn't enough data to estimate movement for this
+ * day (e.g. the very first day with no prior point, and fewer than 2 of its
+ * own geotagged photos).
+ */
+export function computeDayDistanceKm(
+  previousLastPoint: RoutePoint | null,
+  dayRoutePoints: RoutePoint[],
+): number | null {
+  const points = previousLastPoint ? [previousLastPoint, ...dayRoutePoints] : dayRoutePoints;
+  if (points.length < 2) return null;
+
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    total += haversineKm(points[i - 1].lat, points[i - 1].lon, points[i].lat, points[i].lon);
+  }
+  return total;
 }

@@ -28,7 +28,18 @@ export function TripRouteMap({ trip }: { trip: Trip }) {
 
   if (days.length === 0) return null;
 
-  const positions: [number, number][] = days.map((d) => [d.lat, d.lon]);
+  // Prefer the actual chronological trail of geotagged photos for the
+  // drawn route — a straight line between day centroids collapses an
+  // entire day of movement (e.g. touring a city) into a single point and
+  // badly misrepresents where the travelers actually went. Fall back to
+  // the day's centroid for any day that has no route points of its own.
+  const positions: [number, number][] = days.flatMap((d) => {
+    const points = (d.routePoints ?? []) as Array<{ lat: number; lon: number }>;
+    if (points.length > 0) {
+      return points.map((p): [number, number] => [p.lat, p.lon]);
+    }
+    return [[d.lat, d.lon]] as [number, number][];
+  });
   const center = positions[Math.floor(positions.length / 2)];
 
   return (

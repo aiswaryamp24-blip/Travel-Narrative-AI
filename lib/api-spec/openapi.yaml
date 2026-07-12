@@ -917,6 +917,17 @@ components:
         distanceKm:
           type: ["number", "null"]
           description: Distance travelled from the previous day's location.
+        routePoints:
+          type: array
+          description: Chronologically-ordered GPS points from this day's own geotagged photos, for drawing an accurate route through the day.
+          items:
+            type: object
+            required: [lat, lon]
+            properties:
+              lat:
+                type: number
+              lon:
+                type: number
         weather:
           oneOf:
             - $ref: "#/components/schemas/WeatherSummary"

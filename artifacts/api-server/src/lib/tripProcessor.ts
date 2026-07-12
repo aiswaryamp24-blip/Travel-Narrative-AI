@@ -1,9 +1,62 @@
 import { db, photosTable, tripDaysTable, tripsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
-import { clusterPhotosByDay } from "./geo";
-import { haversineKm } from "./geo";
-import { researchAndWriteDay, type DayStoryResult } from "./narrative";
+import { clusterPhotosByDay, computeDayDistanceKm, type RoutePoint } from "./geo";
+import { researchAndWriteDay, type DayStoryResult, type PhotoImage } from "./narrative";
 import { logger } from "./logger";
+import { ObjectStorageService } from "./objectStorage";
+
+const objectStorageService = new ObjectStorageService();
+
+/** How many photos from each day are actually shown to the model for
+ * visual grounding — enough to capture the day's variety without blowing
+ * up token/latency budgets. */
+const MAX_PHOTOS_PER_DAY_FOR_VISION = 4;
+
+function guessMediaType(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    default:
+      return "image/jpeg";
+  }
+}
+
+/** Downloads a handful of a day's photos and base64-encodes them so the
+ * narrative model can describe what's actually in them, instead of writing
+ * purely from GPS/weather/landmark metadata. */
+async function loadPhotoImagesForDay(
+  photos: Array<{ id: number; objectPath: string; filename: string }>,
+  photoIds: number[],
+): Promise<PhotoImage[]> {
+  const chosenIds = photoIds.slice(0, MAX_PHOTOS_PER_DAY_FOR_VISION);
+  const byId = new Map(photos.map((p) => [p.id, p]));
+
+  const images = await Promise.all(
+    chosenIds.map(async (id) => {
+      const photo = byId.get(id);
+      if (!photo) return null;
+      try {
+        const file = await objectStorageService.getObjectEntityFile(photo.objectPath);
+        const [buffer] = await file.download();
+        return {
+          base64: buffer.toString("base64"),
+          mediaType: guessMediaType(photo.filename),
+        } satisfies PhotoImage;
+      } catch {
+        // A missing/unreadable photo shouldn't fail the whole day's story —
+        // it just won't contribute visual grounding.
+        return null;
+      }
+    }),
+  );
+
+  return images.filter((img): img is PhotoImage => img != null);
+}
 
 /** How many days are researched concurrently. Bounded (rather than unbounded
  * Promise.all) because the research pipeline calls Nominatim and Overpass,
@@ -69,17 +122,19 @@ export async function processTrip(tripId: number): Promise<void> {
 
     const tripTitle = (await getTripTitle(tripId)) ?? "Untitled trip";
 
-    // Distances only depend on cluster centroids, which are already known,
-    // so compute them upfront (cheap, synchronous) rather than inside the
-    // research loop.
-    let previousCentroid: { lat: number; lon: number } | null = null;
+    // Distance is estimated from the actual chronological trail of
+    // geotagged photos (intra-day movement + the arrival leg from the
+    // previous day's last point), not just a single centroid-to-centroid
+    // hop per day — that collapsed an entire day of sightseeing into one
+    // averaged point and badly understated real movement.
+    let previousLastPoint: RoutePoint | null = null;
     let totalDistanceKm = 0;
     const distancesKm: (number | null)[] = clusters.map((cluster) => {
-      const distanceKm = previousCentroid
-        ? haversineKm(previousCentroid.lat, previousCentroid.lon, cluster.lat, cluster.lon)
-        : null;
+      const distanceKm = computeDayDistanceKm(previousLastPoint, cluster.routePoints);
       if (distanceKm) totalDistanceKm += distanceKm;
-      previousCentroid = { lat: cluster.lat, lon: cluster.lon };
+      if (cluster.routePoints.length > 0) {
+        previousLastPoint = cluster.routePoints[cluster.routePoints.length - 1];
+      }
       return distanceKm;
     });
 
@@ -88,6 +143,7 @@ export async function processTrip(tripId: number): Promise<void> {
       RESEARCH_CONCURRENCY,
       async (cluster, i) => {
         log.info({ dayIndex: i, date: cluster.date }, "Researching day");
+        const photoImages = await loadPhotoImagesForDay(photos, cluster.photoIds);
         const story = await researchAndWriteDay({
           dayIndex: i,
           date: cluster.date,
@@ -96,6 +152,7 @@ export async function processTrip(tripId: number): Promise<void> {
           locationInferred: cluster.locationInferred,
           distanceKm: distancesKm[i],
           photoCount: cluster.photoIds.length,
+          photoImages,
           tripTitle,
         });
         log.info({ dayIndex: i }, "Day research complete");
@@ -126,6 +183,7 @@ export async function processTrip(tripId: number): Promise<void> {
           lon: cluster.lon,
           elevationMeters: story.elevationMeters,
           distanceKm: distancesKm[i],
+          routePoints: cluster.routePoints,
           weather: story.weather,
           landmarks: story.landmarks,
           headline: story.headline,
