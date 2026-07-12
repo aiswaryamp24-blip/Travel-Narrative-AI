@@ -4,3 +4,4 @@
 - [Express Request augmentation with restricted `types`](express-request-augmentation.md) — use `declare global { namespace Express { interface Request } }`, not `declare module "express-serve-static-core"`.
 - [Testing subagent blocked by Clerk bot-check on sign-up](testing-subagent-clerk-signup-block.md) — Cloudflare human-verification blocks automated sign-up; verify auth gating via curl/API instead.
 - [Express 5 req.params typed as string|string[]](express5-params-string-array.md) — coerce with `String(req.params.x)` before passing to drizzle/typed fns; existing code masks it via `Number(...)`.
+- [Resend connector usage from app code](resend-connector-app-code.md) — use `@replit/connectors-sdk`'s `ReplitConnectors.proxy('resend', '/emails', ...)` directly in server code, not sandbox `listConnections`.

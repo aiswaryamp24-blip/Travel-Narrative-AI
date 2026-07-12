@@ -1,3 +1,4 @@
+import { clerkClient } from '@clerk/express';
 import { and, desc, eq, gt, lte } from 'drizzle-orm';
 import {
   db,
@@ -9,6 +10,7 @@ import {
 } from '@workspace/db';
 import { generateDigestPdf, type DigestTripBundle } from './digestExport';
 import { ObjectStorageService } from './objectStorage';
+import { sendDigestReadyEmail } from './email';
 import { logger } from './logger';
 
 /** Cadence for automatic digest generation, per product decision (every 3-6 months). */
@@ -114,18 +116,47 @@ export async function getOrCreateDigestForUser(
 
 /** Evaluates every user and generates a digest for anyone who is due. Never throws. */
 export async function checkAndGenerateDueDigests(): Promise<void> {
-  const users = await db.select({ id: usersTable.id }).from(usersTable);
+  const users = await db.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable);
 
-  for (const { id: userId } of users) {
+  for (const { id: userId, displayName } of users) {
     try {
       const result = await getOrCreateDigestForUser(userId, { force: false });
       if (result.status === 'created') {
         logger.info({ userId, digestId: result.digest.id }, 'Generated periodic trip digest');
+        await notifyDigestReady(userId, displayName, result.digest);
       }
     } catch (error) {
       logger.error({ err: error, userId }, 'Failed to evaluate/generate digest for user');
     }
   }
+}
+
+/** Looks up the user's verified email via Clerk and, if found, emails them that their digest is ready. */
+async function notifyDigestReady(
+  userId: string,
+  displayName: string,
+  digest: typeof digestsTable.$inferSelect,
+): Promise<void> {
+  let email: string | null = null;
+  try {
+    const clerkUser = await clerkClient.users.getUser(userId);
+    email =
+      clerkUser.emailAddresses.find(
+        (address) =>
+          address.id === clerkUser.primaryEmailAddressId && address.verification?.status === 'verified',
+      )?.emailAddress ?? null;
+  } catch (error) {
+    logger.error({ err: error, userId }, 'Failed to look up Clerk user for digest-ready email');
+    return;
+  }
+
+  await sendDigestReadyEmail({
+    userId,
+    email,
+    displayName,
+    digestId: digest.id,
+    tripCount: digest.tripCount,
+  });
 }
 
 /** Starts the periodic background check. Runs once immediately, then on an interval. */
