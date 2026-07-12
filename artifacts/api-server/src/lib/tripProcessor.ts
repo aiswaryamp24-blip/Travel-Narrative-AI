@@ -10,7 +10,7 @@ const objectStorageService = new ObjectStorageService();
 /** How many photos from each day are actually shown to the model for
  * visual grounding — enough to capture the day's variety without blowing
  * up token/latency budgets. */
-const MAX_PHOTOS_PER_DAY_FOR_VISION = 4;
+const MAX_PHOTOS_PER_DAY_FOR_VISION = 6;
 
 function guessMediaType(filename: string): string {
   const ext = filename.split(".").pop()?.toLowerCase();
