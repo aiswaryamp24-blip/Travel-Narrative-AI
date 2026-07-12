@@ -12,7 +12,7 @@ import type { PhotoImageBlock } from "./photoContent";
 const MODEL = "claude-sonnet-4-5";
 const MAX_TOOL_ROUNDS = 6;
 
-const TOOLS: ToolUnion[] = [
+const GEO_TOOLS: ToolUnion[] = [
   {
     name: "reverse_geocode",
     description:
@@ -53,36 +53,57 @@ const TOOLS: ToolUnion[] = [
       required: ["lat", "lon"],
     },
   },
-  {
-    name: "submit_final_story",
-    description:
-      "Submit the finished, researched story for this day. Call this exactly once, only after you have gathered the facts you need with the other tools.",
-    input_schema: {
-      type: "object",
-      properties: {
-        locationName: {
-          type: "string",
-          description: "Human-readable place name for this day, e.g. 'Kyoto, Japan'.",
-        },
-        visualObservations: {
-          type: "string",
-          description:
-            "Required scratchpad, written BEFORE the narrative. For EACH photo provided, note literally and specifically: how many people are visible (and any distinguishing appearance/clothing you can actually see), what they are physically doing, the concrete setting/backdrop (street, trail, beach, building, interior, etc.), and any weather/light actually visible in the frame (sunny, overcast, wet ground, etc.). Do not guess or embellish beyond what's visibly there — if a detail isn't visible, don't include it. This is for your own grounding, not shown to the reader.",
-        },
-        headline: {
-          type: "string",
-          description: "A short, evocative magazine-style headline for this day (under 12 words).",
-        },
-        narrative: {
-          type: "string",
-          description:
-            "2 tight paragraphs (roughly 90-150 words total) of vivid, specific travel journalism about this day. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting) or the researched facts (weather, location, landmarks) — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers.",
-        },
-      },
-      required: ["locationName", "visualObservations", "headline", "narrative"],
-    },
-  },
 ];
+
+/**
+ * Builds the tool set for one day's research call. When there are no real
+ * coordinates for this day (`hasReliableCoordinates: false`), the
+ * geocode/weather/landmark tools are omitted entirely — rather than letting
+ * Claude call them with a meaningless (0, 0) placeholder (which resolves to
+ * a real spot in the Gulf of Guinea) or, worse, quietly substitute its own
+ * guessed coordinates. Physically removing the tools makes this a hard
+ * constraint instead of a prompt instruction Claude could ignore.
+ */
+function buildTools(hasReliableCoordinates: boolean): ToolUnion[] {
+  return [
+    ...(hasReliableCoordinates ? GEO_TOOLS : []),
+    {
+      name: "submit_final_story",
+      description:
+        "Submit the finished, researched story for this day. Call this exactly once, only after you have gathered the facts you need with the other tools.",
+      input_schema: {
+        type: "object",
+        properties: {
+          locationName: {
+            type: "string",
+            description: hasReliableCoordinates
+              ? "Human-readable place name for this day, e.g. 'Kyoto, Japan'."
+              : "There is no GPS data for this day, so there is no verified location. Only name a specific place if it is unambiguously identifiable from the photos themselves (e.g. legible signage, an unmistakable famous landmark) — otherwise use a generic, non-specific description (e.g. 'a forest trail', 'an unspecified coastal town') rather than guessing a real place name.",
+          },
+          visualObservations: {
+            type: "string",
+            description:
+              "Required scratchpad, written BEFORE the narrative. For EACH photo provided, note literally and specifically: how many people are visible (and any distinguishing appearance/clothing you can actually see), what they are physically doing, the concrete setting/backdrop (street, trail, beach, building, interior, etc.), and any weather/light actually visible in the frame (sunny, overcast, wet ground, etc.). Do not guess or embellish beyond what's visibly there — if a detail isn't visible, don't include it. This is for your own grounding, not shown to the reader.",
+          },
+          headline: {
+            type: "string",
+            description: "A short, evocative magazine-style headline for this day (under 12 words).",
+          },
+          narrative: {
+            type: "string",
+            description:
+              "2 tight paragraphs (roughly 90-150 words total) of vivid, specific travel journalism about this day. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting)" +
+              (hasReliableCoordinates
+                ? " or the researched facts (weather, location, landmarks)"
+                : " — there are no researched facts available for this day, so do not state a specific place name, temperature, or weather condition unless it is unmistakably visible in a photo") +
+              " — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers.",
+          },
+        },
+        required: ["locationName", "visualObservations", "headline", "narrative"],
+      },
+    },
+  ];
+}
 
 export interface DayResearchContext {
   dayIndex: number;
@@ -90,6 +111,10 @@ export interface DayResearchContext {
   lat: number;
   lon: number;
   locationInferred: boolean;
+  /** true when NO photo anywhere in the trip has GPS data, so lat/lon are a
+   * meaningless (0, 0) placeholder — geocode/weather/landmark tools are
+   * withheld entirely in this case rather than researching a fake location. */
+  noGpsInTrip: boolean;
   photoCount: number;
   tripTitle: string;
   /** A representative sample of this day's actual photos, downsized for
@@ -145,29 +170,46 @@ export async function researchAndWriteDay(
   ctx: DayResearchContext,
 ): Promise<DayStoryResult> {
   const hasPhotos = ctx.photoImages.length > 0;
+  const hasReliableCoordinates = !ctx.noGpsInTrip;
+  const tools = buildTools(hasReliableCoordinates);
 
   const systemPrompt = `You are a travel correspondent for a magazine-style trip journal. You are researching day ${ctx.dayIndex + 1} of a trip titled "${ctx.tripTitle}".
 
-You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}${hasPhotos ? `, plus ${ctx.photoImages.length} of the actual photos taken that day (attached below, in roughly chronological order).` : ", but none of that day's photos could be loaded for you to view."}
+${
+  hasReliableCoordinates
+    ? `You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}${hasPhotos ? `, plus ${ctx.photoImages.length} of the actual photos taken that day (attached below, in roughly chronological order).` : ", but none of that day's photos could be loaded for you to view."}`
+    : `No photo anywhere in this trip has GPS data, so there are no real coordinates for this day${hasPhotos ? ` — but you do have ${ctx.photoImages.length} of the actual photos taken that day (attached below, in roughly chronological order) to work from.` : ", and no photos could be loaded either, so you have almost nothing to go on."}`
+}
 
-Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.
+${
+  hasReliableCoordinates
+    ? `Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.`
+    : `You have no reverse-geocoding, weather, or landmark tools available for this day, because there are no real coordinates to research with — do not invent or guess coordinates. Call submit_final_story exactly once, based only on what's genuinely visible in the photos.`
+}
 
 Accuracy rules — follow these strictly, since real people will read this as a factual account of their own trip:
 ${
   hasPhotos
     ? `- First, fill in visualObservations by literally describing each provided photo: how many people are visible (described generically — e.g. "a couple", "a group of friends" — never invent names, ages, or identities you can't actually know), what they're doing, the setting, and any weather/light actually visible. This is mandatory grounding work, not optional — do it even if it feels repetitive.`
-    : `- You have no photos to look at for this day. Note that in visualObservations, and keep the narrative grounded strictly in the researched facts below rather than inventing scenes or activity you can't verify.`
+    : `- You have no photos to look at for this day. Note that in visualObservations, and keep the narrative grounded strictly in whatever real facts you have (if any) rather than inventing scenes or activity you can't verify.`
 }
-- Weather in the narrative is ground truth ONLY from get_historical_weather's "conditions" and "precipitationMm" fields — never mention rain, drizzle, showers, snow, or storms unless precipitationMm is greater than 0 or "conditions" explicitly names that precipitation type. If precipitationMm is 0 or null, describe the day as dry. Do not upgrade "partly cloudy" into anything wetter than what the tool returned, and do not invent atmospheric details (fog, humidity, wind chill, etc.) that aren't in the tool's data. You may describe visible light/sky (golden hour, bright midday sun) if it's actually visible in a photo and doesn't contradict the tool's data.
-- The narrative must be built from visualObservations plus the researched facts (place, weather, landmarks) — every sentence should trace back to one of those two sources. No stock travel-writing filler ("wandered the charming streets", "a tapestry of culture", "as the sun dipped below the horizon") unless it's literally what a photo shows.
-- The narrative text itself (not just the locationName field) must explicitly name the city/town and country visited that day at least once, in prose — don't leave the reader to infer it only from the headline or metadata.
+${
+  hasReliableCoordinates
+    ? `- Weather in the narrative is ground truth ONLY from get_historical_weather's "conditions" and "precipitationMm" fields — never mention rain, drizzle, showers, snow, or storms unless precipitationMm is greater than 0 or "conditions" explicitly names that precipitation type. If precipitationMm is 0 or null, describe the day as dry. Do not upgrade "partly cloudy" into anything wetter than what the tool returned, and do not invent atmospheric details (fog, humidity, wind chill, etc.) that aren't in the tool's data. You may describe visible light/sky (golden hour, bright midday sun) if it's actually visible in a photo and doesn't contradict the tool's data.`
+    : `- You have no weather data for this day. Do not state a specific temperature, condition (rain, sun, snow, etc.), or forecast-style claim — you may only describe weather/light that is unmistakably visible in a photo (e.g. visibly wet ground, snow on the ground, bright sunlight), and even then, describe just what's visible rather than asserting a broader daily forecast.`
+}
+- The narrative must be built from visualObservations plus whatever real researched facts are available — every sentence should trace back to one of those sources, never invented. No stock travel-writing filler ("wandered the charming streets", "a tapestry of culture", "as the sun dipped below the horizon") unless it's literally what a photo shows.
+${
+  hasReliableCoordinates
+    ? `- The narrative text itself (not just the locationName field) must explicitly name the city/town and country visited that day at least once, in prose — don't leave the reader to infer it only from the headline or metadata.`
+    : `- Do not name a specific city, region, or country unless it is unambiguously identifiable from the photos themselves (e.g. legible signage, an unmistakable famous landmark) — if you can't be sure, describe the setting generically instead of guessing a place name.`
+}
 - If people are visible in photos, describe what they're actually doing (the action) rather than just noting their presence — specificity here is what makes the story feel true to the day.
 - Do not describe activities, objects, or people that aren't visible in the provided photos, and don't state a numeric distance traveled in the narrative — the app displays that separately.
 - Keep it succinct and compelling: two tight, information-dense paragraphs beat four padded ones. Cut any sentence that isn't doing real work.`;
 
   const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
-Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}
-Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at)` : ""}
+${hasReliableCoordinates ? `Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}\n` : ""}Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at)` : ""}
 
 Research this day and write the story.`;
 
@@ -189,7 +231,7 @@ Research this day and write the story.`;
       model: MODEL,
       max_tokens: 3072,
       system: systemPrompt,
-      tools: TOOLS,
+      tools,
       messages,
     });
 

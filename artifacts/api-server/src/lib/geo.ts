@@ -34,6 +34,16 @@ export interface DayCluster {
   lon: number;
   /** true when the centroid was inferred (no geotagged photo in this day's own bucket) */
   locationInferred: boolean;
+  /**
+   * true only when NO photo anywhere in the trip has GPS data, so lat/lon
+   * are an arbitrary (0, 0) placeholder rather than any real signal —
+   * distinct from `locationInferred`, which also covers the more
+   * trustworthy case of inheriting a neighboring day's real centroid.
+   * (0, 0) is a real, resolvable coordinate (Gulf of Guinea) — treating it
+   * as a genuine location would produce a plausible-looking but entirely
+   * fake place, weather, and landmarks.
+   */
+  noGpsInTrip: boolean;
   photoIds: number[];
   /**
    * This day's own geotagged photos, in chronological order. Used to draw
@@ -93,6 +103,7 @@ export function clusterPhotosByDay(photos: ClusterablePhoto[]): DayCluster[] {
     let lat: number;
     let lon: number;
     let locationInferred = false;
+    let noGpsInTrip = false;
 
     if (dayGeotagged.length > 0) {
       lat = dayGeotagged.reduce((sum, p) => sum + p.lat!, 0) / dayGeotagged.length;
@@ -107,6 +118,7 @@ export function clusterPhotosByDay(photos: ClusterablePhoto[]): DayCluster[] {
       lat = 0;
       lon = 0;
       locationInferred = true;
+      noGpsInTrip = true;
     }
 
     lastKnownCentroid = { lat, lon };
@@ -123,6 +135,7 @@ export function clusterPhotosByDay(photos: ClusterablePhoto[]): DayCluster[] {
       lat,
       lon,
       locationInferred,
+      noGpsInTrip,
       photoIds: dayPhotos.map((p) => p.id),
       routePoints,
     });

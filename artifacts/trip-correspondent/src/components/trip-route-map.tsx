@@ -23,7 +23,11 @@ function dayIcon(dayIndex: number) {
 
 export function TripRouteMap({ trip }: { trip: Trip }) {
   const days = trip.days
-    .filter((d) => typeof d.lat === 'number' && typeof d.lon === 'number')
+    // (0, 0) is the pipeline's placeholder for "no GPS data anywhere in
+    // this trip" — a real, resolvable coordinate (Gulf of Guinea), not an
+    // empty value, so it has to be filtered out explicitly rather than
+    // just checking for null/undefined.
+    .filter((d) => typeof d.lat === 'number' && typeof d.lon === 'number' && !(d.lat === 0 && d.lon === 0))
     .sort((a, b) => a.dayIndex - b.dayIndex);
 
   if (days.length === 0) return null;

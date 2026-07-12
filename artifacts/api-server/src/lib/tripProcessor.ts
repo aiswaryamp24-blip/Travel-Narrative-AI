@@ -125,6 +125,7 @@ export async function processTrip(tripId: number): Promise<void> {
           lat: cluster.lat,
           lon: cluster.lon,
           locationInferred: cluster.locationInferred,
+          noGpsInTrip: cluster.noGpsInTrip,
           photoCount: cluster.photoIds.length,
           tripTitle,
           photoImages,
