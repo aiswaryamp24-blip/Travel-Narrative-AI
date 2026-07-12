@@ -10,7 +10,7 @@ import {
   tripsTable,
   type Trip,
 } from '@workspace/db';
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
 import { requireAuth, optionalAuth } from '../middlewares/auth';
 import { synthesizeDayNarration } from '../lib/audioNarration';
@@ -44,29 +44,41 @@ router.get('/trips', requireAuth, async (req: Request, res: Response) => {
     .where(eq(tripsTable.userId, req.userId!))
     .orderBy(desc(tripsTable.createdAt));
 
-  const results = await Promise.all(
-    trips.map(async (trip) => {
-      const days = await db
-        .select()
-        .from(tripDaysTable)
-        .where(eq(tripDaysTable.tripId, trip.id))
-        .orderBy(asc(tripDaysTable.dayIndex));
+  const allDays =
+    trips.length === 0
+      ? []
+      : await db
+          .select({
+            tripId: tripDaysTable.tripId,
+            date: tripDaysTable.date,
+            distanceKm: tripDaysTable.distanceKm,
+          })
+          .from(tripDaysTable)
+          .where(inArray(tripDaysTable.tripId, trips.map((t) => t.id)));
 
-      const dates = days.map((d) => d.date).sort();
-      const totalDistanceKm =
-        days.length > 0
-          ? days.reduce((sum, d) => sum + (d.distanceKm ?? 0), 0)
-          : null;
+  const daysByTrip = new Map<number, typeof allDays>();
+  for (const day of allDays) {
+    const bucket = daysByTrip.get(day.tripId);
+    if (bucket) bucket.push(day);
+    else daysByTrip.set(day.tripId, [day]);
+  }
 
-      return {
-        ...toTripSummary(trip),
-        isOwner: true,
-        startDate: dates[0] ?? null,
-        endDate: dates[dates.length - 1] ?? null,
-        totalDistanceKm,
-      };
-    }),
-  );
+  const results = trips.map((trip) => {
+    const days = daysByTrip.get(trip.id) ?? [];
+    const dates = days.map((d) => d.date).sort();
+    const totalDistanceKm =
+      days.length > 0
+        ? days.reduce((sum, d) => sum + (d.distanceKm ?? 0), 0)
+        : null;
+
+    return {
+      ...toTripSummary(trip),
+      isOwner: true,
+      startDate: dates[0] ?? null,
+      endDate: dates[dates.length - 1] ?? null,
+      totalDistanceKm,
+    };
+  });
 
   res.json(results);
 });
@@ -318,11 +330,20 @@ router.post('/trips/:tripId/process', requireAuth, async (req: Request, res: Res
     return;
   }
 
+  // Conditional update: only transition into 'processing' if the trip isn't
+  // already processing. This is the atomic guard against a double-dispatch
+  // (e.g. a double-click, or a retry fired while the previous run is still
+  // in flight) starting two concurrent pipelines against the same trip.
   const [updated] = await db
     .update(tripsTable)
     .set({ status: 'processing', errorMessage: null })
-    .where(eq(tripsTable.id, tripId))
+    .where(and(eq(tripsTable.id, tripId), ne(tripsTable.status, 'processing')))
     .returning();
+
+  if (!updated) {
+    res.status(409).json({ error: 'Trip is already processing' });
+    return;
+  }
 
   // Fire-and-forget: the pipeline makes multiple slow external + Claude
   // calls per day, so we don't await it in the HTTP response. The frontend

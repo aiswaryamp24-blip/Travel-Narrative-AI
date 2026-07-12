@@ -1,9 +1,32 @@
 import { db, photosTable, tripDaysTable, tripsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { clusterPhotosByDay } from "./geo";
 import { haversineKm } from "./geo";
-import { researchAndWriteDay } from "./narrative";
+import { researchAndWriteDay, type DayStoryResult } from "./narrative";
 import { logger } from "./logger";
+
+/** How many days are researched concurrently. Bounded (rather than unbounded
+ * Promise.all) because the research pipeline calls Nominatim and Overpass,
+ * whose usage policies for their free public instances prohibit bulk
+ * parallel requests. */
+const RESEARCH_CONCURRENCY = 3;
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await fn(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
 
 /**
  * Runs the full research + narrative pipeline for a trip: clusters photos
@@ -16,6 +39,15 @@ export async function processTrip(tripId: number): Promise<void> {
   const log = logger.child({ tripId, task: "processTrip" });
 
   try {
+    // Clear any trip_days from a previous run of this trip (e.g. a retry
+    // after a partial failure) so reprocessing doesn't leave duplicate day
+    // rows behind — every run starts from a clean slate.
+    await db.delete(tripDaysTable).where(eq(tripDaysTable.tripId, tripId));
+    await db
+      .update(photosTable)
+      .set({ tripDayId: null })
+      .where(eq(photosTable.tripId, tripId));
+
     const photos = await db
       .select()
       .from(photosTable)
@@ -35,31 +67,48 @@ export async function processTrip(tripId: number): Promise<void> {
       );
     }
 
-    let previousCentroid: { lat: number; lon: number } | null = null;
-    let coverObjectPath: string | null = null;
-    let firstLocationName: string | null = null;
-    let totalDistanceKm = 0;
+    const tripTitle = (await getTripTitle(tripId)) ?? "Untitled trip";
 
-    for (let i = 0; i < clusters.length; i++) {
-      const cluster = clusters[i];
+    // Distances only depend on cluster centroids, which are already known,
+    // so compute them upfront (cheap, synchronous) rather than inside the
+    // research loop.
+    let previousCentroid: { lat: number; lon: number } | null = null;
+    let totalDistanceKm = 0;
+    const distancesKm: (number | null)[] = clusters.map((cluster) => {
       const distanceKm = previousCentroid
         ? haversineKm(previousCentroid.lat, previousCentroid.lon, cluster.lat, cluster.lon)
         : null;
       if (distanceKm) totalDistanceKm += distanceKm;
       previousCentroid = { lat: cluster.lat, lon: cluster.lon };
+      return distanceKm;
+    });
 
-      log.info({ dayIndex: i, date: cluster.date }, "Researching day");
+    const stories: DayStoryResult[] = await mapWithConcurrency(
+      clusters,
+      RESEARCH_CONCURRENCY,
+      async (cluster, i) => {
+        log.info({ dayIndex: i, date: cluster.date }, "Researching day");
+        const story = await researchAndWriteDay({
+          dayIndex: i,
+          date: cluster.date,
+          lat: cluster.lat,
+          lon: cluster.lon,
+          locationInferred: cluster.locationInferred,
+          distanceKm: distancesKm[i],
+          photoCount: cluster.photoIds.length,
+          tripTitle,
+        });
+        log.info({ dayIndex: i }, "Day research complete");
+        return story;
+      },
+    );
 
-      const story = await researchAndWriteDay({
-        dayIndex: i,
-        date: cluster.date,
-        lat: cluster.lat,
-        lon: cluster.lon,
-        locationInferred: cluster.locationInferred,
-        distanceKm,
-        photoCount: cluster.photoIds.length,
-        tripTitle: (await getTripTitle(tripId)) ?? "Untitled trip",
-      });
+    let coverObjectPath: string | null = null;
+    let firstLocationName: string | null = null;
+
+    for (let i = 0; i < clusters.length; i++) {
+      const cluster = clusters[i];
+      const story = stories[i];
 
       if (i === 0) firstLocationName = story.locationName;
 
@@ -76,7 +125,7 @@ export async function processTrip(tripId: number): Promise<void> {
           lat: cluster.lat,
           lon: cluster.lon,
           elevationMeters: story.elevationMeters,
-          distanceKm,
+          distanceKm: distancesKm[i],
           weather: story.weather,
           landmarks: story.landmarks,
           headline: story.headline,
@@ -85,12 +134,10 @@ export async function processTrip(tripId: number): Promise<void> {
         })
         .returning();
 
-      for (const photoId of dayPhotoIds) {
-        await db
-          .update(photosTable)
-          .set({ tripDayId: insertedDay.id })
-          .where(eq(photosTable.id, photoId));
-      }
+      await db
+        .update(photosTable)
+        .set({ tripDayId: insertedDay.id })
+        .where(inArray(photosTable.id, dayPhotoIds));
 
       if (i === 0 && heroPhotoId != null) {
         const heroPhoto = photos.find((p) => p.id === heroPhotoId);
