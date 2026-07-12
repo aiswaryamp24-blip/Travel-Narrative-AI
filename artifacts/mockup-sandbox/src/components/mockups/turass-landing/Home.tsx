@@ -30,45 +30,37 @@ export default function Home() {
           style={{ y: heroY, opacity: heroOpacity }}
         >
           <img 
-            src="/__mockup/images/turass-hero-bg.png" 
-            alt="Traveler looking at horizon" 
-            className="w-full h-full object-cover object-center scale-105" 
+            src="/__mockup/images/turass-hero-day.png" 
+            alt="Friends embracing under bright blue sky" 
+            className="w-full h-full object-cover object-bottom md:object-center scale-105" 
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/10 to-background z-10"></div>
-          <div className="absolute inset-0 bg-indigo-950/30 mix-blend-multiply z-10"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
         </motion.div>
         
-        <div className="relative z-20 container mx-auto px-6 flex flex-col items-center text-center pt-20">
+        <div className="relative z-20 container mx-auto px-6 flex flex-col items-center justify-center h-full text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 flex justify-center items-center pointer-events-none z-20"
           >
-            <h1 className="font-display text-[14vw] sm:text-[12vw] md:text-[10vw] lg:text-[8vw] xl:text-[7.5vw] leading-[0.9] font-bold text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/70 tracking-tighter mix-blend-overlay text-center px-4">
-              YOUR
-              <br />
-              <span className="italic font-serif opacity-90 pl-[10%] sm:pl-[20%] block -mt-2 md:-mt-4 mix-blend-normal text-white text-[10vw] sm:text-[8vw] md:text-[7vw] lg:text-[6vw] xl:text-[5vw]">embedded</span>
-              <span className="-mt-4 md:-mt-6 block break-words">CORRESPONDENT.</span>
+            <h1 className="font-display text-[18vw] leading-none font-bold tracking-tighter flex">
+              <span className="text-background">TUR</span>
+              <span className="text-white mix-blend-overlay opacity-90">ASS</span>
             </h1>
           </motion.div>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="max-w-md mt-12 text-lg md:text-xl text-white/80 font-medium leading-relaxed"
-          >
-            Upload the photos from your trip. We'll write the story. 
-            A personal foreign correspondent for your memories.
-          </motion.p>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.2 }}
-            className="mt-16"
+            transition={{ duration: 1, delay: 1 }}
+            className="absolute bottom-32 md:bottom-20 z-30 flex flex-col items-center"
           >
-            <button className="group relative px-8 py-4 bg-primary text-background font-bold tracking-widest uppercase text-sm overflow-hidden rounded-sm">
+            <p className="max-w-md text-lg md:text-xl text-white/90 font-medium leading-relaxed mb-8 text-center text-shadow-sm px-4">
+              Upload the photos from your trip. We'll write the story. 
+              A personal foreign correspondent for your memories.
+            </p>
+            <button className="group relative px-8 py-4 bg-primary text-background font-bold tracking-widest uppercase text-sm overflow-hidden rounded-sm shadow-xl">
               <span className="relative z-10">Begin the Expedition</span>
               <div className="absolute inset-0 h-full w-full bg-white scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 z-0"></div>
             </button>
@@ -123,7 +115,7 @@ export default function Home() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   onError={(e) => {
                     // Fallback to our generated image if reference isn't available
-                    e.currentTarget.src = "/__mockup/images/turass-friends.png";
+                    e.currentTarget.src = "/__mockup/images/turass-friends-day.png";
                   }}
                 />
                 <div className="absolute inset-0 bg-indigo-900/20 mix-blend-overlay"></div>
@@ -199,11 +191,11 @@ export default function Home() {
       {/* Full width image break */}
       <section className="h-[70vh] w-full relative overflow-hidden flex items-center justify-center">
         <img 
-          src="/__mockup/images/turass-landscape.png" 
-          alt="Misty mountains at twilight" 
+          src="/__mockup/images/turass-landscape-day.png" 
+          alt="Coastal landscape under bright blue sky" 
           className="absolute w-full h-full object-cover z-0" 
         />
-        <div className="absolute inset-0 bg-background/40 mix-blend-multiply z-10"></div>
+        <div className="absolute inset-0 bg-background/20 mix-blend-multiply z-10"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
         
         <h2 className="relative z-20 font-display text-[8vw] font-bold text-white/90 tracking-tighter mix-blend-overlay text-center uppercase leading-none">
@@ -218,10 +210,10 @@ export default function Home() {
             <div className="order-2 lg:order-1 relative h-[600px] w-full">
               {/* Stacked polaroid effect */}
               <div className="absolute top-10 left-10 w-[70%] aspect-[3/4] rounded-sm film-grain rotate-[-6deg] z-10 shadow-2xl border-8 border-white/5 bg-secondary/50 p-2">
-                <img src="/__mockup/images/turass-journal.png" alt="Train window" className="w-full h-full object-cover" />
+                <img src="/__mockup/images/turass-journal-day.png" alt="Train window daytime" className="w-full h-full object-cover" />
               </div>
               <div className="absolute bottom-10 right-10 w-[65%] aspect-square rounded-sm film-grain rotate-[4deg] z-20 shadow-2xl border-8 border-white/5 bg-secondary/50 p-2">
-                <img src="/__mockup/images/turass-friends.png" alt="Friends at campfire" className="w-full h-full object-cover" />
+                <img src="/__mockup/images/turass-friends-day.png" alt="Friends by ocean" className="w-full h-full object-cover" />
               </div>
             </div>
             
