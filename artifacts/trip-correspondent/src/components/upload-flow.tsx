@@ -115,12 +115,10 @@ export function UploadFlow() {
               files.length > 0 ? "bg-accent/30" : ""
             )}
           >
-            <input 
-              type="file" 
-              multiple 
+            <input
+              type="file"
+              multiple
               accept="image/*"
-              // @ts-ignore - webkitdirectory is non-standard but works in modern browsers
-              webkitdirectory=""
               onChange={handleFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
@@ -130,7 +128,7 @@ export function UploadFlow() {
                 <UploadCloud className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-lg">Click to select folder</p>
+                <p className="font-medium text-lg">Tap to select photos</p>
                 <p className="text-sm text-muted-foreground mt-1">or drag and drop photos here</p>
               </div>
               <div className="flex gap-4 text-xs text-muted-foreground">
