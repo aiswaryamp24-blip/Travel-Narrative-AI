@@ -570,3 +570,13 @@ export const DownloadDigestParams = zod.object({
 export const DownloadDigestResponse = zod.unknown()
 
 
+/**
+ * @summary Delete a digest and its stored PDF (owner only)
+ */
+export const DeleteDigestParams = zod.object({
+  "digestId": zod.coerce.number()
+})
+
+export const DeleteDigestResponse = zod.void()
+
+

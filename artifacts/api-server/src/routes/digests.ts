@@ -93,4 +93,43 @@ router.get(
   },
 );
 
+/** DELETE /digests/:digestId — delete a digest and its stored PDF (owner only). */
+router.delete(
+  '/digests/:digestId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const digestId = Number(req.params.digestId);
+    if (!Number.isInteger(digestId)) {
+      res.status(404).json({ error: 'Digest not found' });
+      return;
+    }
+
+    const [digest] = await db
+      .select()
+      .from(digestsTable)
+      .where(eq(digestsTable.id, digestId));
+
+    if (!digest || digest.userId !== req.userId) {
+      res.status(404).json({ error: 'Digest not found' });
+      return;
+    }
+
+    try {
+      const file = await objectStorageService.getObjectEntityFile(digest.objectPath);
+      await file.delete();
+    } catch (error) {
+      if (!(error instanceof ObjectNotFoundError)) {
+        req.log.error({ err: error, digestId }, 'Error deleting digest file');
+        res.status(500).json({ error: 'Failed to delete digest' });
+        return;
+      }
+      // File already gone — still proceed to remove the DB row.
+    }
+
+    await db.delete(digestsTable).where(eq(digestsTable.id, digestId));
+
+    res.status(204).end();
+  },
+);
+
 export default router;

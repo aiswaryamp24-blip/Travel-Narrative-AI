@@ -1,7 +1,7 @@
-import { useListDigests, useGenerateDigest, getListDigestsQueryKey, downloadDigest } from '@workspace/api-client-react';
+import { useListDigests, useGenerateDigest, useDeleteDigest, getListDigestsQueryKey, downloadDigest } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Sparkles, Download } from 'lucide-react';
+import { Sparkles, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ export function DigestsSection() {
   const queryClient = useQueryClient();
   const { data: digests, isLoading } = useListDigests();
   const generateDigest = useGenerateDigest();
+  const deleteDigest = useDeleteDigest();
 
   const handleGenerate = async () => {
     try {
@@ -18,6 +19,19 @@ export function DigestsSection() {
       toast.success('Your wrapped digest is ready.');
     } catch (err: any) {
       toast.error(err?.data?.error ?? 'Nothing to generate yet — no completed trips since your last digest.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Delete this wrapped digest? This cannot be undone.')) {
+      return;
+    }
+    try {
+      await deleteDigest.mutateAsync({ digestId: id });
+      queryClient.invalidateQueries({ queryKey: getListDigestsQueryKey() });
+      toast.success('Digest deleted.');
+    } catch {
+      toast.error('Failed to delete digest.');
     }
   };
 
@@ -75,14 +89,26 @@ export function DigestsSection() {
               <div className="font-serif text-lg">
                 {digest.tripCount} {digest.tripCount === 1 ? 'trip' : 'trips'} covered
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-none font-mono text-xs uppercase tracking-widest gap-2 w-full"
-                onClick={() => handleDownload(digest.id)}
-              >
-                <Download className="h-3.5 w-3.5" /> Download PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-none font-mono text-xs uppercase tracking-widest gap-2 flex-1"
+                  onClick={() => handleDownload(digest.id)}
+                >
+                  <Download className="h-3.5 w-3.5" /> Download PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-none font-mono text-xs uppercase tracking-widest text-destructive hover:text-destructive"
+                  disabled={deleteDigest.isPending}
+                  onClick={() => handleDelete(digest.id)}
+                  aria-label="Delete digest"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>

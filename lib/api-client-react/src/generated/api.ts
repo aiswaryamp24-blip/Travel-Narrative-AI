@@ -1650,3 +1650,74 @@ export function useDownloadDigest<TData = Awaited<ReturnType<typeof downloadDige
 
 
 
+export const getDeleteDigestUrl = (digestId: number,) => {
+
+
+
+
+  return `/api/digests/${digestId}`
+}
+
+/**
+ * @summary Delete a digest and its stored PDF (owner only)
+ */
+export const deleteDigest = async (digestId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteDigestUrl(digestId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDigestMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDigest>>, TError,{digestId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDigest>>, TError,{digestId: number}, TContext> => {
+
+const mutationKey = ['deleteDigest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDigest>>, {digestId: number}> = (props) => {
+          const {digestId} = props ?? {};
+
+          return  deleteDigest(digestId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDigestMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDigest>>>
+
+    export type DeleteDigestMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Delete a digest and its stored PDF (owner only)
+ */
+export const useDeleteDigest = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDigest>>, TError,{digestId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDigest>>,
+        TError,
+        {digestId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteDigestMutationOptions(options));
+    }
+

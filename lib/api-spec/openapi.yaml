@@ -583,6 +583,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /digests/{digestId}:
+    delete:
+      tags: [Digests]
+      operationId: deleteDigest
+      summary: Delete a digest and its stored PDF (owner only)
+      parameters:
+        - name: digestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Digest deleted.
+        "404":
+          description: Digest not found, or the requester does not own it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
