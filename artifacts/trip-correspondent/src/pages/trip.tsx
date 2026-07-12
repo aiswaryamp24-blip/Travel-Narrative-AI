@@ -23,6 +23,7 @@ import { TripStats } from '@/components/trip-stats';
 import { TripRouteMap } from '@/components/trip-route-map';
 import { DayAudioPlayer } from '@/components/day-audio-player';
 import { ShareCard } from '@/components/share-card';
+import { RevealOnScroll } from '@/components/reveal-on-scroll';
 
 export default function Trip() {
   const { id } = useParams();
@@ -283,7 +284,7 @@ export default function Trip() {
               <aside className="lg:col-span-3 space-y-10 lg:sticky lg:top-32 h-fit">
                 <div>
                   <h2 className="text-5xl font-serif text-primary/20 select-none">
-                    {String(day.dayIndex).padStart(2, '0')}
+                    {String(day.dayIndex + 1).padStart(2, '0')}
                   </h2>
                   <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mt-2">
                     {format(new Date(day.date), 'EEEE, MMM do')}
@@ -354,16 +355,16 @@ export default function Trip() {
                 
                 {/* Hero Photo for Day */}
                 {day.heroPhotoId && (
-                  <div className="mb-12">
+                  <RevealOnScroll className="mb-12">
                     {(() => {
                       const heroPhoto = trip.photos.find(p => p.id === day.heroPhotoId);
                       if (!heroPhoto) return null;
                       return (
                         <figure className="space-y-4">
                           <div className="aspect-[3/2] overflow-hidden bg-muted">
-                            <img 
-                              src={`/api/storage${heroPhoto.objectPath}`} 
-                              alt="Hero photo of the day" 
+                            <img
+                              src={`/api/storage${heroPhoto.objectPath}`}
+                              alt="Hero photo of the day"
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -375,10 +376,10 @@ export default function Trip() {
                         </figure>
                       );
                     })()}
-                  </div>
+                  </RevealOnScroll>
                 )}
 
-                <div className="prose prose-lg dark:prose-invert prose-headings:font-serif prose-p:font-sans prose-p:leading-loose prose-p:text-muted-foreground max-w-3xl">
+                <RevealOnScroll delayMs={100} className="prose prose-lg dark:prose-invert prose-headings:font-serif prose-p:font-sans prose-p:leading-loose prose-p:text-muted-foreground max-w-3xl">
                   {day.headline && (
                     <h3 className="text-4xl md:text-5xl font-serif mb-8 text-foreground leading-tight">
                       {day.headline}
@@ -425,34 +426,39 @@ export default function Trip() {
                   ) : (
                     <p className="italic text-muted-foreground opacity-50">No narrative filed for this day.</p>
                   )}
-                </div>
+                </RevealOnScroll>
 
-                {/* Day Photo Grid */}
+                {/* Day Photo Grid — a curated handful, not every leftover
+                    shot, so the story stays magazine-paced rather than
+                    turning into a photo dump. */}
                 {(() => {
-                  const dayPhotos = trip.photos.filter(p => p.tripDayId === day.id && p.id !== day.heroPhotoId);
+                  const MAX_SELECTED_FRAMES = 4;
+                  const dayPhotos = trip.photos
+                    .filter(p => p.tripDayId === day.id && p.id !== day.heroPhotoId)
+                    .slice(0, MAX_SELECTED_FRAMES);
                   if (dayPhotos.length === 0) return null;
-                  
+
                   return (
-                    <div className="mt-16 pt-16 border-t border-border">
+                    <RevealOnScroll delayMs={150} className="mt-16 pt-16 border-t border-border">
                       <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-8 text-center">
                         Selected Frames
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {dayPhotos.map((photo, i) => (
-                          <div 
-                            key={photo.id} 
+                          <div
+                            key={photo.id}
                             className={`bg-muted overflow-hidden ${i % 3 === 0 ? 'sm:col-span-2 aspect-[2/1]' : 'aspect-square'}`}
                           >
-                            <img 
-                              src={`/api/storage${photo.objectPath}`} 
-                              alt="Trip photograph" 
+                            <img
+                              src={`/api/storage${photo.objectPath}`}
+                              alt="Trip photograph"
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                             />
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </RevealOnScroll>
                   );
                 })()}
 

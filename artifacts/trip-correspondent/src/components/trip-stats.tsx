@@ -1,5 +1,5 @@
 import type { Trip } from '@workspace/api-client-react';
-import { Compass, Globe2, Thermometer, CalendarDays } from 'lucide-react';
+import { Compass, Globe2, MapPin, Thermometer, CalendarDays } from 'lucide-react';
 
 function extractCountry(locationName: string | null): string | null {
   if (!locationName) return null;
@@ -15,7 +15,7 @@ export function TripStats({ trip }: { trip: Trip }) {
   const countries = new Set(
     days.map((d) => extractCountry(d.locationName)).filter((c): c is string => !!c),
   );
-  const locations = new Set(
+  const cities = new Set(
     days.map((d) => d.locationName).filter((l): l is string => !!l),
   );
 
@@ -30,25 +30,36 @@ export function TripStats({ trip }: { trip: Trip }) {
 
   const stats: { icon: typeof Globe2; label: string; value: string }[] = [
     { icon: CalendarDays, label: 'Days Documented', value: String(days.length) },
-    {
+  ];
+
+  // Distance is only meaningful when at least one day had real GPS data to
+  // measure movement from — showing a "—" for every trip without GPS reads
+  // as broken rather than "no data available", so hide it entirely instead.
+  if (trip.totalDistanceKm) {
+    stats.push({
       icon: Compass,
       label: 'Distance Covered',
-      value: trip.totalDistanceKm ? `${Math.round(trip.totalDistanceKm)} km` : '—',
-    },
-    {
-      icon: Globe2,
-      label: countries.size > 1 ? 'Countries' : 'Locations',
-      value: String(countries.size > 1 ? countries.size : locations.size),
-    },
-    {
+      value: `${Math.round(trip.totalDistanceKm)} km`,
+    });
+  }
+
+  // Cities and Countries are shown as separate stats (rather than one
+  // toggling into the other) so a single-country, multi-city trip — like a
+  // Poland trip covering Krakow and Warsaw — still surfaces city-level detail.
+  if (cities.size > 0) {
+    stats.push({ icon: MapPin, label: cities.size === 1 ? 'City Visited' : 'Cities Visited', value: String(cities.size) });
+  }
+  if (countries.size > 1) {
+    stats.push({ icon: Globe2, label: 'Countries', value: String(countries.size) });
+  }
+
+  if (tempMin !== null && tempMax !== null) {
+    stats.push({
       icon: Thermometer,
       label: 'Temperature Range',
-      value:
-        tempMin !== null && tempMax !== null
-          ? `${Math.round(tempMin)}° – ${Math.round(tempMax)}°`
-          : '—',
-    },
-  ];
+      value: `${Math.round(tempMin)}° – ${Math.round(tempMax)}°`,
+    });
+  }
 
   return (
     <section className="border-b border-border bg-card">

@@ -132,6 +132,18 @@ export interface DayStoryResult {
   elevationMeters: number | null;
 }
 
+/** Formats an ISO capture timestamp as a plain local-looking time (e.g.
+ * "10:09 AM"). Timestamps are stored as the wall-clock time the photo was
+ * actually taken (see use-upload-flow.ts's EXIF handling), reinterpreted as
+ * UTC to sidestep browser-timezone distortion — so formatting in UTC here
+ * correctly reproduces the original capture time, not a shifted one. */
+function formatPhotoTime(takenAt: string | null): string | null {
+  if (!takenAt) return null;
+  const date = new Date(takenAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" });
+}
+
 async function executeTool(
   name: string,
   input: Record<string, unknown>,
@@ -206,19 +218,26 @@ ${
 }
 - If people are visible in photos, describe what they're actually doing (the action) rather than just noting their presence — specificity here is what makes the story feel true to the day.
 - Do not describe activities, objects, or people that aren't visible in the provided photos, and don't state a numeric distance traveled in the narrative — the app displays that separately.
+${hasPhotos ? `- Each photo below is labeled with its capture time. Use that to give the day genuine temporal shape — how it began, what happened by midday, how it wound down — rather than describing the photos as an undifferentiated list. Only reference specific times/sequence you can actually see in those labels, don't invent a schedule.\n` : ""}- Write in the register of a BBC Travel or broadsheet travel feature: precise, observational, quietly confident. Let specific, concrete detail carry the piece rather than breathless adjectives, superlatives, or exclamation points — understatement reads as more credible than enthusiasm. Prefer plain, exact nouns and verbs over flowery description.
 - Keep it succinct and compelling: two tight, information-dense paragraphs beat four padded ones. Cut any sentence that isn't doing real work.`;
 
   const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
-${hasReliableCoordinates ? `Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}\n` : ""}Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at)` : ""}
+${hasReliableCoordinates ? `Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}\n` : ""}Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at, each labeled with its capture time)` : ""}
 
 Research this day and write the story.`;
 
   const userContent: MessageParam["content"] = [
     { type: "text", text: userText },
-    ...ctx.photoImages.map((img) => ({
-      type: "image" as const,
-      source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
-    })),
+    ...ctx.photoImages.flatMap((img) => {
+      const time = formatPhotoTime(img.takenAt);
+      return [
+        ...(time ? [{ type: "text" as const, text: `Photo taken at ${time}:` }] : []),
+        {
+          type: "image" as const,
+          source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+        },
+      ];
+    }),
   ];
 
   const messages: MessageParam[] = [{ role: "user", content: userContent }];

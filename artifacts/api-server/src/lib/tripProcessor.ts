@@ -116,7 +116,10 @@ export async function processTrip(tripId: number): Promise<void> {
           .filter((p): p is Photo => !!p)
           .sort((a, b) => (a.takenAt?.getTime() ?? 0) - (b.takenAt?.getTime() ?? 0));
         const photoImages = await loadPhotoImageBlocks(
-          sampleForVision(dayPhotoRecords).map((p) => p.objectPath),
+          sampleForVision(dayPhotoRecords).map((p) => ({
+            objectPath: p.objectPath,
+            takenAt: p.takenAt ? p.takenAt.toISOString() : null,
+          })),
         );
 
         const story: DayStoryResult = await researchAndWriteDay({

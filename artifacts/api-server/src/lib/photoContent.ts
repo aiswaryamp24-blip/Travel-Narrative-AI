@@ -14,29 +14,38 @@ const JPEG_QUALITY = 78;
 export interface PhotoImageBlock {
   mediaType: "image/jpeg";
   base64: string;
+  /** ISO capture timestamp, when known — lets the narrative sequence the
+   * day by time of day (morning arrival, midday exploring, evening meal)
+   * instead of treating all photos as interchangeable. */
+  takenAt: string | null;
+}
+
+export interface PhotoRef {
+  objectPath: string;
+  takenAt: string | null;
 }
 
 /** Downloads one photo from object storage and downsizes it for vision
  * input. Returns null (rather than throwing) on failure so one bad/missing
  * photo doesn't take down a whole day's research — the caller just gets
  * fewer images to look at. */
-async function loadPhotoImageBlock(objectPath: string): Promise<PhotoImageBlock | null> {
+async function loadPhotoImageBlock(photo: PhotoRef): Promise<PhotoImageBlock | null> {
   try {
-    const file = await objectStorageService.getObjectEntityFile(objectPath);
+    const file = await objectStorageService.getObjectEntityFile(photo.objectPath);
     const [buffer] = await file.download();
     const resized = await sharp(buffer)
       .rotate() // respect EXIF orientation before resizing
       .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
       .jpeg({ quality: JPEG_QUALITY })
       .toBuffer();
-    return { mediaType: "image/jpeg", base64: resized.toString("base64") };
+    return { mediaType: "image/jpeg", base64: resized.toString("base64"), takenAt: photo.takenAt };
   } catch (error) {
-    logger.warn({ err: error, objectPath }, "Failed to load photo for vision analysis, skipping it");
+    logger.warn({ err: error, objectPath: photo.objectPath }, "Failed to load photo for vision analysis, skipping it");
     return null;
   }
 }
 
-export async function loadPhotoImageBlocks(objectPaths: string[]): Promise<PhotoImageBlock[]> {
-  const results = await Promise.all(objectPaths.map(loadPhotoImageBlock));
+export async function loadPhotoImageBlocks(photos: PhotoRef[]): Promise<PhotoImageBlock[]> {
+  const results = await Promise.all(photos.map(loadPhotoImageBlock));
   return results.filter((r): r is PhotoImageBlock => r !== null);
 }

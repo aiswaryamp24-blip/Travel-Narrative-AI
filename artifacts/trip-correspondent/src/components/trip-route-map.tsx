@@ -70,9 +70,9 @@ export function TripRouteMap({ trip }: { trip: Trip }) {
               <Polyline positions={positions} pathOptions={{ color: 'currentColor', weight: 3, opacity: 0.7 }} />
             )}
             {days.map((day) => (
-              <Marker key={day.id} position={[day.lat, day.lon]} icon={dayIcon(day.dayIndex)}>
+              <Marker key={day.id} position={[day.lat, day.lon]} icon={dayIcon(day.dayIndex + 1)}>
                 <Tooltip>
-                  Day {day.dayIndex} — {day.locationName ?? 'Unknown location'}
+                  Day {day.dayIndex + 1} — {day.locationName ?? 'Unknown location'}
                 </Tooltip>
               </Marker>
             ))}
