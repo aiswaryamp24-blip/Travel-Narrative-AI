@@ -13,9 +13,6 @@ import { ObjectStorageService } from './objectStorage';
 import { sendDigestReadyEmail } from './email';
 import { logger } from './logger';
 
-/** Cadence for automatic digest generation, per product decision (every 3-6 months). */
-export const DIGEST_CADENCE_MONTHS = 4;
-
 /** How often the background scheduler re-evaluates every user. */
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -59,7 +56,7 @@ export async function getOrCreateDigestForUser(
   const periodEnd = new Date();
 
   if (!force) {
-    const dueAt = addMonths(periodStart, DIGEST_CADENCE_MONTHS);
+    const dueAt = addMonths(periodStart, user.digestCadenceMonths);
     if (periodEnd < dueAt) {
       return { status: 'not_due', dueAt };
     }

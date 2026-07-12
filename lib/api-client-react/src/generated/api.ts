@@ -32,6 +32,7 @@ import type {
   TripInput,
   TripSummary,
   UpdateTripPrivacyInput,
+  UpdateUserSettingsInput,
   UploadUrlRequest,
   UploadUrlResponse,
   UserProfile
@@ -1123,6 +1124,78 @@ export function useGetUserProfile<TData = Awaited<ReturnType<typeof getUserProfi
 
 
 
+
+export const getUpdateUserSettingsUrl = (userId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/settings`
+}
+
+/**
+ * @summary Update a user's own settings (owner only)
+ */
+export const updateUserSettings = async (userId: string,
+    updateUserSettingsInput: UpdateUserSettingsInput, options?: RequestInit): Promise<UserProfile> => {
+
+  return customFetch<UserProfile>(getUpdateUserSettingsUrl(userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateUserSettingsInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateUserSettingsMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,{userId: string;data: BodyType<UpdateUserSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,{userId: string;data: BodyType<UpdateUserSettingsInput>}, TContext> => {
+
+const mutationKey = ['updateUserSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUserSettings>>, {userId: string;data: BodyType<UpdateUserSettingsInput>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  updateUserSettings(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserSettings>>>
+    export type UpdateUserSettingsMutationBody = BodyType<UpdateUserSettingsInput>
+    export type UpdateUserSettingsMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Update a user's own settings (owner only)
+ */
+export const useUpdateUserSettings = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,{userId: string;data: BodyType<UpdateUserSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateUserSettings>>,
+        TError,
+        {userId: string;data: BodyType<UpdateUserSettingsInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateUserSettingsMutationOptions(options));
+    }
 
 export const getFollowUserUrl = (userId: string,) => {
 

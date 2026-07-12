@@ -96,6 +96,18 @@ export interface UserSummary {
   avatarUrl: string | null;
 }
 
+/**
+ * How often (in months) this user's wrapped digest is automatically generated.
+ */
+export type DigestCadenceMonths = typeof DigestCadenceMonths[keyof typeof DigestCadenceMonths];
+
+
+export const DigestCadenceMonths = {
+  NUMBER_3: 3,
+  NUMBER_4: 4,
+  NUMBER_6: 6,
+} as const;
+
 export type UserProfile = UserSummary & {
   /** Whether this profile belongs to the requesting viewer. */
   isSelf: boolean;
@@ -104,7 +116,12 @@ export type UserProfile = UserSummary & {
   followerCount: number;
   followingCount: number;
   trips: TripSummary[];
+  digestCadenceMonths: DigestCadenceMonths;
 };
+
+export interface UpdateUserSettingsInput {
+  digestCadenceMonths: DigestCadenceMonths;
+}
 
 export interface FollowState {
   isFollowing: boolean;

@@ -450,7 +450,46 @@ export const GetUserProfileResponse = zod.object({
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
+})),
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
 }))
+
+
+/**
+ * @summary Update a user's own settings (owner only)
+ */
+export const UpdateUserSettingsParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const UpdateUserSettingsBody = zod.object({
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
+})
+
+export const UpdateUserSettingsResponse = zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}).and(zod.object({
+  "isSelf": zod.boolean().describe('Whether this profile belongs to the requesting viewer.'),
+  "isFollowing": zod.boolean().describe('Whether the requesting viewer follows this user. Always false for anonymous viewers or your own profile.'),
+  "followerCount": zod.number(),
+  "followingCount": zod.number(),
+  "trips": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
 }))
 
 

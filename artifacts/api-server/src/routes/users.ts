@@ -1,5 +1,7 @@
+import { UpdateUserSettingsBody } from '@workspace/api-zod';
 import {
   db,
+  digestCadenceMonthsValues,
   followsTable,
   tripsTable,
   usersTable,
@@ -89,6 +91,56 @@ router.get('/users/:userId', optionalAuth, async (req: Request, res: Response) =
     followerCount,
     followingCount,
     trips: visibleTrips,
+    digestCadenceMonths: profileUser.digestCadenceMonths,
+  });
+});
+
+router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: Response) => {
+  const userId = String(req.params.userId);
+
+  if (userId !== req.userId) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const parsed = UpdateUserSettingsBody.safeParse(req.body);
+  if (!parsed.success || !digestCadenceMonthsValues.includes(parsed.data.digestCadenceMonths as any)) {
+    res.status(400).json({ error: 'Missing or invalid required fields' });
+    return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ digestCadenceMonths: parsed.data.digestCadenceMonths })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const [{ followerCount }] = await db
+    .select({ followerCount: sql<number>`count(*)::int` })
+    .from(followsTable)
+    .where(eq(followsTable.followedId, userId));
+  const [{ followingCount }] = await db
+    .select({ followingCount: sql<number>`count(*)::int` })
+    .from(followsTable)
+    .where(eq(followsTable.followerId, userId));
+  const allTrips = await db.select().from(tripsTable).where(eq(tripsTable.userId, userId));
+  const trips = allTrips
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .map((trip) => toTripSummary(trip, true));
+
+  res.json({
+    ...toUserSummary(updated),
+    isSelf: true,
+    isFollowing: false,
+    followerCount,
+    followingCount,
+    trips,
+    digestCadenceMonths: updated.digestCadenceMonths,
   });
 });
 

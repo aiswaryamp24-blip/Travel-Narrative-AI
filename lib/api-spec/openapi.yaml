@@ -426,6 +426,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /users/{userId}/settings:
+    patch:
+      tags: [Social]
+      operationId: updateUserSettings
+      summary: Update a user's own settings (owner only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserSettingsInput"
+      responses:
+        "200":
+          description: Settings updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: User not found, or not the requesting user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /users/{userId}/follow:
     post:
       tags: [Social]
@@ -705,11 +741,15 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+    DigestCadenceMonths:
+      type: integer
+      enum: [3, 4, 6]
+      description: How often (in months) this user's wrapped digest is automatically generated.
     UserProfile:
       allOf:
         - $ref: "#/components/schemas/UserSummary"
         - type: object
-          required: [isSelf, isFollowing, followerCount, followingCount, trips]
+          required: [isSelf, isFollowing, followerCount, followingCount, trips, digestCadenceMonths]
           properties:
             isSelf:
               type: boolean
@@ -725,6 +765,14 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/TripSummary"
+            digestCadenceMonths:
+              $ref: "#/components/schemas/DigestCadenceMonths"
+    UpdateUserSettingsInput:
+      type: object
+      required: [digestCadenceMonths]
+      properties:
+        digestCadenceMonths:
+          $ref: "#/components/schemas/DigestCadenceMonths"
     FollowState:
       type: object
       required: [isFollowing]

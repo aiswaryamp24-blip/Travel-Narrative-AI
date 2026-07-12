@@ -64,7 +64,9 @@ export default function Profile() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-16 space-y-16">
-        {profile.isSelf && <DigestsSection />}
+        {profile.isSelf && (
+          <DigestsSection userId={profile.id} digestCadenceMonths={profile.digestCadenceMonths} />
+        )}
 
         <div className="flex items-end justify-between border-b border-border pb-4">
           <h2 className="text-3xl font-serif">{profile.isSelf ? 'Your Stories' : 'Filed Stories'}</h2>

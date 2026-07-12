@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DigestCadenceMonths } from './digestCadenceMonths';
 import type { TripSummary } from './tripSummary';
 import type { UserSummary } from './userSummary';
 
@@ -16,4 +17,5 @@ export type UserProfile = UserSummary & {
   followerCount: number;
   followingCount: number;
   trips: TripSummary[];
+  digestCadenceMonths: DigestCadenceMonths;
 };

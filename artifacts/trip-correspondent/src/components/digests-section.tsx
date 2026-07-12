@@ -1,16 +1,58 @@
-import { useListDigests, useGenerateDigest, useDeleteDigest, getListDigestsQueryKey, downloadDigest } from '@workspace/api-client-react';
+import {
+  useListDigests,
+  useGenerateDigest,
+  useDeleteDigest,
+  useUpdateUserSettings,
+  getListDigestsQueryKey,
+  getGetUserProfileQueryKey,
+  downloadDigest,
+} from '@workspace/api-client-react';
+import type { DigestCadenceMonths } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Sparkles, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 
-export function DigestsSection() {
+const CADENCE_OPTIONS = [
+  { value: 3, label: 'Every 3 months' },
+  { value: 4, label: 'Every 4 months' },
+  { value: 6, label: 'Every 6 months' },
+];
+
+export function DigestsSection({
+  userId,
+  digestCadenceMonths,
+}: {
+  userId: string;
+  digestCadenceMonths: number;
+}) {
   const queryClient = useQueryClient();
   const { data: digests, isLoading } = useListDigests();
   const generateDigest = useGenerateDigest();
   const deleteDigest = useDeleteDigest();
+  const updateSettings = useUpdateUserSettings();
+
+  const handleCadenceChange = async (value: string) => {
+    try {
+      await updateSettings.mutateAsync({
+        userId,
+        data: { digestCadenceMonths: Number(value) as DigestCadenceMonths },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(userId) });
+      toast.success('Digest cadence updated.');
+    } catch {
+      toast.error('Failed to update digest cadence.');
+    }
+  };
 
   const handleGenerate = async () => {
     try {
@@ -53,18 +95,41 @@ export function DigestsSection() {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-end justify-between border-b border-border pb-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
         <h2 className="text-3xl font-serif flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-primary" /> Your Wrapped
         </h2>
-        <Button
-          size="sm"
-          className="rounded-none font-mono text-xs uppercase tracking-widest"
-          disabled={generateDigest.isPending}
-          onClick={handleGenerate}
-        >
-          {generateDigest.isPending ? 'Generating…' : 'Generate Now'}
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Recap Frequency
+            </span>
+            <Select
+              value={String(digestCadenceMonths)}
+              onValueChange={handleCadenceChange}
+              disabled={updateSettings.isPending}
+            >
+              <SelectTrigger className="w-[160px] rounded-none font-mono text-xs uppercase tracking-widest">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CADENCE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            size="sm"
+            className="rounded-none font-mono text-xs uppercase tracking-widest"
+            disabled={generateDigest.isPending}
+            onClick={handleGenerate}
+          >
+            {generateDigest.isPending ? 'Generating…' : 'Generate Now'}
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (

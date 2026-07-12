@@ -7,6 +7,7 @@
  */
 
 export * from './digest';
+export * from './digestCadenceMonths';
 export * from './errorEnvelope';
 export * from './feedTripSummary';
 export * from './followState';
@@ -22,6 +23,7 @@ export * from './tripPrivacy';
 export * from './tripStatus';
 export * from './tripSummary';
 export * from './updateTripPrivacyInput';
+export * from './updateUserSettingsInput';
 export * from './uploadUrlRequest';
 export * from './uploadUrlResponse';
 export * from './userProfile';
