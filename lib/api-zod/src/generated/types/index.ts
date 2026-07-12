@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './digest';
 export * from './errorEnvelope';
 export * from './feedTripSummary';
 export * from './followState';

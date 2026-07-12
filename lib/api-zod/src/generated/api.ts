@@ -532,3 +532,41 @@ export const GetDiscoverFeedResponseItem = zod.object({
 export const GetDiscoverFeedResponse = zod.array(GetDiscoverFeedResponseItem)
 
 
+/**
+ * @summary List the signed-in user's own trip digests, newest first
+ */
+export const ListDigestsResponseItem = zod.object({
+  "id": zod.number(),
+  "periodStart": zod.coerce.date(),
+  "periodEnd": zod.coerce.date(),
+  "tripCount": zod.number().describe('Number of completed trips covered by this digest.'),
+  "createdAt": zod.coerce.date()
+})
+export const ListDigestsResponse = zod.array(ListDigestsResponseItem)
+
+
+/**
+ * Covers completed trips since the user's last digest (or account
+ * creation, for their first one) through now. Fails if there are no
+ * completed trips in that period rather than creating an empty digest.
+ * @summary Manually generate a digest now, bypassing the automatic cadence
+ */
+export const GenerateDigestResponse = zod.object({
+  "id": zod.number(),
+  "periodStart": zod.coerce.date(),
+  "periodEnd": zod.coerce.date(),
+  "tripCount": zod.number().describe('Number of completed trips covered by this digest.'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Download a digest PDF (owner only)
+ */
+export const DownloadDigestParams = zod.object({
+  "digestId": zod.coerce.number()
+})
+
+export const DownloadDigestResponse = zod.unknown()
+
+

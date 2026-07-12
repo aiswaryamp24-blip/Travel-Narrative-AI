@@ -114,6 +114,15 @@ export type FeedTripSummary = TripSummary & {
   owner: UserSummary;
 };
 
+export interface Digest {
+  id: number;
+  periodStart: string;
+  periodEnd: string;
+  /** Number of completed trips covered by this digest. */
+  tripCount: number;
+  createdAt: string;
+}
+
 export interface WeatherSummary {
   /** @nullable */
   tempMaxC?: number | null;

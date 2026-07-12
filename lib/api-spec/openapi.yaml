@@ -16,6 +16,8 @@ tags:
     description: Trip correspondent — photo trips, clustering, and AI-researched narratives.
   - name: Social
     description: User profiles, following, and the friends feed.
+  - name: Digests
+    description: Periodic "wrapped"-style recap PDFs of a user's completed trips.
 paths:
   /healthz:
     get:
@@ -508,6 +510,79 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/FeedTripSummary"
+  /digests:
+    get:
+      tags: [Digests]
+      operationId: listDigests
+      summary: List the signed-in user's own trip digests, newest first
+      responses:
+        "200":
+          description: Digests.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Digest"
+  /digests/generate:
+    post:
+      tags: [Digests]
+      operationId: generateDigest
+      summary: Manually generate a digest now, bypassing the automatic cadence
+      description: |
+        Covers completed trips since the user's last digest (or account
+        creation, for their first one) through now. Fails if there are no
+        completed trips in that period rather than creating an empty digest.
+      responses:
+        "201":
+          description: Digest generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Digest"
+        "400":
+          description: No completed trips since the last digest — nothing to generate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to generate digest.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /digests/{digestId}/download:
+    get:
+      tags: [Digests]
+      operationId: downloadDigest
+      summary: Download a digest PDF (owner only)
+      parameters:
+        - name: digestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PDF streamed.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Digest not found, or the requester does not own it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve digest.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
@@ -644,6 +719,24 @@ components:
           properties:
             owner:
               $ref: "#/components/schemas/UserSummary"
+    Digest:
+      type: object
+      required: [id, periodStart, periodEnd, tripCount, createdAt]
+      properties:
+        id:
+          type: integer
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        tripCount:
+          type: integer
+          description: Number of completed trips covered by this digest.
+        createdAt:
+          type: string
+          format: date-time
     Trip:
       allOf:
         - $ref: "#/components/schemas/TripSummary"

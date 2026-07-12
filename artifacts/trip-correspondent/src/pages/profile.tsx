@@ -5,6 +5,7 @@ import { ChevronLeft, AlertTriangle, Map, FileText, AlertCircle } from 'lucide-r
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FollowButton } from '@/components/follow-button';
+import { DigestsSection } from '@/components/digests-section';
 
 export default function Profile() {
   const { id } = useParams();
@@ -62,7 +63,9 @@ export default function Profile() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-16 space-y-10">
+      <main className="max-w-6xl mx-auto px-6 py-16 space-y-16">
+        {profile.isSelf && <DigestsSection />}
+
         <div className="flex items-end justify-between border-b border-border pb-4">
           <h2 className="text-3xl font-serif">{profile.isSelf ? 'Your Stories' : 'Filed Stories'}</h2>
           <span className="font-mono text-sm uppercase tracking-widest text-muted-foreground">

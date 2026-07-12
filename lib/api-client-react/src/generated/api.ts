@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  Digest,
   ErrorEnvelope,
   FeedTripSummary,
   FollowState,
@@ -1409,6 +1410,234 @@ export function useGetDiscoverFeed<TData = Awaited<ReturnType<typeof getDiscover
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDiscoverFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListDigestsUrl = () => {
+
+
+
+
+  return `/api/digests`
+}
+
+/**
+ * @summary List the signed-in user's own trip digests, newest first
+ */
+export const listDigests = async ( options?: RequestInit): Promise<Digest[]> => {
+
+  return customFetch<Digest[]>(getListDigestsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDigestsQueryKey = () => {
+    return [
+    `/api/digests`
+    ] as const;
+    }
+
+
+export const getListDigestsQueryOptions = <TData = Awaited<ReturnType<typeof listDigests>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDigests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDigestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDigests>>> = ({ signal }) => listDigests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDigests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDigestsQueryResult = NonNullable<Awaited<ReturnType<typeof listDigests>>>
+export type ListDigestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the signed-in user's own trip digests, newest first
+ */
+
+export function useListDigests<TData = Awaited<ReturnType<typeof listDigests>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDigests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDigestsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGenerateDigestUrl = () => {
+
+
+
+
+  return `/api/digests/generate`
+}
+
+/**
+ * Covers completed trips since the user's last digest (or account
+ * creation, for their first one) through now. Fails if there are no
+ * completed trips in that period rather than creating an empty digest.
+ * @summary Manually generate a digest now, bypassing the automatic cadence
+ */
+export const generateDigest = async ( options?: RequestInit): Promise<Digest> => {
+
+  return customFetch<Digest>(getGenerateDigestUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getGenerateDigestMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext> => {
+
+const mutationKey = ['generateDigest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateDigest>>, void> = () => {
+
+
+          return  generateDigest(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateDigestMutationResult = NonNullable<Awaited<ReturnType<typeof generateDigest>>>
+
+    export type GenerateDigestMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Manually generate a digest now, bypassing the automatic cadence
+ */
+export const useGenerateDigest = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateDigest>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getGenerateDigestMutationOptions(options));
+    }
+
+export const getDownloadDigestUrl = (digestId: number,) => {
+
+
+
+
+  return `/api/digests/${digestId}/download`
+}
+
+/**
+ * @summary Download a digest PDF (owner only)
+ */
+export const downloadDigest = async (digestId: number, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadDigestUrl(digestId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadDigestQueryKey = (digestId: number,) => {
+    return [
+    `/api/digests/${digestId}/download`
+    ] as const;
+    }
+
+
+export const getDownloadDigestQueryOptions = <TData = Awaited<ReturnType<typeof downloadDigest>>, TError = ErrorType<ErrorEnvelope>>(digestId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadDigest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadDigestQueryKey(digestId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadDigest>>> = ({ signal }) => downloadDigest(digestId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: digestId !== null && digestId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadDigest>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadDigestQueryResult = NonNullable<Awaited<ReturnType<typeof downloadDigest>>>
+export type DownloadDigestQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary Download a digest PDF (owner only)
+ */
+
+export function useDownloadDigest<TData = Awaited<ReturnType<typeof downloadDigest>>, TError = ErrorType<ErrorEnvelope>>(
+ digestId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadDigest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadDigestQueryOptions(digestId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
