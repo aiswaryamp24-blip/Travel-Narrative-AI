@@ -418,3 +418,117 @@ export const GenerateDayNarrationResponse = zod.object({
 })
 
 
+/**
+ * Visible trips are the owner's public trips, plus (when the requester
+ * follows the owner) their friends-tier trips, plus (when viewing your
+ * own profile) everything you own.
+ * @summary Get a user's public profile and the trips visible to the requester
+ */
+export const GetUserProfileParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const GetUserProfileResponse = zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}).and(zod.object({
+  "isSelf": zod.boolean().describe('Whether this profile belongs to the requesting viewer.'),
+  "isFollowing": zod.boolean().describe('Whether the requesting viewer follows this user. Always false for anonymous viewers or your own profile.'),
+  "followerCount": zod.number(),
+  "followingCount": zod.number(),
+  "trips": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+}))
+
+
+/**
+ * @summary Follow a user
+ */
+export const FollowUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const FollowUserResponse = zod.object({
+  "isFollowing": zod.boolean()
+})
+
+
+/**
+ * @summary Unfollow a user
+ */
+export const UnfollowUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const UnfollowUserResponse = zod.object({
+  "isFollowing": zod.boolean()
+})
+
+
+/**
+ * Includes both public and friends-tier trips from every user the
+ * signed-in viewer follows.
+ * @summary Trips from people you follow, newest first
+ */
+export const GetFeedResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "owner": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+}))
+export const GetFeedResponse = zod.array(GetFeedResponseItem)
+
+
+/**
+ * @summary Public trips from people you don't yet follow
+ */
+export const GetDiscoverFeedResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "owner": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+}))
+export const GetDiscoverFeedResponse = zod.array(GetDiscoverFeedResponseItem)
+
+

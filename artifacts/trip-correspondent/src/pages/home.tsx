@@ -2,7 +2,7 @@ import { useListTrips } from '@workspace/api-client-react';
 import { UploadFlow } from '@/components/upload-flow';
 import { Link } from 'wouter';
 import { format } from 'date-fns';
-import { Map, AlertCircle, FileText, Calendar } from 'lucide-react';
+import { Map, AlertCircle, FileText, Calendar, Newspaper, UserCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useClerk } from '@clerk/react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,14 @@ export default function Home() {
       <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
         <span className="font-serif italic text-lg">Trip Correspondent</span>
         <div className="flex items-center gap-3">
+          <Link href="/feed" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+            <Newspaper className="h-3.5 w-3.5" /> Feed
+          </Link>
+          {user && (
+            <Link href={`/users/${user.id}`} className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+              <UserCircle className="h-3.5 w-3.5" /> Profile
+            </Link>
+          )}
           {user && (
             <span className="text-sm text-muted-foreground font-mono hidden sm:inline">
               {user.firstName ?? user.username ?? 'Correspondent'}

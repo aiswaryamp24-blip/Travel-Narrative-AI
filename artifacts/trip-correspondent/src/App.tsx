@@ -9,6 +9,8 @@ import { shadcn } from '@clerk/themes';
 import Landing from '@/pages/landing';
 import Home from '@/pages/home';
 import Trip from '@/pages/trip';
+import Feed from '@/pages/feed';
+import Profile from '@/pages/profile';
 
 const queryClient = new QueryClient();
 
@@ -128,6 +130,19 @@ function LibraryPage() {
   );
 }
 
+function FeedPage() {
+  return (
+    <>
+      <Show when="signed-in">
+        <Feed />
+      </Show>
+      <Show when="signed-out">
+        <Redirect to="/" />
+      </Show>
+    </>
+  );
+}
+
 // Helps user's webview stay up-to-date when the signed-in user changes by invalidating the QueryClient cache.
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
@@ -156,6 +171,8 @@ function Router() {
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/trips/:id" component={Trip} />
+      <Route path="/feed" component={FeedPage} />
+      <Route path="/users/:id" component={Profile} />
       <Route>
         <div className="min-h-screen flex items-center justify-center text-center p-6 bg-background">
           <div>

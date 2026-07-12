@@ -120,7 +120,7 @@ router.get(
     // uploader who just requested it.
     const owningTrip = await findTripForObjectPath(objectPath);
     if (owningTrip) {
-      if (!canViewTrip(owningTrip, req.userId)) {
+      if (!(await canViewTrip(owningTrip, req.userId))) {
         res.status(404).json({ error: 'Object not found' });
         return;
       }

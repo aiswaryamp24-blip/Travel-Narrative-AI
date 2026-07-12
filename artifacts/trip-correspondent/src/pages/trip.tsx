@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown } from 'lucide-react';
+import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, Compass, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -167,6 +167,9 @@ export default function Trip() {
         <span className="font-serif italic text-sm md:text-base">Trip Correspondent</span>
         
         <div className="flex items-center gap-1">
+        <Link href="/feed" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-2">
+          <Newspaper className="h-3.5 w-3.5" /> Feed
+        </Link>
         {trip.isOwner && (
           <Select value={trip.privacy} onValueChange={handlePrivacyChange}>
             <SelectTrigger className="w-[130px] h-9 rounded-none border-border font-mono text-xs uppercase tracking-widest">

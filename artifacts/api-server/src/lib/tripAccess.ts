@@ -1,14 +1,30 @@
-import { db, photosTable, tripDaysTable, tripsTable, type Trip } from '@workspace/db';
-import { eq, or } from 'drizzle-orm';
+import { db, followsTable, photosTable, tripDaysTable, tripsTable, type Trip } from '@workspace/db';
+import { and, eq, or } from 'drizzle-orm';
 
 /**
- * Friends-tier visibility (owner + followers) lands with the friends-feed
- * task, which introduces the `follows` table. Until then, friends-tier
- * trips are only visible to their owner, same as private ones.
+ * A viewer can see a trip when: it's public, they own it, or it's
+ * friends-tier and they follow the owner. Following is one-directional, so
+ * only the follower's own follow row matters — the owner does not need to
+ * follow back.
  */
-export function canViewTrip(trip: Trip, viewerUserId: string | undefined): boolean {
+export async function canViewTrip(trip: Trip, viewerUserId: string | undefined): Promise<boolean> {
   if (trip.privacy === 'public') return true;
-  return !!viewerUserId && viewerUserId === trip.userId;
+  if (!!viewerUserId && viewerUserId === trip.userId) return true;
+
+  if (trip.privacy === 'friends' && viewerUserId && trip.userId) {
+    const [follow] = await db
+      .select({ followerId: followsTable.followerId })
+      .from(followsTable)
+      .where(
+        and(
+          eq(followsTable.followerId, viewerUserId),
+          eq(followsTable.followedId, trip.userId),
+        ),
+      );
+    return !!follow;
+  }
+
+  return false;
 }
 
 /**

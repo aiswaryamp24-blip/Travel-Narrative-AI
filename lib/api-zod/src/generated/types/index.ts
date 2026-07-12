@@ -7,6 +7,8 @@
  */
 
 export * from './errorEnvelope';
+export * from './feedTripSummary';
+export * from './followState';
 export * from './healthStatus';
 export * from './landmark';
 export * from './photo';
@@ -21,4 +23,6 @@ export * from './tripSummary';
 export * from './updateTripPrivacyInput';
 export * from './uploadUrlRequest';
 export * from './uploadUrlResponse';
+export * from './userProfile';
+export * from './userSummary';
 export * from './weatherSummary';

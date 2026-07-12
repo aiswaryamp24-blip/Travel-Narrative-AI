@@ -14,6 +14,8 @@ tags:
     description: Object storage upload and serving endpoints.
   - name: Trips
     description: Trip correspondent — photo trips, clustering, and AI-researched narratives.
+  - name: Social
+    description: User profiles, following, and the friends feed.
 paths:
   /healthz:
     get:
@@ -394,6 +396,118 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /users/{userId}:
+    get:
+      tags: [Social]
+      operationId: getUserProfile
+      summary: Get a user's public profile and the trips visible to the requester
+      description: |
+        Visible trips are the owner's public trips, plus (when the requester
+        follows the owner) their friends-tier trips, plus (when viewing your
+        own profile) everything you own.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /users/{userId}/follow:
+    post:
+      tags: [Social]
+      operationId: followUser
+      summary: Follow a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Now following (or already was).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowState"
+        "400":
+          description: Cannot follow yourself.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      tags: [Social]
+      operationId: unfollowUser
+      summary: Unfollow a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: No longer following (or wasn't).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowState"
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /feed:
+    get:
+      tags: [Social]
+      operationId: getFeed
+      summary: Trips from people you follow, newest first
+      description: |
+        Includes both public and friends-tier trips from every user the
+        signed-in viewer follows.
+      responses:
+        "200":
+          description: Feed trips.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedTripSummary"
+  /discover:
+    get:
+      tags: [Social]
+      operationId: getDiscoverFeed
+      summary: Public trips from people you don't yet follow
+      responses:
+        "200":
+          description: Discoverable trips.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedTripSummary"
 components:
   schemas:
     HealthStatus:
@@ -486,6 +600,50 @@ components:
         createdAt:
           type: string
           format: date-time
+    UserSummary:
+      type: object
+      required: [id, displayName, avatarUrl]
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+    UserProfile:
+      allOf:
+        - $ref: "#/components/schemas/UserSummary"
+        - type: object
+          required: [isSelf, isFollowing, followerCount, followingCount, trips]
+          properties:
+            isSelf:
+              type: boolean
+              description: Whether this profile belongs to the requesting viewer.
+            isFollowing:
+              type: boolean
+              description: Whether the requesting viewer follows this user. Always false for anonymous viewers or your own profile.
+            followerCount:
+              type: integer
+            followingCount:
+              type: integer
+            trips:
+              type: array
+              items:
+                $ref: "#/components/schemas/TripSummary"
+    FollowState:
+      type: object
+      required: [isFollowing]
+      properties:
+        isFollowing:
+          type: boolean
+    FeedTripSummary:
+      allOf:
+        - $ref: "#/components/schemas/TripSummary"
+        - type: object
+          required: [owner]
+          properties:
+            owner:
+              $ref: "#/components/schemas/UserSummary"
     Trip:
       allOf:
         - $ref: "#/components/schemas/TripSummary"

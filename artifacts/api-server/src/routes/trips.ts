@@ -99,7 +99,7 @@ router.get('/trips/:tripId', optionalAuth, async (req: Request, res: Response) =
   }
 
   const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-  if (!trip || !canViewTrip(trip, req.userId)) {
+  if (!trip || !(await canViewTrip(trip, req.userId))) {
     res.status(404).json({ error: 'Trip not found' });
     return;
   }
@@ -164,7 +164,7 @@ router.get(
     }
 
     const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-    if (!trip || !canViewTrip(trip, req.userId)) {
+    if (!trip || !(await canViewTrip(trip, req.userId))) {
       res.status(404).json({ error: 'Trip not found' });
       return;
     }
@@ -354,7 +354,7 @@ router.post(
     }
 
     const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
-    if (!trip || !canViewTrip(trip, req.userId)) {
+    if (!trip || !(await canViewTrip(trip, req.userId))) {
       res.status(404).json({ error: 'Trip or day not found' });
       return;
     }

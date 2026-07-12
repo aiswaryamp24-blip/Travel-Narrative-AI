@@ -89,6 +89,31 @@ export interface TripSummary {
   createdAt: string;
 }
 
+export interface UserSummary {
+  id: string;
+  displayName: string;
+  /** @nullable */
+  avatarUrl: string | null;
+}
+
+export type UserProfile = UserSummary & {
+  /** Whether this profile belongs to the requesting viewer. */
+  isSelf: boolean;
+  /** Whether the requesting viewer follows this user. Always false for anonymous viewers or your own profile. */
+  isFollowing: boolean;
+  followerCount: number;
+  followingCount: number;
+  trips: TripSummary[];
+};
+
+export interface FollowState {
+  isFollowing: boolean;
+}
+
+export type FeedTripSummary = TripSummary & {
+  owner: UserSummary;
+};
+
 export interface WeatherSummary {
   /** @nullable */
   tempMaxC?: number | null;

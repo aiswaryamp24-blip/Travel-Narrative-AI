@@ -3,3 +3,4 @@
 - [OpenAI TTS via AI Integrations for server-side narration](openai-tts-integration-pattern.md) — media-generation TTS is sandbox-only; live in-app speech needs the OpenAI AI Integration server template instead.
 - [Express Request augmentation with restricted `types`](express-request-augmentation.md) — use `declare global { namespace Express { interface Request } }`, not `declare module "express-serve-static-core"`.
 - [Testing subagent blocked by Clerk bot-check on sign-up](testing-subagent-clerk-signup-block.md) — Cloudflare human-verification blocks automated sign-up; verify auth gating via curl/API instead.
+- [Express 5 req.params typed as string|string[]](express5-params-string-array.md) — coerce with `String(req.params.x)` before passing to drizzle/typed fns; existing code masks it via `Number(...)`.
