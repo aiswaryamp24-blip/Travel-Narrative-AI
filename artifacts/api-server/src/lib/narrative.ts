@@ -7,6 +7,7 @@ import {
   type LandmarkResult,
   type WeatherResult,
 } from "./research";
+import type { PhotoImageBlock } from "./photoContent";
 
 const MODEL = "claude-sonnet-4-5";
 const MAX_TOOL_ROUNDS = 6;
@@ -70,7 +71,7 @@ const TOOLS: ToolUnion[] = [
         narrative: {
           type: "string",
           description:
-            "2-4 paragraphs of vivid, specific, magazine-style travel journalism about this day, grounded in the researched facts (weather, distance, landmarks). Write in third person about 'the travelers'. No markdown headers.",
+            "2-4 paragraphs of vivid, specific, magazine-style travel journalism about this day. Ground every claim in either (a) what is genuinely visible in the attached photos, or (b) facts returned by the research tools (weather, landmarks) — never invent details, people, or events that aren't supported by one of those two sources. Must explicitly name the city/town and country at least once. Write in third person about 'the travelers'. No markdown headers.",
         },
       },
       required: ["locationName", "headline", "narrative"],
@@ -84,9 +85,12 @@ export interface DayResearchContext {
   lat: number;
   lon: number;
   locationInferred: boolean;
-  distanceKm: number | null;
   photoCount: number;
   tripTitle: string;
+  /** A representative sample of this day's actual photos, downsized for
+   * vision input — lets Claude ground the narrative in what's genuinely
+   * depicted (people, activity, setting) instead of inventing it. */
+  photoImages: PhotoImageBlock[];
 }
 
 export interface DayStoryResult {
@@ -135,16 +139,29 @@ async function executeTool(
 export async function researchAndWriteDay(
   ctx: DayResearchContext,
 ): Promise<DayStoryResult> {
+  const hasPhotos = ctx.photoImages.length > 0;
+
   const systemPrompt = `You are a travel correspondent for a magazine-style trip journal. You are researching day ${ctx.dayIndex + 1} of a trip titled "${ctx.tripTitle}".
 
-You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}. Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.`;
+You have been given the approximate GPS coordinates for this day (derived from photo metadata)${ctx.locationInferred ? " — note: no photo on this specific day had GPS data, so this location was inferred from surrounding days and may be approximate" : ""}${hasPhotos ? `, plus ${ctx.photoImages.length} of the actual photos taken that day (attached below, in roughly chronological order).` : ", but none of that day's photos could be loaded for you to view."}
 
-  const userContent = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
+${hasPhotos ? `Look closely at the attached photos before writing. Describe only what you can genuinely see: who appears to be present (described generically — e.g. "a couple", "a group of friends" — never invent names, ages, or identities you can't actually know), what they appear to be doing, the setting, and any concrete visual detail that grounds the scene. If the photos don't show something (a specific activity, a specific place), do not claim it happened — write around what's actually visible instead of inventing filler.` : "You have no photos to look at for this day, so keep the narrative grounded strictly in the researched facts below rather than inventing scenes or activity you can't verify."}
+
+Use the tools available to research the real place, weather, and nearby landmarks before writing. Always call reverse_geocode first, then get_historical_weather and get_landmarks. Your finished narrative must explicitly name the city/town and country you found (not just imply a region) at least once. Once you have enough material, call submit_final_story exactly once with your finished piece. Do not call any tool after submit_final_story.`;
+
+  const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
 Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}
-Photos taken that day: ${ctx.photoCount}
-Distance traveled from the previous day: ${ctx.distanceKm != null ? `${ctx.distanceKm.toFixed(1)} km` : "N/A (first day)"}
+Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at)` : ""}
 
 Research this day and write the story.`;
+
+  const userContent: MessageParam["content"] = [
+    { type: "text", text: userText },
+    ...ctx.photoImages.map((img) => ({
+      type: "image" as const,
+      source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+    })),
+  ];
 
   const messages: MessageParam[] = [{ role: "user", content: userContent }];
 

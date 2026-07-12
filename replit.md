@@ -36,7 +36,8 @@ An agentic AI travel magazine: upload a folder of trip photos and an AI correspo
 - `lib/db/src/schema/digests.ts` — generated "wrapped"-style recap PDFs per user per period
 - `artifacts/api-server/src/lib/geo.ts` — haversine distance + day-clustering of photos by date/GPS
 - `artifacts/api-server/src/lib/research.ts` — direct clients for Nominatim (reverse geocode), Open-Meteo (historical weather + elevation), Overpass (landmarks)
-- `artifacts/api-server/src/lib/narrative.ts` — Claude tool-calling loop that researches and writes one day's story
+- `artifacts/api-server/src/lib/narrative.ts` — Claude tool-calling loop that researches and writes one day's story, grounded in both tool results and a sample of that day's actual photos (vision input)
+- `artifacts/api-server/src/lib/photoContent.ts` — downloads + downsizes a day's sampled photos from object storage into base64 image blocks for Claude vision input
 - `artifacts/api-server/src/lib/tripProcessor.ts` — top-level pipeline: cluster → research each day (bounded concurrency) → persist → mark trip ready/error; clears prior `trip_days` at the start of every run so retries don't duplicate days
 - `artifacts/api-server/src/lib/tripAccess.ts` — `canViewTrip` (privacy/follow rules) and `findTripForObjectPath`, which extends those same rules to raw media fetches
 - `artifacts/api-server/src/lib/digestScheduler.ts` — periodic (6h-interval) check of every user's digest cadence; generates + emails a digest PDF when due
@@ -52,13 +53,18 @@ An agentic AI travel magazine: upload a folder of trip photos and an AI correspo
 - Day research runs with bounded concurrency (3 at a time via a small `mapWithConcurrency` helper in `tripProcessor.ts`), not full `Promise.all` — Nominatim and Overpass's free public instances prohibit bulk parallel requests, so unbounded concurrency risks getting the server IP rate-limited/banned.
 - EXIF (GPS + capture timestamp) is extracted client-side via `exifr` before upload, not server-side — keeps the upload flow simple and avoids parsing image bytes on the backend.
 - Claude researches each day agentically via real tool calls (`reverse_geocode`, `get_historical_weather`, `get_landmarks`, `submit_final_story`) against Nominatim/Open-Meteo/Overpass — the DB row is populated from whatever those tool calls actually returned, so the stored facts always match what the narrative is grounded in.
-- Nominatim/Open-Meteo/Overpass are free, keyless public APIs called directly via server-side `fetch` — no connector/integration needed.
+- Claude also receives up to 5 of that day's actual photos (downsized to 768px JPEG via `photoContent.ts`, sampled evenly across the day's chronological order) as vision input, and is instructed to describe only what's genuinely visible (people, activity, setting) rather than inventing scenes from metadata alone. If none of a day's photos can be loaded, the prompt tells Claude explicitly so it stays grounded in tool results instead of hallucinating. Photo count/size are deliberately modest — vision input is the main driver of per-day processing time, and multi-day trips already take a few minutes.
+- Each day is persisted to the DB as soon as its own research finishes (inside the `mapWithConcurrency` worker in `tripProcessor.ts`), not batched until the whole trip completes — so the frontend's poll of `GET /trips/:id` sees `trip.days` grow incrementally and can show real per-day progress instead of the trip looking stuck for the full multi-minute duration.
+- Nominatim/Open-Meteo/Overpass are free, keyless public APIs called directly via server-side `fetch` — no connector/integration needed. `getHistoricalWeather` uses `timezone=auto` (not `UTC`) so the daily weather aggregation lines up with the destination's local calendar day.
+- Client-side EXIF date extraction (`use-upload-flow.ts`) reconstructs `DateTimeOriginal`'s wall-clock numbers as a UTC-equivalent instant rather than trusting `exifr`'s default `.toISOString()` path, which reinterprets timezone-less EXIF timestamps through the *browser's* local timezone — that mismatch (viewer's timezone vs. the trip's) was shifting late-night photos into the wrong day-bucket and querying weather for the wrong date.
+- Day-centroid-to-day-centroid distance (`distanceKm`) is still computed and stored per day, but is not surfaced anywhere in the UI or fed into Claude's narrative prompt — it's a straight-line haversine between averaged daily GPS points, not a real travel route, and was producing visibly wrong "distance traveled" claims.
+- The route map (`trip-route-map.tsx`) plots day-centroid pins but no longer draws a connecting line between them — a straight polyline between averaged daily points overstates precision for something that isn't a real recorded route.
 - Digests are always private to their owner regardless of the underlying trips' privacy tier — they're a personal keepsake, not a shareable artifact.
 
 ## Product
 
 - Landing page for signed-out visitors; home page (signed in) is the masthead + upload form (title + folder of photos) that creates a trip, uploads photos, and dispatches the AI pipeline, plus a gallery of the user's past trip "issues" with cover art and status.
-- Trip page: full magazine spread — cover, then a day-by-day narrative sequence with weather, distance traveled, nearby landmarks, and that day's photos. Shows a "filing the story" state while processing and an error state with retry if the pipeline fails. Supports PDF export and per-day audio narration.
+- Trip page: full magazine spread — cover, then a day-by-day narrative sequence with weather, nearby landmarks, and that day's photos. Shows a "filing the story" state while processing and an error state with retry if the pipeline fails. Supports PDF export and per-day audio narration (voice: `nova`, the closest fixed-preset match to "British female" — the TTS API has no accent/age controls, only named presets).
 - Feed page: public/friends-tier trips from followed users.
 - Profile page: a user's own trips plus follow management; digest cadence (every 3/4/6 months) is configurable per user, and a periodic scheduler emails a "wrapped"-style recap PDF when one is due.
 
@@ -70,6 +76,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 - In `lib/api-spec/openapi.yaml`, avoid `format: uri` on string schema fields — the installed `zod` is pinned to v3 (`^3.25.76`) but Orval emits `zod.url()` (a v4-only top-level function) for that format, which fails typecheck. Use a plain `type: string` instead.
 - Don't bump `RESEARCH_CONCURRENCY` in `tripProcessor.ts` without checking Nominatim/Overpass's usage policy first — their free public instances are keyless and rate-limit/ban by IP for bulk parallel use.
+- Sending photos to Claude (`photoContent.ts` + `narrative.ts`) adds real cost/latency per day — `MAX_PHOTOS_FOR_VISION` (currently 5) and `MAX_DIMENSION` (currently 768px) in those two files are the levers if trips with many days/photos get slow or expensive to process. Already tuned down once after real-world processing felt "stuck" on a multi-day trip — don't raise them back up without also improving the progress UI, or it'll regress to looking broken again.
 
 ## Pointers
 

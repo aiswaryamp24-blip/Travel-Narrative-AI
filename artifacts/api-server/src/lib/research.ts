@@ -109,7 +109,11 @@ export async function getHistoricalWeather(
     "daily",
     "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code",
   );
-  url.searchParams.set("timezone", "UTC");
+  // "auto" resolves the local timezone from lat/lon, so the daily
+  // aggregation lines up with the destination's calendar day rather than
+  // UTC's — otherwise a day's weather could bleed across the UTC day
+  // boundary for locations that aren't UTC-aligned.
+  url.searchParams.set("timezone", "auto");
 
   const response = await fetch(url);
   if (!response.ok) {

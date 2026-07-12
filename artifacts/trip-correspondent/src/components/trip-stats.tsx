@@ -1,5 +1,5 @@
 import type { Trip } from '@workspace/api-client-react';
-import { Compass, Globe2, Thermometer, CalendarDays } from 'lucide-react';
+import { Globe2, Thermometer, CalendarDays } from 'lucide-react';
 
 function extractCountry(locationName: string | null): string | null {
   if (!locationName) return null;
@@ -28,13 +28,8 @@ export function TripStats({ trip }: { trip: Trip }) {
   const tempMin = temps.length > 0 ? Math.min(...temps) : null;
   const tempMax = temps.length > 0 ? Math.max(...temps) : null;
 
-  const stats: { icon: typeof Compass; label: string; value: string }[] = [
+  const stats: { icon: typeof Globe2; label: string; value: string }[] = [
     { icon: CalendarDays, label: 'Days Documented', value: String(days.length) },
-    {
-      icon: Compass,
-      label: 'Distance Covered',
-      value: trip.totalDistanceKm ? `${Math.round(trip.totalDistanceKm)} km` : '—',
-    },
     {
       icon: Globe2,
       label: countries.size > 1 ? 'Countries' : 'Locations',
@@ -52,7 +47,7 @@ export function TripStats({ trip }: { trip: Trip }) {
 
   return (
     <section className="border-b border-border bg-card">
-      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-3 gap-8">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center space-y-2">
             <stat.icon className="h-5 w-5 mx-auto text-primary" />

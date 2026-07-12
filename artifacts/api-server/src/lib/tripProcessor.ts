@@ -1,9 +1,22 @@
-import { db, photosTable, tripDaysTable, tripsTable } from "@workspace/db";
+import { db, photosTable, tripDaysTable, tripsTable, type Photo } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { clusterPhotosByDay } from "./geo";
 import { haversineKm } from "./geo";
 import { researchAndWriteDay, type DayStoryResult } from "./narrative";
+import { loadPhotoImageBlocks } from "./photoContent";
 import { logger } from "./logger";
+
+/** Max photos sent to Claude as vision input per day — sampled evenly across
+ * the day's chronological order so a big day doesn't blow up request size
+ * or token cost while still giving a representative look at what happened.
+ * Kept modest specifically to keep per-day processing time down. */
+const MAX_PHOTOS_FOR_VISION = 5;
+
+function sampleForVision(dayPhotos: Photo[]): Photo[] {
+  if (dayPhotos.length <= MAX_PHOTOS_FOR_VISION) return dayPhotos;
+  const step = dayPhotos.length / MAX_PHOTOS_FOR_VISION;
+  return Array.from({ length: MAX_PHOTOS_FOR_VISION }, (_, i) => dayPhotos[Math.floor(i * step)]);
+}
 
 /** How many days are researched concurrently. Bounded (rather than unbounded
  * Promise.all) because the research pipeline calls Nominatim and Overpass,
@@ -71,84 +84,93 @@ export async function processTrip(tripId: number): Promise<void> {
 
     // Distances only depend on cluster centroids, which are already known,
     // so compute them upfront (cheap, synchronous) rather than inside the
-    // research loop.
+    // research loop. Still stored per-day (not surfaced in the UI — see
+    // trip-stats.tsx/trip.tsx — since day-centroid-to-day-centroid haversine
+    // isn't a real travel distance).
     let previousCentroid: { lat: number; lon: number } | null = null;
-    let totalDistanceKm = 0;
     const distancesKm: (number | null)[] = clusters.map((cluster) => {
       const distanceKm = previousCentroid
         ? haversineKm(previousCentroid.lat, previousCentroid.lon, cluster.lat, cluster.lon)
         : null;
-      if (distanceKm) totalDistanceKm += distanceKm;
       previousCentroid = { lat: cluster.lat, lon: cluster.lon };
       return distanceKm;
     });
 
-    const stories: DayStoryResult[] = await mapWithConcurrency(
+    // Persist each day to the DB as soon as its own research finishes,
+    // rather than collecting every story and writing them all at the end —
+    // that way the frontend (which polls GET /trips/:id) can show days
+    // appearing progressively instead of the trip looking stuck until the
+    // entire multi-day pipeline completes.
+    let coverObjectPath: string | null = null;
+    let firstLocationName: string | null = null;
+
+    await mapWithConcurrency(
       clusters,
       RESEARCH_CONCURRENCY,
       async (cluster, i) => {
         log.info({ dayIndex: i, date: cluster.date }, "Researching day");
-        const story = await researchAndWriteDay({
+
+        const dayPhotoRecords = cluster.photoIds
+          .map((id) => photos.find((p) => p.id === id))
+          .filter((p): p is Photo => !!p)
+          .sort((a, b) => (a.takenAt?.getTime() ?? 0) - (b.takenAt?.getTime() ?? 0));
+        const photoImages = await loadPhotoImageBlocks(
+          sampleForVision(dayPhotoRecords).map((p) => p.objectPath),
+        );
+
+        const story: DayStoryResult = await researchAndWriteDay({
           dayIndex: i,
           date: cluster.date,
           lat: cluster.lat,
           lon: cluster.lon,
           locationInferred: cluster.locationInferred,
-          distanceKm: distancesKm[i],
           photoCount: cluster.photoIds.length,
           tripTitle,
+          photoImages,
         });
-        log.info({ dayIndex: i }, "Day research complete");
-        return story;
+        log.info({ dayIndex: i, photosUsed: photoImages.length }, "Day research complete");
+
+        const dayPhotoIds = cluster.photoIds;
+        const heroPhotoId = dayPhotoIds[0] ?? null;
+
+        const [insertedDay] = await db
+          .insert(tripDaysTable)
+          .values({
+            tripId,
+            dayIndex: i,
+            date: cluster.date,
+            locationName: story.locationName,
+            lat: cluster.lat,
+            lon: cluster.lon,
+            elevationMeters: story.elevationMeters,
+            distanceKm: distancesKm[i],
+            weather: story.weather,
+            landmarks: story.landmarks,
+            headline: story.headline,
+            narrative: story.narrative,
+            heroPhotoId,
+          })
+          .returning();
+
+        await db
+          .update(photosTable)
+          .set({ tripDayId: insertedDay.id })
+          .where(inArray(photosTable.id, dayPhotoIds));
+
+        if (i === 0) {
+          firstLocationName = story.locationName;
+          if (heroPhotoId != null) {
+            const heroPhoto = photos.find((p) => p.id === heroPhotoId);
+            coverObjectPath = heroPhoto?.objectPath ?? null;
+          }
+        }
       },
     );
-
-    let coverObjectPath: string | null = null;
-    let firstLocationName: string | null = null;
-
-    for (let i = 0; i < clusters.length; i++) {
-      const cluster = clusters[i];
-      const story = stories[i];
-
-      if (i === 0) firstLocationName = story.locationName;
-
-      const dayPhotoIds = cluster.photoIds;
-      const heroPhotoId = dayPhotoIds[0] ?? null;
-
-      const [insertedDay] = await db
-        .insert(tripDaysTable)
-        .values({
-          tripId,
-          dayIndex: i,
-          date: cluster.date,
-          locationName: story.locationName,
-          lat: cluster.lat,
-          lon: cluster.lon,
-          elevationMeters: story.elevationMeters,
-          distanceKm: distancesKm[i],
-          weather: story.weather,
-          landmarks: story.landmarks,
-          headline: story.headline,
-          narrative: story.narrative,
-          heroPhotoId,
-        })
-        .returning();
-
-      await db
-        .update(photosTable)
-        .set({ tripDayId: insertedDay.id })
-        .where(inArray(photosTable.id, dayPhotoIds));
-
-      if (i === 0 && heroPhotoId != null) {
-        const heroPhoto = photos.find((p) => p.id === heroPhotoId);
-        coverObjectPath = heroPhoto?.objectPath ?? null;
-      }
-    }
 
     const summary =
       clusters.length === 1
         ? `A single day in ${firstLocationName ?? "an unknown location"}.`
-        : `${clusters.length} days across ${totalDistanceKm.toFixed(0)} km, starting in ${firstLocationName ?? "an unknown location"}.`;
+        : `${clusters.length} days, starting in ${firstLocationName ?? "an unknown location"}.`;
 
     await db
       .update(tripsTable)

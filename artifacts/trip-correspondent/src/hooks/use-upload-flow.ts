@@ -70,7 +70,21 @@ export function useUploadFlow() {
                   lon = parsedExif.longitude;
                 }
                 if (parsedExif.DateTimeOriginal) {
-                  takenAt = new Date(parsedExif.DateTimeOriginal).toISOString();
+                  // EXIF's DateTimeOriginal has no timezone — it's just the
+                  // wall-clock time where the photo was taken. exifr turns
+                  // it into a Date using the *browser's* local timezone, so
+                  // a naive .toISOString() here would reinterpret those
+                  // numbers through the viewer's timezone rather than the
+                  // trip's, which can shift a late-night photo into the
+                  // wrong calendar day (and therefore query weather for the
+                  // wrong day). Re-read the same wall-clock numbers as a UTC
+                  // instant instead, so the calendar date always matches
+                  // what the camera recorded, regardless of the browser.
+                  const d: Date = parsedExif.DateTimeOriginal;
+                  takenAt = new Date(Date.UTC(
+                    d.getFullYear(), d.getMonth(), d.getDate(),
+                    d.getHours(), d.getMinutes(), d.getSeconds(),
+                  )).toISOString();
                 } else if (file.lastModified) {
                   takenAt = new Date(file.lastModified).toISOString();
                 }
