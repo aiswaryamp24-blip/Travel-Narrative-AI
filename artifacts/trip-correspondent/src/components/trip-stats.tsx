@@ -1,23 +1,30 @@
 import type { Trip } from '@workspace/api-client-react';
 import { Compass, Globe2, MapPin, Thermometer, CalendarDays } from 'lucide-react';
 
-function extractCountry(locationName: string | null): string | null {
+/**
+ * Parses a "City, Country" style locationName into its parts. Only trusts
+ * strings that actually contain a comma — when there's no confirmed real
+ * location for a day (see narrative.ts's noGpsInTrip handling), the
+ * narrative uses a generic, comma-less description like "a forest trail"
+ * instead of guessing a place, and that must NOT be counted as if it were
+ * its own distinct city/country.
+ */
+function parseLocation(locationName: string | null): { city: string; country: string } | null {
   if (!locationName) return null;
   const parts = locationName.split(',').map((p) => p.trim()).filter(Boolean);
-  if (parts.length === 0) return null;
-  return parts[parts.length - 1];
+  if (parts.length < 2) return null;
+  return { city: parts.slice(0, -1).join(', '), country: parts[parts.length - 1] };
 }
 
 export function TripStats({ trip }: { trip: Trip }) {
   const days = trip.days;
   if (days.length === 0) return null;
 
-  const countries = new Set(
-    days.map((d) => extractCountry(d.locationName)).filter((c): c is string => !!c),
-  );
-  const cities = new Set(
-    days.map((d) => d.locationName).filter((l): l is string => !!l),
-  );
+  const parsedLocations = days
+    .map((d) => parseLocation(d.locationName))
+    .filter((p): p is NonNullable<typeof p> => !!p);
+  const countries = new Set(parsedLocations.map((p) => p.country));
+  const cities = new Set(parsedLocations.map((p) => p.city));
 
   const temps = days
     .map((d) => d.weather)
