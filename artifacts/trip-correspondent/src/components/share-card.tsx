@@ -59,7 +59,7 @@ export function ShareCard({ trip }: { trip: Trip }) {
         await navigator.share({
           files: [file],
           title: trip.title,
-          text: trip.summary ?? `${trip.title} — a Trip Correspondent story`,
+          text: trip.summary ?? `${trip.title} — a Turasum story`,
         });
         return;
       } catch {
@@ -76,7 +76,7 @@ export function ShareCard({ trip }: { trip: Trip }) {
   };
 
   const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = trip.summary ?? `${trip.title} — a Trip Correspondent story`;
+  const shareText = trip.summary ?? `${trip.title} — a Turasum story`;
   const isPublic = trip.privacy === 'public';
 
   const handleFacebookShare = () => {
@@ -141,7 +141,7 @@ export function ShareCard({ trip }: { trip: Trip }) {
             )}
             <div className="relative z-10 space-y-3">
               <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/70">
-                Trip Correspondent
+                Turasum
               </div>
               <h2 className="text-3xl font-serif font-black uppercase leading-tight text-white">
                 {trip.title}

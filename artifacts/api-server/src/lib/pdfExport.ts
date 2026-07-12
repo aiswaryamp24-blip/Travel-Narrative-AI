@@ -289,7 +289,7 @@ export async function generateTripPdf(
       e(
         View,
         { style: styles.coverOverlay },
-        e(Text, { style: styles.kicker }, 'Trip Correspondent'),
+        e(Text, { style: styles.kicker }, 'Turasum'),
         e(Text, { style: styles.coverTitle }, trip.title),
         dates[0] &&
           e(

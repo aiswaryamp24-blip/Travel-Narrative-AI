@@ -213,12 +213,20 @@ router.get('/feed', requireAuth, async (req: Request, res: Response) => {
   res.json(results);
 });
 
-router.get('/discover', requireAuth, async (req: Request, res: Response) => {
-  const followedRows = await db
-    .select({ followedId: followsTable.followedId })
-    .from(followsTable)
-    .where(eq(followsTable.followerId, req.userId!));
-  const excludedIds = new Set([...followedRows.map((r) => r.followedId), req.userId!]);
+// optionalAuth (not requireAuth): this also powers the logged-out public
+// Explore page, so anonymous visitors see every public trip. Signed-in
+// visitors additionally get trips they already follow (and their own)
+// excluded, since those already show up in their "Following" feed.
+router.get('/discover', optionalAuth, async (req: Request, res: Response) => {
+  const followedRows = req.userId
+    ? await db
+        .select({ followedId: followsTable.followedId })
+        .from(followsTable)
+        .where(eq(followsTable.followerId, req.userId))
+    : [];
+  const excludedIds = new Set(
+    req.userId ? [...followedRows.map((r) => r.followedId), req.userId] : [],
+  );
 
   const trips = await db
     .select()

@@ -87,10 +87,8 @@ export async function processTrip(tripId: number): Promise<void> {
     // day — that collapsed an entire day of sightseeing into one averaged
     // point and badly understated real movement.
     let previousLastPoint: RoutePoint | null = null;
-    let totalDistanceKm = 0;
     const distancesKm: (number | null)[] = clusters.map((cluster) => {
       const distanceKm = computeDayDistanceKm(previousLastPoint, cluster.routePoints);
-      if (distanceKm) totalDistanceKm += distanceKm;
       if (cluster.routePoints.length > 0) {
         previousLastPoint = cluster.routePoints[cluster.routePoints.length - 1];
       }
@@ -104,6 +102,7 @@ export async function processTrip(tripId: number): Promise<void> {
     // entire multi-day pipeline completes.
     let coverObjectPath: string | null = null;
     let firstLocationName: string | null = null;
+    let firstHeadline: string | null = null;
 
     await mapWithConcurrency(
       clusters,
@@ -165,6 +164,7 @@ export async function processTrip(tripId: number): Promise<void> {
 
         if (i === 0) {
           firstLocationName = story.locationName;
+          firstHeadline = story.headline;
           if (heroPhotoId != null) {
             const heroPhoto = photos.find((p) => p.id === heroPhotoId);
             coverObjectPath = heroPhoto?.objectPath ?? null;
@@ -173,10 +173,15 @@ export async function processTrip(tripId: number): Promise<void> {
       },
     );
 
+    // Use the first day's actual headline as the trip's pull-quote rather
+    // than a mechanically-generated "X days across Y km" caption — the
+    // headline is already tuned (see narrative.ts) to be short and
+    // evocative, so it reads like a real hook instead of a stat readout.
     const summary =
-      clusters.length === 1
-        ? `A single day in ${firstLocationName ?? "an unknown location"}.`
-        : `${clusters.length} days across ${totalDistanceKm.toFixed(0)} km, starting in ${firstLocationName ?? "an unknown location"}.`;
+      firstHeadline ??
+      (clusters.length === 1
+        ? `A day in ${firstLocationName ?? "an unspecified place"}.`
+        : `${clusters.length} days in ${firstLocationName ?? "an unspecified place"}.`);
 
     await db
       .update(tripsTable)

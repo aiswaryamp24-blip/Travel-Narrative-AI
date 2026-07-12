@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FollowButton } from '@/components/follow-button';
 import { DigestsSection } from '@/components/digests-section';
+import { Logo } from '@/components/logo';
 
 export default function Profile() {
   const { id } = useParams();
@@ -40,7 +41,7 @@ export default function Profile() {
         <Link href="/feed" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft className="h-4 w-4 mr-1" /> Feed
         </Link>
-        <span className="font-serif italic text-lg">Trip Correspondent</span>
+        <Logo className="text-lg" />
       </nav>
 
       <header className="py-16 px-6 border-b border-border bg-card text-card-foreground">

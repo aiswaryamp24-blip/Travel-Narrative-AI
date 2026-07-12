@@ -4,7 +4,7 @@ import { logger } from './logger';
 const connectors = new ReplitConnectors();
 
 /** Default "from" address — Resend's shared sandbox sender, usable without a verified domain. */
-const DEFAULT_FROM_ADDRESS = 'Trip Correspondent <onboarding@resend.dev>';
+const DEFAULT_FROM_ADDRESS = 'Turasum <onboarding@resend.dev>';
 
 interface SendEmailOptions {
   to: string;
@@ -59,7 +59,7 @@ export async function sendDigestReadyEmail(params: {
   const appUrl = `${getAppUrl()}/profile`;
   const tripWord = tripCount === 1 ? 'trip' : 'trips';
   const subject = 'Your travel wrapped is ready 🎉';
-  const text = `Hi ${displayName},\n\nYour new travel wrapped is ready — a recap of ${tripCount} ${tripWord}. View and download it here: ${appUrl}\n\n— Trip Correspondent`;
+  const text = `Hi ${displayName},\n\nYour new travel wrapped is ready — a recap of ${tripCount} ${tripWord}. View and download it here: ${appUrl}\n\n— Turasum`;
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
       <h1 style="font-size: 20px;">Your travel wrapped is ready 🎉</h1>
@@ -70,7 +70,7 @@ export async function sendDigestReadyEmail(params: {
           View your wrapped
         </a>
       </p>
-      <p style="color: #666; font-size: 13px;">— Trip Correspondent</p>
+      <p style="color: #666; font-size: 13px;">— Turasum</p>
     </div>
   `;
 

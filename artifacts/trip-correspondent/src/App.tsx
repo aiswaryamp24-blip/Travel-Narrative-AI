@@ -11,6 +11,7 @@ import Home from '@/pages/home';
 import Trip from '@/pages/trip';
 import Feed from '@/pages/feed';
 import Profile from '@/pages/profile';
+import Explore from '@/pages/explore';
 
 const queryClient = new QueryClient();
 
@@ -48,14 +49,14 @@ const clerkAppearance = {
     logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
   },
   variables: {
-    colorPrimary: 'hsl(15 70% 50%)',
-    colorForeground: 'hsl(222 47% 11%)',
-    colorMutedForeground: 'hsl(222 20% 40%)',
+    colorPrimary: 'hsl(243 65% 48%)',
+    colorForeground: 'hsl(234 40% 10%)',
+    colorMutedForeground: 'hsl(234 15% 42%)',
     colorDanger: 'hsl(0 84% 60%)',
-    colorBackground: 'hsl(40 33% 98%)',
+    colorBackground: 'hsl(220 25% 97%)',
     colorInput: 'hsl(0 0% 100%)',
-    colorInputForeground: 'hsl(222 47% 11%)',
-    colorNeutral: 'hsl(40 15% 85%)',
+    colorInputForeground: 'hsl(234 40% 10%)',
+    colorNeutral: 'hsl(220 15% 88%)',
     fontFamily: "'DM Sans', sans-serif",
     borderRadius: '0.25rem',
   },
@@ -172,6 +173,7 @@ function Router() {
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/trips/:id" component={Trip} />
       <Route path="/feed" component={FeedPage} />
+      <Route path="/explore" component={Explore} />
       <Route path="/users/:id" component={Profile} />
       <Route>
         <div className="min-h-screen flex items-center justify-center text-center p-6 bg-background">
@@ -198,14 +200,14 @@ function ClerkProviderWithRoutes() {
       localization={{
         signIn: {
           start: {
-            title: 'Welcome back, Correspondent',
-            subtitle: 'Sign in to file your next story',
+            title: 'Welcome back',
+            subtitle: 'Sign in to pick up your next story',
           },
         },
         signUp: {
           start: {
-            title: 'Join the Masthead',
-            subtitle: 'Create an account to start documenting your travels',
+            title: 'Start your story',
+            subtitle: 'Create an account to turn your trip photos into one',
           },
         },
       }}

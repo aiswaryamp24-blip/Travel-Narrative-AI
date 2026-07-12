@@ -6,6 +6,7 @@ import { Map, AlertCircle, FileText, Calendar, Newspaper, UserCircle } from 'luc
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useClerk } from '@clerk/react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/logo';
 
 export default function Home() {
   const { data: trips, isLoading } = useListTrips();
@@ -15,7 +16,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-24">
       <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
-        <span className="font-serif italic text-lg">Trip Correspondent</span>
+        <Logo className="text-lg" />
         <div className="flex items-center gap-3">
           <Link href="/feed" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
             <Newspaper className="h-3.5 w-3.5" /> Feed
@@ -50,10 +51,10 @@ export default function Home() {
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight text-center uppercase">
-            Trip Correspondent
+            Turasum
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg max-w-xl text-center">
-            Journalism for your personal journeys. Submit your photos, and our AI correspondent files the story.
+            Your camera roll, turned into a proper story.
           </p>
         </div>
       </header>

@@ -1,6 +1,8 @@
-# Trip Correspondent
+# Turasum
 
-An agentic AI travel magazine: upload a folder of trip photos and an AI correspondent clusters them into days, researches each location's weather/landmarks, and files a magazine-style day-by-day narrative. Multi-user, with Clerk accounts, per-trip privacy tiers, a social feed, and periodic "wrapped"-style PDF digests emailed to users.
+(Formerly "Trip Correspondent" — renamed as part of a full rebrand: indigo palette replacing the earlier orange/cream "Paper & Ink" theme, new line-art fox+T mark in `components/logo.tsx`/`components/animated-logo.tsx`.)
+
+An agentic AI travel magazine: upload a folder of trip photos and an AI correspondent clusters them into days, researches each location's weather/landmarks, and files a magazine-style day-by-day narrative. Multi-user, with Clerk accounts, per-trip privacy tiers, a social feed, a logged-out public Explore page, and periodic "wrapped"-style PDF digests emailed to users.
 
 ## Run & Operate
 
@@ -44,7 +46,10 @@ An agentic AI travel magazine: upload a folder of trip photos and an AI correspo
 - `artifacts/api-server/src/middlewares/auth.ts` — `requireAuth` / `optionalAuth`, backed by Clerk
 - `artifacts/api-server/src/routes/trips.ts` — trip CRUD, photo attach, process trigger, PDF export, day narration
 - `artifacts/api-server/src/routes/storage.ts` — presigned upload URL + object serving (private objects gated by `canViewTrip`)
-- `artifacts/trip-correspondent/src/pages/` — landing, home (upload/dispatch), trip (magazine spread), feed, profile pages
+- `artifacts/api-server/src/routes/users.ts` — `GET /discover` (public trips, `optionalAuth`), follow/profile endpoints
+- `artifacts/trip-correspondent/src/pages/` — landing, home (upload/dispatch), trip (magazine spread), feed, profile, explore (logged-out public discovery) pages
+- `artifacts/trip-correspondent/src/components/logo.tsx` / `animated-logo.tsx` — the static line-art fox+T mark, and the anime.js stroke-draw-in variant used once in the landing hero
+- `artifacts/trip-correspondent/src/components/trip-card.tsx` — the trip preview card shared by feed.tsx's Discover section and explore.tsx
 
 ## Architecture decisions
 
@@ -65,15 +70,19 @@ An agentic AI travel magazine: upload a folder of trip photos and an AI correspo
 - Each vision photo carries its own capture timestamp (`PhotoImageBlock.takenAt` in `photoContent.ts`) through to `narrative.ts`, which labels each image with its formatted time before sending it to Claude and instructs the model to use that for real temporal structure in the narrative (morning → midday → evening) rather than treating the day's photos as an unordered set.
 - Day numbers are stored 0-indexed (`dayIndex`) but always displayed 1-indexed (`dayIndex + 1`) in the frontend (trip page day headers, route map pins/tooltips) — internal ordering logic stays 0-based, only the display was bumped.
 - `trip-stats.tsx` shows Distance Covered only when `trip.totalDistanceKm` is truthy (hidden rather than showing "—" for GPS-less trips), and surfaces Cities and Countries as two independent stats rather than one toggling into the other — a single-country, multi-city trip (e.g. visiting Krakow and Warsaw in Poland) now shows both meaningfully instead of collapsing to just a country count.
-- The end-of-day "Selected Frames" grid is capped to `MAX_SELECTED_FRAMES` (4) rather than dumping every remaining photo — day sections are also wrapped in `RevealOnScroll` (`components/reveal-on-scroll.tsx`, IntersectionObserver-based fade/slide-in) so the magazine spread has scroll-triggered motion instead of everything just appearing at once (which is invisible for anything below the fold on mount-triggered CSS animation).
+- The end-of-day "Selected Frames" grid is capped to `MAX_SELECTED_FRAMES` (4) rather than dumping every remaining photo — day sections are also wrapped in `RevealOnScroll` (`components/reveal-on-scroll.tsx`, Framer Motion `whileInView`) so the magazine spread has scroll-triggered motion instead of everything just appearing at once (which is invisible for anything below the fold on mount-triggered CSS animation).
 - Share dialog (`share-card.tsx`) adds direct Facebook/X share-intent links (disabled unless the trip's `privacy` is `public`, since those platforms need a resolvable URL) and an Instagram button that uses the OS-level Web Share API (the only real way to hand an image to Instagram from a website — Instagram has no web share-intent of its own) with a download fallback on unsupported browsers/desktop.
 - Digests are always private to their owner regardless of the underlying trips' privacy tier — they're a personal keepsake, not a shareable artifact.
+- The trip `summary` (the pull-quote under the title) is the first day's actual headline, not a mechanically-generated "X days across Y km" caption — headlines are already tuned by `narrative.ts` to be short and evocative, so reusing one reads like a real hook instead of a stat readout.
+- `GET /discover` uses `optionalAuth` (not `requireAuth`) specifically so it can power both the signed-in Feed's "Discover" section and the logged-out `/explore` page from the same endpoint — for anonymous visitors, the "already following" exclusion set is just empty rather than the route being unavailable.
+- Two animation libraries, used for different jobs rather than redundantly: Framer Motion (`reveal-on-scroll.tsx`, `trip-card.tsx`) for declarative React-native transitions (scroll reveals, hover/tap physics); anime.js (`animated-logo.tsx`) for one specific non-declarative effect — an SVG stroke-dasharray "drawn on" animation for the logo mark in the landing hero only, not used elsewhere since animating it on every nav bar would be distracting rather than impressive.
 
 ## Product
 
 - Landing page for signed-out visitors; home page (signed in) is the masthead + upload form (title + folder of photos) that creates a trip, uploads photos, and dispatches the AI pipeline, plus a gallery of the user's past trip "issues" with cover art and status.
 - Trip page: full magazine spread — cover, distance/route/temperature stats, an accurate route map, then a day-by-day narrative sequence with weather, distance traveled, nearby landmarks, and that day's photos. Shows a "filing the story" state (with live per-day progress) while processing and an error state with retry if the pipeline fails. Supports PDF export and per-day audio narration in a British-accented young-woman voice persona.
-- Feed page: public/friends-tier trips from followed users.
+- Feed page: public/friends-tier trips from followed users, plus a "Discover" section of public trips from people you don't follow.
+- Explore page (`/explore`, logged out): the public front door — browse the same "Discover" public trips without an account, with sign-up CTAs. Marketing funnel for visitors who land on the site cold.
 - Profile page: a user's own trips plus follow management; digest cadence (every 3/4/6 months) is configurable per user, and a periodic scheduler emails a "wrapped"-style recap PDF when one is due.
 
 ## User preferences
@@ -86,6 +95,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 - Don't bump `RESEARCH_CONCURRENCY` in `tripProcessor.ts` without checking Nominatim/Overpass's usage policy first — their free public instances are keyless and rate-limit/ban by IP for bulk parallel use.
 - Sending photos to Claude (`photoContent.ts` + `narrative.ts`) adds real cost/latency per day — `MAX_PHOTOS_FOR_VISION` (currently 5) and `MAX_DIMENSION` (currently 768px) in those two files are the levers if trips with many days/photos get slow or expensive to process. Already tuned down once after real-world processing felt "stuck" on a multi-day trip — don't raise them back up without also improving the progress UI, or it'll regress to looking broken again.
 - `trip_days.route_points` is a new column — run `pnpm --filter @workspace/db run push` after pulling this, or every trip processed before the push will 500 on insert.
+- `animejs` was added as a new dependency (`trip-correspondent/package.json`) for the landing-page logo animation — run `pnpm install` after pulling, or the frontend build will fail on the missing package.
 
 ## Pointers
 

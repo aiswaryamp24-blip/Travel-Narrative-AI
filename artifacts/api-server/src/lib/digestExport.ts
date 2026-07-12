@@ -243,7 +243,7 @@ export async function generateDigestPdf(
       e(
         View,
         {},
-        e(Text, { style: styles.kicker }, 'Your Trip Correspondent Wrapped'),
+        e(Text, { style: styles.kicker }, 'Your Turasum Wrapped'),
         e(Text, { style: styles.coverTitle }, user.displayName),
         e(Text, { style: styles.coverSubtitle }, formatPeriod(periodStart, periodEnd)),
       ),
@@ -282,7 +282,7 @@ export async function generateDigestPdf(
     e(
       View,
       { style: styles.footer, fixed: true },
-      e(Text, {}, 'Trip Correspondent · Wrapped'),
+      e(Text, {}, 'Turasum · Wrapped'),
       e(
         Text,
         { render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `${pageNumber} / ${totalPages}` },
@@ -321,7 +321,7 @@ export async function generateDigestPdf(
 
   const doc = e(
     Document,
-    { title: `${user.displayName} — Trip Correspondent Wrapped` },
+    { title: `${user.displayName} — Turasum Wrapped` },
     coverPage,
     statsPage,
     ...highlightPages,

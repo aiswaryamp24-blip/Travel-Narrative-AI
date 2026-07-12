@@ -1,13 +1,18 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Camera, Map, Newspaper, Volume2 } from 'lucide-react';
+import { Camera, Compass, Map, Newspaper, Volume2 } from 'lucide-react';
+import { Logo } from '@/components/logo';
+import { AnimatedLogoMark } from '@/components/animated-logo';
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <nav className="py-6 px-6 flex justify-between items-center border-b border-border">
-        <span className="font-serif italic text-lg">Trip Correspondent</span>
+        <Logo className="text-lg" />
         <div className="flex items-center gap-2">
+          <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3">
+            <Compass className="h-3.5 w-3.5" /> Explore
+          </Link>
           <Link href="/sign-in">
             <Button variant="ghost" className="rounded-none font-mono text-xs uppercase tracking-widest">
               Sign In
@@ -21,16 +26,17 @@ export default function Landing() {
 
       <header className="py-24 md:py-32 px-6 border-b border-border bg-card text-card-foreground">
         <div className="max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 text-center">
+          <AnimatedLogoMark className="h-14 w-14 md:h-16 md:w-16 text-primary" />
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Volume I</span>
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight uppercase">
-            Trip Correspondent
+            Turasum
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg md:text-xl max-w-xl">
-            Journalism for your personal journeys. Submit your photos, and our AI correspondent files the story.
+            Your camera roll, turned into a proper story.
           </p>
           <div className="pt-6">
             <Link href="/sign-up">

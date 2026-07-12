@@ -50,74 +50,75 @@
 }
 
 :root {
-  /* Paper & Ink theme: Cream background, Oxford Blue text, Rust accents */
-  --background: 40 33% 98%;
-  --foreground: 222 47% 11%;
-  
+  /* Turasum theme: cool paper background, ink-indigo text, vivid indigo
+     accent — replaces the earlier "Paper & Ink" cream/rust identity. */
+  --background: 220 25% 97%;
+  --foreground: 234 40% 10%;
+
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 40 10% 90%;
-  
+  --card-foreground: 234 40% 10%;
+  --card-border: 220 15% 90%;
+
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 40 10% 90%;
-  
-  --primary: 15 70% 50%;
-  --primary-foreground: 40 33% 98%;
-  
-  --secondary: 222 47% 11%;
-  --secondary-foreground: 40 33% 98%;
-  
-  --muted: 40 15% 90%;
-  --muted-foreground: 222 20% 40%;
-  
-  --accent: 40 25% 92%;
-  --accent-foreground: 222 47% 11%;
-  
+  --popover-foreground: 234 40% 10%;
+  --popover-border: 220 15% 90%;
+
+  --primary: 243 65% 48%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 234 55% 12%;
+  --secondary-foreground: 220 25% 97%;
+
+  --muted: 220 18% 93%;
+  --muted-foreground: 234 15% 42%;
+
+  --accent: 235 45% 95%;
+  --accent-foreground: 234 40% 10%;
+
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 40 15% 85%;
-  --input: 40 15% 85%;
-  --ring: 15 70% 50%;
+  --border: 220 15% 88%;
+  --input: 220 15% 88%;
+  --ring: 243 65% 48%;
 
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: 'Playfair Display', serif;
   --app-font-mono: Menlo, monospace;
-  
+
   --radius: 0.25rem;
 }
 
 .dark {
-  --background: 222 47% 7%;
-  --foreground: 40 33% 98%;
-  
-  --card: 222 47% 11%;
-  --card-foreground: 40 33% 98%;
-  --card-border: 222 47% 15%;
-  
-  --popover: 222 47% 11%;
-  --popover-foreground: 40 33% 98%;
-  --popover-border: 222 47% 15%;
-  
-  --primary: 15 70% 55%;
-  --primary-foreground: 40 33% 98%;
-  
-  --secondary: 40 33% 98%;
-  --secondary-foreground: 222 47% 11%;
-  
-  --muted: 222 47% 15%;
-  --muted-foreground: 40 15% 70%;
-  
-  --accent: 222 47% 15%;
-  --accent-foreground: 40 33% 98%;
-  
+  --background: 234 45% 7%;
+  --foreground: 220 25% 97%;
+
+  --card: 234 40% 11%;
+  --card-foreground: 220 25% 97%;
+  --card-border: 234 35% 16%;
+
+  --popover: 234 40% 11%;
+  --popover-foreground: 220 25% 97%;
+  --popover-border: 234 35% 16%;
+
+  --primary: 243 70% 62%;
+  --primary-foreground: 234 45% 7%;
+
+  --secondary: 220 25% 97%;
+  --secondary-foreground: 234 45% 7%;
+
+  --muted: 234 35% 16%;
+  --muted-foreground: 220 15% 70%;
+
+  --accent: 234 35% 16%;
+  --accent-foreground: 220 25% 97%;
+
   --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 222 47% 18%;
-  --input: 222 47% 18%;
-  --ring: 15 70% 55%;
+  --border: 234 35% 18%;
+  --input: 234 35% 18%;
+  --ring: 243 70% 62%;
 }
 
 @layer base {

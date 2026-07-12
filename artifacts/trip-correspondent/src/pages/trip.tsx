@@ -24,6 +24,7 @@ import { TripRouteMap } from '@/components/trip-route-map';
 import { DayAudioPlayer } from '@/components/day-audio-player';
 import { ShareCard } from '@/components/share-card';
 import { RevealOnScroll } from '@/components/reveal-on-scroll';
+import { Logo } from '@/components/logo';
 
 export default function Trip() {
   const { id } = useParams();
@@ -170,7 +171,7 @@ export default function Trip() {
         <Link href="/" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft className="h-4 w-4 mr-1" /> Library
         </Link>
-        <span className="font-serif italic text-sm md:text-base">Trip Correspondent</span>
+        <Logo className="text-sm md:text-base" />
         
         <div className="flex items-center gap-1">
         <Link href="/feed" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-2">
