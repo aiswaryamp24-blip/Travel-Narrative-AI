@@ -1,11 +1,22 @@
 import { Link } from 'wouter';
+import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Camera, Compass, Map, Newspaper, Volume2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
 import { HeroGlow, ChromeText } from '@/components/hero-glow';
+import { ScrollVelocityStrip, type StripItem } from '@/components/scroll-velocity-strip';
 
 export default function Landing() {
+  const { data: discoverTrips } = useGetDiscoverFeed();
+  const stripItems: StripItem[] = (discoverTrips ?? [])
+    .filter((trip) => trip.coverObjectPath)
+    .map((trip) => ({
+      id: trip.id,
+      src: `/api/storage${trip.coverObjectPath}`,
+      label: trip.title,
+    }));
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="py-6 px-6 flex justify-between items-center border-b border-border">
@@ -52,6 +63,12 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {stripItems.length > 0 && (
+        <section className="py-12 border-b border-border bg-card">
+          <ScrollVelocityStrip items={stripItems} />
+        </section>
+      )}
 
       <main className="max-w-5xl mx-auto px-6 py-24 grid grid-cols-1 md:grid-cols-2 gap-12">
         <Feature
