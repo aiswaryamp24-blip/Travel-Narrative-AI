@@ -7,6 +7,7 @@ import { useUser, useClerk } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { MosaicTripCard, mosaicSpanClass } from '@/components/mosaic-trip-card';
+import { HeroGlow, ChromeText } from '@/components/hero-glow';
 
 export default function Home() {
   const { data: trips, isLoading } = useListTrips();
@@ -43,18 +44,19 @@ export default function Home() {
       </nav>
 
       {/* Masthead */}
-      <header className="py-12 px-6 border-b border-border bg-card text-card-foreground">
-        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
+      <header className="relative py-12 px-6 border-b border-border bg-card text-card-foreground overflow-hidden">
+        <HeroGlow />
+        <div className="relative max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Volume I</span>
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight text-center uppercase">
-            Turasum
+            <ChromeText>Turasum</ChromeText>
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg max-w-xl text-center">
-            Your camera roll, turned into a proper story.
+            Your camera roll turned into a story you remember.
           </p>
         </div>
       </header>

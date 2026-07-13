@@ -4,6 +4,7 @@ import { Compass, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TripCard, TripGridSkeleton } from '@/components/trip-card';
 import { Logo } from '@/components/logo';
+import { HeroGlow, ChromeText } from '@/components/hero-glow';
 
 /**
  * The logged-out front door: public trips, no account required to browse.
@@ -30,8 +31,9 @@ export default function Explore() {
         </div>
       </nav>
 
-      <header className="py-16 px-6 border-b border-border bg-secondary text-secondary-foreground">
-        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center space-y-4 text-center">
+      <header className="relative py-16 px-6 border-b border-border bg-secondary text-secondary-foreground overflow-hidden">
+        <HeroGlow />
+        <div className="relative max-w-4xl mx-auto flex flex-col items-center justify-center space-y-4 text-center">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-secondary-foreground/70">
@@ -41,7 +43,7 @@ export default function Explore() {
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
           <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tight uppercase">
-            Real Trips, Really Told
+            <ChromeText>Real Trips, Really Told</ChromeText>
           </h1>
           <p className="text-secondary-foreground/80 font-serif italic text-lg md:text-xl max-w-xl">
             Public stories from people using Turasum for their own travels.

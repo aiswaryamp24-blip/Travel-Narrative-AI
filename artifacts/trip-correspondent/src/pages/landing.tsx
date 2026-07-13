@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Compass, Map, Newspaper, Volume2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
+import { HeroGlow, ChromeText } from '@/components/hero-glow';
 
 export default function Landing() {
   return (
@@ -24,8 +25,9 @@ export default function Landing() {
         </div>
       </nav>
 
-      <header className="py-24 md:py-32 px-6 border-b border-border bg-card text-card-foreground">
-        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 text-center">
+      <header className="relative py-24 md:py-32 px-6 border-b border-border bg-card text-card-foreground overflow-hidden">
+        <HeroGlow />
+        <div className="relative max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 text-center">
           <AnimatedLogoMark className="h-14 w-14 md:h-16 md:w-16 text-primary" />
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
@@ -33,14 +35,17 @@ export default function Landing() {
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight uppercase">
-            Turasum
+            <ChromeText>Turasum</ChromeText>
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg md:text-xl max-w-xl">
-            Your camera roll, turned into a proper story.
+            Your camera roll turned into a story you remember.
           </p>
           <div className="pt-6">
             <Link href="/sign-up">
-              <Button size="lg" className="rounded-none font-mono uppercase tracking-widest">
+              <Button
+                size="lg"
+                className="rounded-none font-mono uppercase tracking-widest shadow-[0_0_35px_-8px_hsl(243_75%_55%/0.65)] hover:shadow-[0_0_45px_-6px_hsl(243_75%_55%/0.85)] transition-shadow"
+              >
                 Start Your Story
               </Button>
             </Link>
