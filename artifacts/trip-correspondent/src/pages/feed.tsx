@@ -1,11 +1,47 @@
-import { useGetFeed, useGetDiscoverFeed } from '@workspace/api-client-react';
+import { useGetFeed, useGetFollowersFeed, useGetDiscoverFeed, type FeedTripSummary } from '@workspace/api-client-react';
 import { Link } from 'wouter';
-import { Users, Compass, FileText } from 'lucide-react';
+import { Users, UserPlus, Compass, type LucideIcon } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { TripCard, TripGridSkeleton } from '@/components/trip-card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+
+function FeedTabContent({
+  trips,
+  isLoading,
+  emptyIcon: EmptyIcon,
+  emptyTitle,
+  emptyMessage,
+}: {
+  trips: FeedTripSummary[] | undefined;
+  isLoading: boolean;
+  emptyIcon: LucideIcon;
+  emptyTitle: string;
+  emptyMessage: string;
+}) {
+  if (isLoading) return <TripGridSkeleton />;
+
+  if (!trips?.length) {
+    return (
+      <div className="text-center py-24 bg-accent/30 border border-border">
+        <EmptyIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+        <h3 className="font-serif text-xl mb-2">{emptyTitle}</h3>
+        <p className="text-muted-foreground">{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {trips.map((trip) => (
+        <TripCard key={trip.id} trip={trip} />
+      ))}
+    </div>
+  );
+}
 
 export default function Feed() {
   const { data: feedTrips, isLoading: isFeedLoading } = useGetFeed();
+  const { data: followerTrips, isLoading: isFollowersLoading } = useGetFollowersFeed();
   const { data: discoverTrips, isLoading: isDiscoverLoading } = useGetDiscoverFeed();
 
   return (
@@ -26,56 +62,55 @@ export default function Feed() {
             The Feed
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg max-w-xl text-center">
-            Dispatches from correspondents you follow.
+            Dispatches from your network, and beyond.
           </p>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-16 space-y-24">
-        <section className="space-y-10">
-          <div className="flex items-end justify-between border-b border-border pb-4">
-            <h2 className="text-3xl font-serif flex items-center gap-3"><Users className="h-6 w-6 text-primary" /> Following</h2>
-          </div>
+      <main className="max-w-6xl mx-auto px-6 py-16">
+        <Tabs defaultValue="following">
+          <TabsList className="mb-10 w-full sm:w-auto rounded-none bg-accent/30 p-1">
+            <TabsTrigger value="following" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
+              <Users className="h-3.5 w-3.5" /> Following
+            </TabsTrigger>
+            <TabsTrigger value="followers" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
+              <UserPlus className="h-3.5 w-3.5" /> Followers
+            </TabsTrigger>
+            <TabsTrigger value="discover" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
+              <Compass className="h-3.5 w-3.5" /> Discover
+            </TabsTrigger>
+          </TabsList>
 
-          {isFeedLoading ? (
-            <TripGridSkeleton />
-          ) : !feedTrips?.length ? (
-            <div className="text-center py-24 bg-accent/30 border border-border">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-              <h3 className="font-serif text-xl mb-2">No Dispatches Yet</h3>
-              <p className="text-muted-foreground">Follow other correspondents below to fill your feed.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {feedTrips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-          )}
-        </section>
+          <TabsContent value="following">
+            <FeedTabContent
+              trips={feedTrips}
+              isLoading={isFeedLoading}
+              emptyIcon={Users}
+              emptyTitle="No Dispatches Yet"
+              emptyMessage="Follow other correspondents to fill this tab."
+            />
+          </TabsContent>
 
-        <section className="space-y-10">
-          <div className="flex items-end justify-between border-b border-border pb-4">
-            <h2 className="text-3xl font-serif flex items-center gap-3"><Compass className="h-6 w-6 text-primary" /> Discover</h2>
-            <span className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Public Stories</span>
-          </div>
+          <TabsContent value="followers">
+            <FeedTabContent
+              trips={followerTrips}
+              isLoading={isFollowersLoading}
+              emptyIcon={UserPlus}
+              emptyTitle="No Followers Yet"
+              emptyMessage="Trips from people who follow you will show up here."
+            />
+          </TabsContent>
 
-          {isDiscoverLoading ? (
-            <TripGridSkeleton />
-          ) : !discoverTrips?.length ? (
-            <div className="text-center py-24 bg-accent/30 border border-border">
-              <Compass className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-              <h3 className="font-serif text-xl mb-2">Nothing New to Discover</h3>
-              <p className="text-muted-foreground">Check back later for public stories from new correspondents.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {discoverTrips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-          )}
-        </section>
+          <TabsContent value="discover">
+            <FeedTabContent
+              trips={discoverTrips}
+              isLoading={isDiscoverLoading}
+              emptyIcon={Compass}
+              emptyTitle="Nothing New to Discover"
+              emptyMessage="Check back later for public stories from new correspondents."
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

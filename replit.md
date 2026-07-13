@@ -81,7 +81,7 @@ An agentic AI travel magazine: upload a folder of trip photos and an AI correspo
 
 - Landing page for signed-out visitors; home page (signed in) is the masthead + upload form (title + folder of photos) that creates a trip, uploads photos, and dispatches the AI pipeline, plus a gallery of the user's past trip "issues" with cover art and status.
 - Trip page: full magazine spread — cover, distance/route/temperature stats, an accurate route map, then a day-by-day narrative sequence with weather, distance traveled, nearby landmarks, and that day's photos. Shows a "filing the story" state (with live per-day progress) while processing and an error state with retry if the pipeline fails. Supports PDF export and per-day audio narration in a British-accented young-woman voice persona.
-- Feed page: public/friends-tier trips from followed users, plus a "Discover" section of public trips from people you don't follow.
+- Feed page: three tabs — Following (public/friends-tier trips from people you follow), Followers (public, or friends-tier if you follow them back, trips from people who follow you — `GET /followers-feed`), and Discover (public trips from anyone else).
 - Explore page (`/explore`, logged out): the public front door — browse the same "Discover" public trips without an account, with sign-up CTAs. Marketing funnel for visitors who land on the site cold.
 - Profile page: a user's own trips plus follow management; digest cadence (every 3/4/6 months) is configurable per user, and a periodic scheduler emails a "wrapped"-style recap PDF when one is due.
 
@@ -96,6 +96,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 - Sending photos to Claude (`photoContent.ts` + `narrative.ts`) adds real cost/latency per day — `MAX_PHOTOS_FOR_VISION` (currently 5) and `MAX_DIMENSION` (currently 768px) in those two files are the levers if trips with many days/photos get slow or expensive to process. Already tuned down once after real-world processing felt "stuck" on a multi-day trip — don't raise them back up without also improving the progress UI, or it'll regress to looking broken again.
 - `trip_days.route_points` is a new column — run `pnpm --filter @workspace/db run push` after pulling this, or every trip processed before the push will 500 on insert.
 - `animejs` was added as a new dependency (`trip-correspondent/package.json`) for the landing-page logo animation — run `pnpm install` after pulling, or the frontend build will fail on the missing package.
+- `GET /followers-feed`'s client hook (`useGetFollowersFeed`) was hand-written directly into `lib/api-client-react/src/generated/api.ts` to match Orval's exact output pattern, since codegen couldn't be run in that environment — if you run `pnpm --filter @workspace/api-spec run codegen`, it'll regenerate cleanly from the `openapi.yaml` entry and supersede the hand-written version with no drift, since the openapi.yaml is already the real source of truth for it.
 
 ## Pointers
 

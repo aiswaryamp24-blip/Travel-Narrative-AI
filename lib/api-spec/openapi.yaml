@@ -546,6 +546,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/FeedTripSummary"
+  /followers-feed:
+    get:
+      tags: [Social]
+      operationId: getFollowersFeed
+      summary: Trips from people who follow you
+      responses:
+        "200":
+          description: Trips from your followers (public, plus friends-tier for anyone you follow back).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedTripSummary"
   /digests:
     get:
       tags: [Digests]

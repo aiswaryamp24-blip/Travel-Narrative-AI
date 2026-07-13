@@ -213,6 +213,49 @@ router.get('/feed', requireAuth, async (req: Request, res: Response) => {
   res.json(results);
 });
 
+router.get('/followers-feed', requireAuth, async (req: Request, res: Response) => {
+  const followerRows = await db
+    .select({ followerId: followsTable.followerId })
+    .from(followsTable)
+    .where(eq(followsTable.followedId, req.userId!));
+  const followerIds = followerRows.map((r) => r.followerId);
+
+  if (followerIds.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  // Being followed by someone doesn't mean you follow them back, so their
+  // friends-tier trips aren't automatically visible — only their public
+  // trips are, unless you also follow them (in which case those
+  // friends-tier trips already show up in the Following feed too).
+  const myFollowedRows = await db
+    .select({ followedId: followsTable.followedId })
+    .from(followsTable)
+    .where(eq(followsTable.followerId, req.userId!));
+  const myFollowedIds = new Set(myFollowedRows.map((r) => r.followedId));
+
+  const trips = await db
+    .select()
+    .from(tripsTable)
+    .where(inArray(tripsTable.userId, followerIds));
+
+  const visible = trips.filter(
+    (t) => t.privacy === 'public' || (t.privacy === 'friends' && t.userId != null && myFollowedIds.has(t.userId)),
+  );
+  const owners = await db.select().from(usersTable).where(inArray(usersTable.id, followerIds));
+  const ownerById = new Map(owners.map((o) => [o.id, o]));
+
+  const results = visible
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .map((trip) => ({
+      ...toTripSummary(trip, false),
+      owner: toUserSummary(ownerById.get(trip.userId!)!),
+    }));
+
+  res.json(results);
+});
+
 // optionalAuth (not requireAuth): this also powers the logged-out public
 // Explore page, so anonymous visitors see every public trip. Signed-in
 // visitors additionally get trips they already follow (and their own)

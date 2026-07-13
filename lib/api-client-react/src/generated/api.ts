@@ -1492,6 +1492,80 @@ export function useGetDiscoverFeed<TData = Awaited<ReturnType<typeof getDiscover
 
 
 
+export const getGetFollowersFeedUrl = () => {
+
+
+
+
+  return `/api/followers-feed`
+}
+
+/**
+ * @summary Trips from people who follow you
+ */
+export const getFollowersFeed = async ( options?: RequestInit): Promise<FeedTripSummary[]> => {
+
+  return customFetch<FeedTripSummary[]>(getGetFollowersFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFollowersFeedQueryKey = () => {
+    return [
+    `/api/followers-feed`
+    ] as const;
+    }
+
+
+export const getGetFollowersFeedQueryOptions = <TData = Awaited<ReturnType<typeof getFollowersFeed>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFollowersFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFollowersFeedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFollowersFeed>>> = ({ signal }) => getFollowersFeed({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFollowersFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFollowersFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getFollowersFeed>>>
+export type GetFollowersFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Trips from people who follow you
+ */
+
+export function useGetFollowersFeed<TData = Awaited<ReturnType<typeof getFollowersFeed>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFollowersFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFollowersFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
 
 
 
