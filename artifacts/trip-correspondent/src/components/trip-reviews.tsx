@@ -132,7 +132,7 @@ export function TripReviews({ tripId }: { tripId: number }) {
                   alt={icon.alt}
                   className="w-10 h-10 object-contain"
                   style={{
-                    filter: icon.gold && isActive
+                    filter: ('gold' in icon && icon.gold) && isActive
                       ? 'drop-shadow(0 0 8px rgba(251,191,36,0.8)) saturate(2) sepia(0.5)'
                       : isActive
                       ? 'drop-shadow(0 0 6px rgba(99,102,241,0.7))'
