@@ -5,7 +5,7 @@ import { Link } from 'wouter';
 import { FileText, Newspaper, UserCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useClerk } from '@clerk/react';
-import { Logo, FoxT } from '@/components/logo';
+import { Logo } from '@/components/logo';
 import { ThreeCubeBg } from '@/components/three-cube-bg';
 import { MosaicTripCard, mosaicSpanClass } from '@/components/mosaic-trip-card';
 
@@ -138,26 +138,52 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Masthead with fox-T embedded in headline */}
-      <header className="relative overflow-hidden border-b border-border">
-        <div className="bg-primary text-primary-foreground px-6 py-2 flex items-center justify-between">
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Field Correspondent Network</span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Est. 2025</span>
+      {/* Masthead — electric cobalt magazine cover style */}
+      <header className="relative overflow-hidden border-b-4 border-foreground">
+        {/* Top info bar */}
+        <div
+          className="relative px-6 py-2 flex items-center justify-between overflow-hidden"
+          style={{ background: 'hsl(213 100% 44%)' }}
+        >
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/90">Field Correspondent Network</span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/90">Est. 2025</span>
         </div>
-        <div className="relative px-6 py-14 md:py-20 text-center bg-card overflow-hidden">
-          {/* Three.js cube accent — left side background */}
-          <div className="absolute left-0 top-0 bottom-0 w-48 md:w-64 pointer-events-none opacity-20">
+
+        {/* Main hero — electric cobalt blue, magazine cover style */}
+        <div
+          className="relative overflow-hidden"
+          style={{ background: 'hsl(213 100% 44%)', minHeight: '38vh' }}
+        >
+          {/* Floating CD disc decorations */}
+          <div className="cd-disc absolute -top-16 -right-16 w-64 h-64 opacity-30 pointer-events-none"
+               style={{ animation: 'holo-spin 22s linear infinite' }} />
+          <div className="cd-disc absolute -bottom-20 -left-12 w-52 h-52 opacity-25 pointer-events-none"
+               style={{ animation: 'holo-spin 28s linear infinite reverse' }} />
+          <div className="cd-disc absolute top-8 left-1/3 w-28 h-28 opacity-20 pointer-events-none"
+               style={{ animation: 'holo-spin 16s linear infinite' }} />
+
+          {/* Three.js cube — left accent */}
+          <div className="absolute left-0 top-0 bottom-0 w-48 md:w-64 pointer-events-none opacity-15">
             <ThreeCubeBg className="w-full h-full" />
           </div>
-          <h1 className="relative z-10 font-serif font-black tracking-tighter leading-none uppercase text-foreground"
-              style={{ fontSize: 'clamp(3rem,10vw,7rem)' }}>
-            <FoxT />
-            <span>urasum</span>
-          </h1>
-          <div className="w-full h-[2px] bg-foreground mt-4 mb-4" />
-          <p className="font-mono text-xs uppercase tracking-[0.35em] text-muted-foreground">
-            Your camera roll · Turned into a story you remember
-          </p>
+
+          {/* Masthead content */}
+          <div className="relative z-10 px-6 py-14 md:py-20 text-center">
+            <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
+              Vol. I — Special Correspondent Edition
+            </div>
+            <h1
+              className="font-serif font-black tracking-tighter leading-none uppercase text-white"
+              style={{ fontSize: 'clamp(3rem,11vw,8rem)', textShadow: '3px 3px 0 rgba(0,0,0,0.25)' }}
+            >
+              Turasum
+            </h1>
+            {/* Holographic stripe rule */}
+            <div className="holo-stripe h-[3px] w-full mt-5 mb-5 opacity-80" />
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/70">
+              Your camera roll · Turned into a story you remember
+            </p>
+          </div>
         </div>
       </header>
 

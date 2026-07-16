@@ -51,37 +51,38 @@
 }
 
 :root {
-  /* Turasum theme: cool paper background, ink-indigo text, vivid indigo
-     accent — replaces the earlier "Paper & Ink" cream/rust identity. */
-  --background: 220 25% 97%;
-  --foreground: 234 40% 10%;
+  /* Turasum theme — electric cobalt blue primary (Y2K magazine cover energy),
+     cool paper background, ink-navy text. */
+  --background: 216 30% 97%;
+  --foreground: 218 55% 8%;
 
   --card: 0 0% 100%;
-  --card-foreground: 234 40% 10%;
-  --card-border: 220 15% 90%;
+  --card-foreground: 218 55% 8%;
+  --card-border: 216 20% 89%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 234 40% 10%;
-  --popover-border: 220 15% 90%;
+  --popover-foreground: 218 55% 8%;
+  --popover-border: 216 20% 89%;
 
-  --primary: 243 65% 48%;
+  /* Electric cobalt — the magazine-cover blue */
+  --primary: 213 100% 44%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 234 55% 12%;
-  --secondary-foreground: 220 25% 97%;
+  --secondary: 218 60% 10%;
+  --secondary-foreground: 216 30% 97%;
 
-  --muted: 220 18% 93%;
-  --muted-foreground: 234 15% 42%;
+  --muted: 216 20% 93%;
+  --muted-foreground: 218 20% 42%;
 
-  --accent: 235 45% 95%;
-  --accent-foreground: 234 40% 10%;
+  --accent: 213 60% 93%;
+  --accent-foreground: 218 55% 8%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 15% 88%;
-  --input: 220 15% 88%;
-  --ring: 243 65% 48%;
+  --border: 216 18% 87%;
+  --input: 216 18% 87%;
+  --ring: 213 100% 44%;
 
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: 'Space Grotesk', sans-serif;
@@ -92,35 +93,35 @@
 }
 
 .dark {
-  --background: 234 45% 7%;
-  --foreground: 220 25% 97%;
+  --background: 218 50% 6%;
+  --foreground: 216 30% 97%;
 
-  --card: 234 40% 11%;
-  --card-foreground: 220 25% 97%;
-  --card-border: 234 35% 16%;
+  --card: 218 45% 10%;
+  --card-foreground: 216 30% 97%;
+  --card-border: 218 40% 16%;
 
-  --popover: 234 40% 11%;
-  --popover-foreground: 220 25% 97%;
-  --popover-border: 234 35% 16%;
+  --popover: 218 45% 10%;
+  --popover-foreground: 216 30% 97%;
+  --popover-border: 218 40% 16%;
 
-  --primary: 243 70% 62%;
-  --primary-foreground: 234 45% 7%;
+  --primary: 213 100% 58%;
+  --primary-foreground: 218 50% 6%;
 
-  --secondary: 220 25% 97%;
-  --secondary-foreground: 234 45% 7%;
+  --secondary: 216 30% 97%;
+  --secondary-foreground: 218 50% 6%;
 
-  --muted: 234 35% 16%;
-  --muted-foreground: 220 15% 70%;
+  --muted: 218 40% 16%;
+  --muted-foreground: 216 15% 70%;
 
-  --accent: 234 35% 16%;
-  --accent-foreground: 220 25% 97%;
+  --accent: 218 40% 16%;
+  --accent-foreground: 216 30% 97%;
 
   --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 234 35% 18%;
-  --input: 234 35% 18%;
-  --ring: 243 70% 62%;
+  --border: 218 40% 18%;
+  --input: 218 40% 18%;
+  --ring: 213 100% 58%;
 }
 
 /* Per-trip visual style overrides — applied via data-trip-style="<id>" on a
@@ -286,6 +287,90 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+}
+
+/* ── Holographic / iridescent CD effects ──────────────────────────────────── */
+@keyframes holo-shift {
+  0%   { background-position: 0% 50%;   filter: hue-rotate(0deg); }
+  50%  { background-position: 100% 50%; filter: hue-rotate(180deg); }
+  100% { background-position: 0% 50%;   filter: hue-rotate(360deg); }
+}
+
+@keyframes holo-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Holographic shimmer stripe — use on <div> or <span> */
+.holo-stripe {
+  background: linear-gradient(
+    135deg,
+    #ff6b6b, #ffbe0b, #06d6a0, #118ab2, #c77dff, #ff6b6b
+  );
+  background-size: 300% 300%;
+  animation: holo-shift 5s ease infinite;
+}
+
+/* Holographic text — transparent text filled with the gradient */
+.holo-text {
+  background: linear-gradient(
+    135deg,
+    #ff6b6b, #ffbe0b, #06d6a0, #118ab2, #c77dff, #ff6b6b
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holo-shift 5s ease infinite;
+}
+
+/* Holographic border ring */
+.holo-ring {
+  position: relative;
+}
+.holo-ring::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #ff6b6b, #ffbe0b, #06d6a0, #118ab2, #c77dff, #ff6b6b);
+  background-size: 300% 300%;
+  animation: holo-shift 5s ease infinite;
+  z-index: -1;
+}
+
+/* CD disc — purely decorative element */
+.cd-disc {
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.55) 0%, transparent 32%),
+    radial-gradient(circle at 65% 70%, rgba(100,160,255,0.4) 0%, transparent 40%),
+    conic-gradient(
+      from 45deg,
+      hsla(0,   90%, 70%, 0.55),
+      hsla(50,  90%, 68%, 0.55),
+      hsla(120, 80%, 58%, 0.55),
+      hsla(180, 80%, 58%, 0.55),
+      hsla(213, 100%,65%, 0.55),
+      hsla(270, 90%, 68%, 0.55),
+      hsla(320, 90%, 65%, 0.55),
+      hsla(360, 90%, 70%, 0.55)
+    ),
+    radial-gradient(circle, #b0c8f8 0%, #7090e0 100%);
+}
+.cd-disc::after {
+  /* centre hole */
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16%;
+  height: 16%;
+  border-radius: 50%;
+  background: hsl(213 100% 44%);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
 }
 
 .drop-cap {

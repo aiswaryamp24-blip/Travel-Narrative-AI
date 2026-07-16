@@ -48,69 +48,54 @@ export default function Feed() {
         <span className="text-[10px] font-black font-mono uppercase tracking-[0.3em] text-muted-foreground border border-primary/30 px-3 py-1.5">Wire Service</span>
       </nav>
 
-      {/* Masthead */}
-      <header className="relative border-b border-border overflow-hidden">
-        {/* Watercolor top layer (soft blue blobs) */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: [
-              'radial-gradient(ellipse 80% 60% at 15% 25%, rgba(147,197,253,0.32) 0%, transparent 65%)',
-              'radial-gradient(ellipse 60% 50% at 80% 60%, rgba(196,219,255,0.28) 0%, transparent 60%)',
-              'hsl(var(--background))',
-            ].join(', '),
-          }} />
-          {/* Airplane + contrail SVG */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.10]" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid slice" fill="none">
-            <path d="M 40 160 Q 180 60 360 95 Q 520 130 680 40" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="5 8" />
-            <g transform="translate(676, 32) rotate(-32)">
-              <path d="M0 0 L-9 4.5 L-7 0 L-9 -4.5 Z" fill="hsl(var(--primary))" />
-              <path d="M-5 0 L-12 -7 L-13 -6 L-7 0 L-13 6 L-12 7 Z" fill="hsl(var(--primary))" />
-            </g>
-          </svg>
+      {/* Masthead — electric cobalt, Feed edition */}
+      <header className="relative border-b-4 border-foreground overflow-hidden">
+        {/* Info bar */}
+        <div className="relative px-6 py-2 flex items-center justify-between"
+             style={{ background: 'hsl(213 100% 44%)' }}>
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/85">The Feed</span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/85">Turasum Wire Service</span>
         </div>
 
-        {/* Editorial bar */}
-        <div className="relative bg-primary text-primary-foreground px-6 py-2 flex items-center justify-between">
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">The Feed</span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Turasum Wire Service</span>
-        </div>
-        <div className="relative px-6 py-12 text-center bg-card/70 backdrop-blur-sm">
-          <h1 className="text-[clamp(2.5rem,8vw,5.5rem)] font-serif font-black tracking-tighter leading-none uppercase text-foreground">
-            The Feed
-          </h1>
-          <div className="w-full h-[2px] bg-foreground mt-3 mb-3" />
-          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-            Dispatches from your network · and beyond
-          </p>
+        {/* Electric blue hero with CD decorations */}
+        <div className="relative overflow-hidden" style={{ background: 'hsl(213 100% 44%)' }}>
+          {/* CD disc decorations */}
+          <div className="cd-disc absolute -top-12 -right-12 w-56 h-56 opacity-28 pointer-events-none"
+               style={{ animation: 'holo-spin 20s linear infinite' }} />
+          <div className="cd-disc absolute -bottom-10 -left-10 w-44 h-44 opacity-22 pointer-events-none"
+               style={{ animation: 'holo-spin 26s linear infinite reverse' }} />
+
+          <div className="relative z-10 px-6 py-12 text-center">
+            <h1 className="font-serif font-black tracking-tighter leading-none uppercase text-white"
+                style={{ fontSize: 'clamp(2.5rem,8vw,6rem)', textShadow: '3px 3px 0 rgba(0,0,0,0.2)' }}>
+              The Feed
+            </h1>
+            <div className="holo-stripe h-[3px] w-full mt-3 mb-3 opacity-80" />
+            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-white/65">
+              Dispatches from your network · and beyond
+            </p>
+          </div>
         </div>
       </header>
 
-      {/* Tabs + content area with Y2K indigo background */}
+      {/* Tabs + content — electric cobalt deep background */}
       <div
         className="relative"
-        style={{
-          background: [
-            /* Base deep indigo */
-            'hsl(234 40% 10%)',
-          ].join(', '),
-        }}
+        style={{ background: 'hsl(213 70% 8%)' }}
       >
-        {/* Y2K grid overlay */}
+        {/* Y2K grid overlay — now blue-tinted */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage: [
-              /* Horizontal lines */
-              'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.12) 39px, rgba(99,102,241,0.12) 40px)',
-              /* Vertical lines */
-              'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.12) 39px, rgba(99,102,241,0.12) 40px)',
+              'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
+              'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
             ].join(', '),
           }}
         />
-        {/* Diagonal neon accent bars (Y2K) */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, hsl(243 75% 55% / 0.6), transparent)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, hsl(243 75% 55% / 0.3), transparent)' }} />
+        {/* Holographic top/bottom accent lines */}
+        <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
+        <div className="holo-stripe absolute bottom-0 left-0 right-0 h-[1px] opacity-40" />
 
         <div className="relative max-w-5xl mx-auto px-6 py-12">
           <Tabs defaultValue="following">

@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Camera, Compass, Newspaper, Volume2 } from 'lucide-react';
-import { Logo, FoxT } from '@/components/logo';
+import { Logo } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
 import { ScrollVelocityStrip, type StripItem } from '@/components/scroll-velocity-strip';
 import { ThreeCubeBg } from '@/components/three-cube-bg';
@@ -35,40 +35,65 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Editorial masthead */}
-      <header className="relative border-b border-border overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: [
-            'radial-gradient(ellipse 65% 55% at 20% 20%, hsl(243 75% 55% / 0.11) 0%, transparent 65%)',
-            'radial-gradient(ellipse 50% 45% at 75% 75%, hsl(260 70% 60% / 0.09) 0%, transparent 60%)',
-            'hsl(var(--background))',
-          ].join(', '),
-        }} />
-        <div className="relative bg-foreground text-background px-6 py-2 flex items-center justify-between">
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Turasum · Field Correspondent Network</span>
-          <AnimatedLogoMark className="h-4 w-4 text-background" />
+      {/* Hero — electric cobalt magazine cover */}
+      <header className="relative border-b-4 border-foreground overflow-hidden">
+        {/* Info ticker */}
+        <div className="relative px-6 py-2 flex items-center justify-between overflow-hidden"
+             style={{ background: 'hsl(213 100% 44%)' }}>
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/85">
+            Turasum · Field Correspondent Network
+          </span>
+          <AnimatedLogoMark className="h-4 w-4 text-white/70" />
         </div>
-        <div className="relative px-6 py-20 md:py-28 text-center bg-card/60 backdrop-blur-sm overflow-hidden">
-          {/* Three.js rotating cube grid — abstract hero accent (right side) */}
-          <div className="absolute right-0 top-0 bottom-0 w-64 md:w-80 pointer-events-none opacity-30">
+
+        {/* Electric blue cover */}
+        <div className="relative overflow-hidden" style={{ background: 'hsl(213 100% 44%)', minHeight: '55vh' }}>
+          {/* Floating CD discs — like the magazine cover */}
+          <div className="cd-disc absolute -top-20 -right-20 w-80 h-80 opacity-35 pointer-events-none"
+               style={{ animation: 'holo-spin 24s linear infinite' }} />
+          <div className="cd-disc absolute bottom-0 -left-16 w-60 h-60 opacity-28 pointer-events-none"
+               style={{ animation: 'holo-spin 30s linear infinite reverse' }} />
+          <div className="cd-disc absolute top-12 left-1/4 w-36 h-36 opacity-20 pointer-events-none"
+               style={{ animation: 'holo-spin 18s linear infinite' }} />
+          <div className="cd-disc absolute bottom-12 right-1/4 w-24 h-24 opacity-18 pointer-events-none"
+               style={{ animation: 'holo-spin 14s linear infinite reverse' }} />
+
+          {/* Three.js cube — right accent */}
+          <div className="absolute right-0 top-0 bottom-0 w-64 md:w-80 pointer-events-none opacity-15">
             <ThreeCubeBg className="w-full h-full" />
           </div>
 
-          {/* Fox-T embedded in the masthead headline */}
-          <h1 className="relative z-10 font-serif font-black tracking-tighter leading-none uppercase text-foreground"
-              style={{ fontSize: 'clamp(3.5rem,12vw,9rem)' }}>
-            <FoxT />
-            <span>urasum</span>
-          </h1>
-          <div className="w-full h-[3px] bg-foreground mt-5 mb-5" />
-          <p className="font-mono text-[10px] md:text-xs uppercase tracking-[0.35em] text-muted-foreground max-w-sm mx-auto">
-            Your camera roll · Turned into a story you remember
-          </p>
-          <div className="pt-8">
+          {/* Cover content */}
+          <div className="relative z-10 px-6 py-20 md:py-28 text-center">
+            <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
+              Fall 2025 · Vol. I · Issue 1
+            </div>
+
+            <h1
+              className="font-serif font-black tracking-tighter leading-none uppercase text-white"
+              style={{ fontSize: 'clamp(3.5rem,13vw,10rem)', textShadow: '4px 4px 0 rgba(0,0,0,0.22)' }}
+            >
+              Turasum
+            </h1>
+
+            {/* Holographic rule */}
+            <div className="holo-stripe h-[3px] w-full mt-5 mb-3 opacity-90" />
+            <p
+              className="font-serif italic text-white/80 mt-2 mb-1"
+              style={{ fontSize: 'clamp(0.9rem,2.5vw,1.4rem)' }}
+            >
+              Y2K and the art of the travel story
+            </p>
+            <div className="holo-stripe h-[2px] w-full mt-3 mb-8 opacity-60" />
+
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/65 mb-8">
+              Your camera roll · Turned into a story you remember
+            </p>
+
             <Link href="/sign-up">
               <Button
                 size="lg"
-                className="rounded-none font-mono text-[10px] uppercase tracking-[0.25em] shadow-[0_0_35px_-8px_hsl(243_75%_55%/0.65)] hover:shadow-[0_0_45px_-6px_hsl(243_75%_55%/0.85)] transition-shadow"
+                className="rounded-none font-mono text-[10px] uppercase tracking-[0.25em] bg-white text-foreground hover:bg-white/90 border-0 shadow-[0_0_40px_-8px_rgba(255,255,255,0.5)] hover:shadow-[0_0_55px_-6px_rgba(255,255,255,0.7)] transition-all"
               >
                 Start Your Story
               </Button>
