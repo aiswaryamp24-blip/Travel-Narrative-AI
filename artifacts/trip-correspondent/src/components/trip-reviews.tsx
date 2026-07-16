@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { Send, MessageSquare } from 'lucide-react';
 
 const ICONS = [
   { src: '/icon-bike.png',  label: 'Needs the SOS button',  alt: 'bike' },
@@ -20,11 +21,44 @@ function useStoredRating(tripId: number) {
   return [rating, setRating] as const;
 }
 
+interface StoredComment { text: string; savedAt: string; }
+
+function useStoredComments(tripId: number) {
+  const key = `trip-comments-${tripId}`;
+  const [comments, setCommentsState] = useState<StoredComment[]>(() => {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : []; } catch { return []; }
+  });
+  const addComment = (text: string) => {
+    const next = [...comments, { text, savedAt: new Date().toISOString() }];
+    setCommentsState(next);
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+  const removeComment = (index: number) => {
+    const next = comments.filter((_, i) => i !== index);
+    setCommentsState(next);
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+  return { comments, addComment, removeComment };
+}
+
 export function TripReviews({ tripId }: { tripId: number }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [rating, setRating] = useStoredRating(tripId);
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
+  const { comments, addComment, removeComment } = useStoredComments(tripId);
+  const [draft, setDraft] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleSubmit = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    addComment(trimmed);
+    setDraft('');
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
+  };
 
   const ratingFromX = useCallback((clientX: number): number => {
     const track = trackRef.current;
@@ -166,14 +200,92 @@ export function TripReviews({ tripId }: { tripId: number }) {
         </div>
 
         {rating !== null && (
-          <button
-            type="button"
-            onClick={() => setRating(rating)}
-            className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest hover:text-muted-foreground transition-colors"
-          >
+          <p className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest">
             Rating saved · click any icon to change
-          </button>
+          </p>
         )}
+
+        {/* ── Comment box ─────────────────────────────────────── */}
+        <div className="border-t border-border pt-8 space-y-5 text-left select-text">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-3.5 w-3.5 text-primary" />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Leave a note
+            </span>
+          </div>
+
+          {/* Textarea */}
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
+              }}
+              placeholder="What made this trip unforgettable? Share a memory, a detail, a feeling…"
+              rows={4}
+              className="w-full resize-none border border-border bg-background text-foreground text-sm font-sans placeholder:text-muted-foreground/50 px-4 py-3 focus:outline-none focus:border-primary transition-colors rounded-none"
+            />
+            {/* Character count */}
+            <span className="absolute bottom-2 right-3 font-mono text-[9px] text-muted-foreground/40 pointer-events-none">
+              {draft.length > 0 ? `${draft.length}` : ''}
+            </span>
+          </div>
+
+          {/* Submit row */}
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[9px] text-muted-foreground/40 uppercase tracking-wider hidden sm:block">
+              ⌘ + Enter to send
+            </span>
+            <button
+              type="button"
+              disabled={!draft.trim()}
+              onClick={handleSubmit}
+              className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              {submitted ? (
+                <span className="animate-in fade-in duration-200">Saved ✓</span>
+              ) : (
+                <>
+                  <Send className="h-3 w-3" />
+                  Post note
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Saved comments list */}
+          {comments.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <div className="h-px bg-border/50" />
+              {comments.map((c, i) => (
+                <div
+                  key={i}
+                  className="group relative bg-muted/40 border border-border/60 px-4 py-3 space-y-1"
+                >
+                  <p className="text-sm font-sans text-foreground leading-relaxed whitespace-pre-wrap">
+                    {c.text}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider">
+                      {new Date(c.savedAt).toLocaleDateString(undefined, {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeComment(i)}
+                      className="font-mono text-[9px] text-muted-foreground/30 hover:text-destructive uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
