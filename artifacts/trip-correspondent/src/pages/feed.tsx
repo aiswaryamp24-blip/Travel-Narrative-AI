@@ -19,22 +19,18 @@ function FeedTabContent({
   emptyMessage: string;
 }) {
   if (isLoading) return <TripGridSkeleton />;
-
   if (!trips?.length) {
     return (
-      <div className="text-center py-24 bg-accent/30 border border-border">
-        <EmptyIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+      <div className="text-center py-24 border border-dashed border-primary/20">
+        <EmptyIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-30" />
         <h3 className="font-serif text-xl mb-2">{emptyTitle}</h3>
-        <p className="text-muted-foreground">{emptyMessage}</p>
+        <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">{emptyMessage}</p>
       </div>
     );
   }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {trips.map((trip) => (
-        <TripCard key={trip.id} trip={trip} />
-      ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {trips.map(trip => <TripCard key={trip.id} trip={trip} />)}
     </div>
   );
 }
@@ -45,95 +41,120 @@ export default function Feed() {
   const { data: discoverTrips, isLoading: isDiscoverLoading } = useGetDiscoverFeed();
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'hsl(var(--background))' }}>
-      <nav className="py-4 px-6 flex justify-between items-center border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-40">
+    <div className="min-h-screen pb-24 bg-background">
+      {/* Nav */}
+      <nav className="py-3 px-6 flex justify-between items-center border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-40">
         <Link href="/library"><Logo className="text-lg" /></Link>
-        <span className="text-xs font-bold font-mono uppercase tracking-widest text-muted-foreground border border-primary/30 px-3 py-1.5">The Feed</span>
+        <span className="text-[10px] font-black font-mono uppercase tracking-[0.3em] text-muted-foreground border border-primary/30 px-3 py-1.5">Wire Service</span>
       </nav>
 
-      {/* Watercolor-inspired hero banner */}
-      <header className="relative py-16 px-6 border-b border-border overflow-hidden">
-        {/* Watercolor background layers */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Base gradient - soft blue-white watercolor */}
-          <div className="absolute inset-0" style={{
-            background: 'radial-gradient(ellipse 80% 60% at 15% 25%, rgba(147,197,253,0.35) 0%, transparent 65%), radial-gradient(ellipse 60% 50% at 80% 60%, rgba(196,219,255,0.3) 0%, transparent 60%), radial-gradient(ellipse 50% 70% at 50% 80%, rgba(224,239,255,0.25) 0%, transparent 55%), hsl(var(--background))'
+      {/* Masthead */}
+      <header className="relative border-b border-border overflow-hidden">
+        {/* Watercolor top layer (soft blue blobs) */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: [
+              'radial-gradient(ellipse 80% 60% at 15% 25%, rgba(147,197,253,0.32) 0%, transparent 65%)',
+              'radial-gradient(ellipse 60% 50% at 80% 60%, rgba(196,219,255,0.28) 0%, transparent 60%)',
+              'hsl(var(--background))',
+            ].join(', '),
           }} />
-          {/* Watercolor blob top-right */}
-          <div className="absolute -top-8 right-0 w-64 h-64 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, rgba(147,197,253,0.8) 0%, rgba(196,219,255,0.4) 40%, transparent 70%)', transform: 'scale(1.5)' }} />
-          {/* Airplane trail SVG */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.12]" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice" fill="none">
-            {/* Dotted flight trail */}
-            <path d="M 50 200 Q 200 80 380 120 Q 550 160 700 60" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="6 8" />
-            {/* Airplane shape at end of trail */}
-            <g transform="translate(695, 48) rotate(-30)">
-              <path d="M0 0 L-8 4 L-6 0 L-8 -4 Z" fill="hsl(var(--primary))" />
-              <path d="M-4 0 L-10 -6 L-11 -5 L-6 0 L-11 5 L-10 6 Z" fill="hsl(var(--primary))" />
-              <path d="M-7 0 L-10 -2 L-10.5 -1.5 L-8.5 0 L-10.5 1.5 L-10 2 Z" fill="hsl(var(--primary))" />
+          {/* Airplane + contrail SVG */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.10]" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid slice" fill="none">
+            <path d="M 40 160 Q 180 60 360 95 Q 520 130 680 40" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="5 8" />
+            <g transform="translate(676, 32) rotate(-32)">
+              <path d="M0 0 L-9 4.5 L-7 0 L-9 -4.5 Z" fill="hsl(var(--primary))" />
+              <path d="M-5 0 L-12 -7 L-13 -6 L-7 0 L-13 6 L-12 7 Z" fill="hsl(var(--primary))" />
             </g>
           </svg>
         </div>
 
-        <div className="relative max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-primary"></span>
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Wire Service</span>
-            <span className="h-[1px] w-12 bg-primary"></span>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tight text-center uppercase text-foreground">
+        {/* Editorial bar */}
+        <div className="relative bg-primary text-primary-foreground px-6 py-2 flex items-center justify-between">
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">The Feed</span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Turasum Wire Service</span>
+        </div>
+        <div className="relative px-6 py-12 text-center bg-card/70 backdrop-blur-sm">
+          <h1 className="text-[clamp(2.5rem,8vw,5.5rem)] font-serif font-black tracking-tighter leading-none uppercase text-foreground">
             The Feed
           </h1>
-          <p className="text-muted-foreground font-serif italic text-lg max-w-xl text-center">
-            Dispatches from your network, and beyond.
+          <div className="w-full h-[2px] bg-foreground mt-3 mb-3" />
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+            Dispatches from your network · and beyond
           </p>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <Tabs defaultValue="following">
-          <TabsList className="mb-10 w-full sm:w-auto rounded-none bg-accent/30 p-1">
-            <TabsTrigger value="following" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
-              <Users className="h-3.5 w-3.5" /> Following
-            </TabsTrigger>
-            <TabsTrigger value="followers" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
-              <UserPlus className="h-3.5 w-3.5" /> Followers
-            </TabsTrigger>
-            <TabsTrigger value="discover" className="rounded-none font-mono text-xs uppercase tracking-widest gap-2">
-              <Compass className="h-3.5 w-3.5" /> Discover
-            </TabsTrigger>
-          </TabsList>
+      {/* Tabs + content area with Y2K indigo background */}
+      <div
+        className="relative"
+        style={{
+          background: [
+            /* Base deep indigo */
+            'hsl(234 40% 10%)',
+          ].join(', '),
+        }}
+      >
+        {/* Y2K grid overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: [
+              /* Horizontal lines */
+              'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.12) 39px, rgba(99,102,241,0.12) 40px)',
+              /* Vertical lines */
+              'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.12) 39px, rgba(99,102,241,0.12) 40px)',
+            ].join(', '),
+          }}
+        />
+        {/* Diagonal neon accent bars (Y2K) */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, hsl(243 75% 55% / 0.6), transparent)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, hsl(243 75% 55% / 0.3), transparent)' }} />
 
-          <TabsContent value="following">
-            <FeedTabContent
-              trips={feedTrips}
-              isLoading={isFeedLoading}
-              emptyIcon={Users}
-              emptyTitle="No Dispatches Yet"
-              emptyMessage="Follow other correspondents to fill this tab."
-            />
-          </TabsContent>
+        <div className="relative max-w-5xl mx-auto px-6 py-12">
+          <Tabs defaultValue="following">
+            <TabsList className="mb-8 w-full sm:w-auto rounded-none bg-white/5 backdrop-blur-sm border border-white/10 p-1">
+              <TabsTrigger
+                value="following"
+                className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em] gap-2 text-white/60 data-[state=active]:text-white data-[state=active]:bg-primary data-[state=active]:shadow-none"
+              >
+                <Users className="h-3.5 w-3.5" /> Following
+              </TabsTrigger>
+              <TabsTrigger
+                value="followers"
+                className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em] gap-2 text-white/60 data-[state=active]:text-white data-[state=active]:bg-primary data-[state=active]:shadow-none"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Followers
+              </TabsTrigger>
+              <TabsTrigger
+                value="discover"
+                className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em] gap-2 text-white/60 data-[state=active]:text-white data-[state=active]:bg-primary data-[state=active]:shadow-none"
+              >
+                <Compass className="h-3.5 w-3.5" /> Discover
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="followers">
-            <FeedTabContent
-              trips={followerTrips}
-              isLoading={isFollowersLoading}
-              emptyIcon={UserPlus}
-              emptyTitle="No Followers Yet"
-              emptyMessage="Trips from people who follow you will show up here."
-            />
-          </TabsContent>
+            <TabsContent value="following">
+              <FeedTabContent trips={feedTrips} isLoading={isFeedLoading} emptyIcon={Users} emptyTitle="No Dispatches Yet" emptyMessage="Follow other correspondents to fill this tab" />
+            </TabsContent>
+            <TabsContent value="followers">
+              <FeedTabContent trips={followerTrips} isLoading={isFollowersLoading} emptyIcon={UserPlus} emptyTitle="No Followers Yet" emptyMessage="Trips from people who follow you appear here" />
+            </TabsContent>
+            <TabsContent value="discover">
+              <FeedTabContent trips={discoverTrips} isLoading={isDiscoverLoading} emptyIcon={Compass} emptyTitle="Nothing New to Discover" emptyMessage="Check back later for public stories" />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
-          <TabsContent value="discover">
-            <FeedTabContent
-              trips={discoverTrips}
-              isLoading={isDiscoverLoading}
-              emptyIcon={Compass}
-              emptyTitle="Nothing New to Discover"
-              emptyMessage="Check back later for public stories from new correspondents."
-            />
-          </TabsContent>
-        </Tabs>
-      </main>
+      <footer className="border-t border-border py-8 px-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-center gap-6 text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+          <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          <span className="h-3 w-px bg-border" />
+          <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+        </div>
+      </footer>
     </div>
   );
 }

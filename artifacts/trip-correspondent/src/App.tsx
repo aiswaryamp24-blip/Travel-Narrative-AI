@@ -13,6 +13,8 @@ import Trip from '@/pages/trip';
 import Feed from '@/pages/feed';
 import Profile from '@/pages/profile';
 import Explore from '@/pages/explore';
+import Terms from '@/pages/terms';
+import Privacy from '@/pages/privacy';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppBackground } from '@/components/app-background';
 
@@ -178,6 +180,8 @@ function Router() {
       <Route path="/feed" component={FeedPage} />
       <Route path="/explore" component={Explore} />
       <Route path="/users/:id" component={Profile} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route>
         <div className="min-h-screen flex items-center justify-center text-center p-6 bg-background">
           <div>

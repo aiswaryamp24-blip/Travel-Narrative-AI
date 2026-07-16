@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-/** Counts 0 -> 100 over `durationMs`, driving both the percentage readout
- * and the progress-track marker — matches the splash's real display
- * duration (see App.tsx's useShowSplash) rather than an arbitrary pace. */
 function useCountUp(durationMs: number) {
   const [progress, setProgress] = useState(0);
-
   useEffect(() => {
     const start = performance.now();
     let frame: number;
@@ -18,83 +14,109 @@ function useCountUp(durationMs: number) {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [durationMs]);
-
   return progress;
 }
 
-/** Trailing caravan riding the progress track — each icon lags the readout
- * percentage by a fixed offset (so they arrive staggered, not stacked) and
- * bobs slightly out of phase with the others for a lively, non-uniform feel. */
 const CARAVAN = [
   { src: '/icon-plane.png', offset: 0, bobDelay: 0 },
   { src: '/icon-train.png', offset: 9, bobDelay: 0.2 },
   { src: '/icon-bike.png', offset: 18, bobDelay: 0.4 },
 ];
 
-function TurasumLoadingCard({ durationMs = 1500 }: { durationMs?: number }) {
+function GlassProgressBar({ durationMs = 1500 }: { durationMs?: number }) {
   const progress = useCountUp(durationMs);
 
   return (
-    <div className="w-72 md:w-80 rounded-3xl bg-card/30 backdrop-blur-xl border border-white/40 shadow-xl px-6 py-5 space-y-5">
-      <div className="text-center font-y2k text-xs uppercase tracking-[0.3em] text-muted-foreground">
-        turasum
-      </div>
-
-      <div className="text-right text-3xl md:text-4xl font-y2k font-black text-primary tabular-nums">
-        {progress}%
-      </div>
-
-      <div className="relative h-8">
-        <div
-          className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[2px]"
+    <div className="w-full flex flex-col items-center gap-8">
+      {/* Large logo mark */}
+      <div className="flex flex-col items-center gap-3">
+        <img
+          src="/fox-logo.png"
+          alt="Turasum"
+          className="h-20 w-20 object-contain"
           style={{
-            backgroundImage:
-              'repeating-linear-gradient(90deg, hsl(var(--muted-foreground)) 0, hsl(var(--muted-foreground)) 2px, transparent 2px, transparent 7px)',
-            opacity: 0.4,
+            filter: 'drop-shadow(0 0 16px hsl(243 75% 55% / 0.7)) drop-shadow(0 0 6px hsl(243 75% 55% / 0.9))',
           }}
         />
-        {CARAVAN.map(({ src, offset, bobDelay }) => (
-          <motion.img
-            key={src}
-            src={src}
-            alt=""
-            className="absolute top-1/2 h-5 w-5 md:h-6 md:w-6 object-contain -translate-x-1/2"
-            animate={{
-              left: `${Math.max(0, progress - offset)}%`,
-              y: ['-50%', 'calc(-50% - 3px)', '-50%'],
-            }}
-            transition={{
-              left: { ease: 'linear', duration: 0.1 },
-              y: { duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: bobDelay },
-            }}
-          />
-        ))}
+        <span
+          className="text-xs font-mono uppercase tracking-[0.45em] text-primary/80"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        >
+          turasum
+        </span>
+      </div>
+
+      {/* Percentage readout */}
+      <span
+        className="text-5xl font-black tabular-nums"
+        style={{
+          fontFamily: "'Space Grotesk', serif",
+          color: 'hsl(var(--foreground))',
+          letterSpacing: '-0.04em',
+        }}
+      >
+        {progress}<span className="text-2xl text-muted-foreground">%</span>
+      </span>
+
+      {/* Glass progress track — no box, just the line */}
+      <div className="relative w-80 md:w-[420px]">
+        {/* Track: frosted glass hairline */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[1px]"
+          style={{ background: 'hsl(var(--border))' }}
+        />
+        {/* Glass fill bar */}
+        <motion.div
+          className="absolute top-1/2 -translate-y-1/2 left-0 h-[2px] origin-left"
+          style={{
+            width: `${progress}%`,
+            background: 'linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary)))',
+            boxShadow: '0 0 8px 1px hsl(var(--primary) / 0.4)',
+          }}
+          transition={{ ease: 'linear', duration: 0.1 }}
+        />
+        {/* Travel icons riding the track */}
+        <div className="relative h-9">
+          {CARAVAN.map(({ src, offset, bobDelay }) => (
+            <motion.img
+              key={src}
+              src={src}
+              alt=""
+              className="absolute top-1/2 h-5 w-5 object-contain -translate-x-1/2"
+              animate={{
+                left: `${Math.max(0, progress - offset)}%`,
+                y: ['-50%', 'calc(-50% - 4px)', '-50%'],
+              }}
+              transition={{
+                left: { ease: 'linear', duration: 0.1 },
+                y: { duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: bobDelay },
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-/**
- * Full-screen splash shown briefly on initial app load. Deliberately not
- * wired to any real loading signal (Clerk auth resolution, data fetches)
- * since this app's exact Clerk wrapper API couldn't be verified in this
- * environment — a fixed-duration overlay (see App.tsx) is a safer bet than
- * gating on an unconfirmed API and risking a broken build.
- */
 export function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-end pb-4 md:pb-6 overflow-hidden bg-background">
-      <img src="/loading-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
-      <video
-        src="/loading-fox-bg.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div className="relative z-10 flex flex-col items-center gap-8">
-        <TurasumLoadingCard durationMs={1500} />
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-background">
+      {/* Subtle indigo aurora background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: [
+              'radial-gradient(ellipse 70% 55% at 20% 15%, hsl(243 75% 55% / 0.12) 0%, transparent 65%)',
+              'radial-gradient(ellipse 55% 45% at 80% 80%, hsl(260 70% 60% / 0.10) 0%, transparent 60%)',
+              'radial-gradient(ellipse 40% 60% at 55% 40%, hsl(243 60% 65% / 0.07) 0%, transparent 50%)',
+            ].join(', '),
+          }}
+        />
+      </div>
+      <div className="relative z-10">
+        <GlassProgressBar durationMs={1500} />
       </div>
     </div>
   );

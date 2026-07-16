@@ -84,7 +84,7 @@ export const TRIP_STYLES: TripStyleDef[] = [
   },
   {
     id: 'camera-interface',
-    name: 'Camera Interface',
+    name: 'Viewfinder Interface',
     description: 'Black EVF, emerald HUD readouts',
     colors: {
       background: '150 17% 5%',

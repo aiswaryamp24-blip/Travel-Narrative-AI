@@ -77,7 +77,7 @@ export const DIGEST_STYLES: Record<DigestStyleId, DigestStylePreset> = {
   },
   'camera-interface': {
     id: 'camera-interface',
-    name: 'Camera Interface',
+    name: 'Viewfinder Interface',
     bg: '#0A0A0A',          // Black EVF
     surface: '#1A1A1A',
     fg: '#E8E8E8',
