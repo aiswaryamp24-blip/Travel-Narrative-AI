@@ -467,7 +467,8 @@ export const GetUserProfileResponse = zod.object({
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })),
-  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.')
 }))
 
 
@@ -479,7 +480,8 @@ export const UpdateUserSettingsParams = zod.object({
 })
 
 export const UpdateUserSettingsBody = zod.object({
-  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for a wrapped digest PDF.')
 })
 
 export const UpdateUserSettingsResponse = zod.object({
@@ -505,7 +507,8 @@ export const UpdateUserSettingsResponse = zod.object({
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })),
-  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.')
+  "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.')
 }))
 
 
@@ -588,6 +591,32 @@ export const GetDiscoverFeedResponse = zod.array(GetDiscoverFeedResponseItem)
 
 
 /**
+ * @summary Trips from people who follow you
+ */
+export const GetFollowersFeedResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "owner": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+}))
+export const GetFollowersFeedResponse = zod.array(GetFollowersFeedResponseItem)
+
+
+/**
  * @summary List the signed-in user's own trip digests, newest first
  */
 export const ListDigestsResponseItem = zod.object({
@@ -606,6 +635,10 @@ export const ListDigestsResponse = zod.array(ListDigestsResponseItem)
  * completed trips in that period rather than creating an empty digest.
  * @summary Manually generate a digest now, bypassing the automatic cadence
  */
+export const GenerateDigestBody = zod.object({
+  "style": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for a wrapped digest PDF.')
+})
+
 export const GenerateDigestResponse = zod.object({
   "id": zod.number(),
   "periodStart": zod.coerce.date(),

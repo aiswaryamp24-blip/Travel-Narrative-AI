@@ -5,3 +5,4 @@
 - [Testing subagent blocked by Clerk bot-check on sign-up](testing-subagent-clerk-signup-block.md) — Cloudflare human-verification blocks automated sign-up; verify auth gating via curl/API instead.
 - [Express 5 req.params typed as string|string[]](express5-params-string-array.md) — coerce with `String(req.params.x)` before passing to drizzle/typed fns; existing code masks it via `Number(...)`.
 - [Resend connector usage from app code](resend-connector-app-code.md) — use `@replit/connectors-sdk`'s `ReplitConnectors.proxy('resend', '/emails', ...)` directly in server code, not sandbox `listConnections`.
+- [api-server integration test setup](api-server-testing-setup.md) — vitest+supertest added for api-server; Clerk mocked via header, tests hit real DB/object storage.

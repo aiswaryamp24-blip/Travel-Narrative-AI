@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DigestCadenceMonths } from './digestCadenceMonths';
+import type { DigestStyle } from './digestStyle';
 
 export interface UpdateUserSettingsInput {
   digestCadenceMonths: DigestCadenceMonths;
+  preferredDigestStyle?: DigestStyle;
 }

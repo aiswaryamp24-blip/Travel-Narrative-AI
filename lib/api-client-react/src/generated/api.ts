@@ -24,6 +24,7 @@ import type {
   ErrorEnvelope,
   FeedTripSummary,
   FollowState,
+  GenerateDigestInput,
   HealthStatus,
   Photo,
   PhotoBatchInput,
@@ -1492,6 +1493,9 @@ export function useGetDiscoverFeed<TData = Awaited<ReturnType<typeof getDiscover
 
 
 
+
+
+
 export const getGetFollowersFeedUrl = () => {
 
 
@@ -1660,14 +1664,14 @@ export const getGenerateDigestUrl = () => {
  * completed trips in that period rather than creating an empty digest.
  * @summary Manually generate a digest now, bypassing the automatic cadence
  */
-export const generateDigest = async ( options?: RequestInit): Promise<Digest> => {
+export const generateDigest = async (generateDigestInput?: GenerateDigestInput, options?: RequestInit): Promise<Digest> => {
 
   return customFetch<Digest>(getGenerateDigestUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(generateDigestInput)
   }
 );}
 
@@ -1676,8 +1680,8 @@ export const generateDigest = async ( options?: RequestInit): Promise<Digest> =>
 
 
 export const getGenerateDigestMutationOptions = <TError = ErrorType<ErrorEnvelope>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,{data?: BodyType<GenerateDigestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,{data?: BodyType<GenerateDigestInput>}, TContext> => {
 
 const mutationKey = ['generateDigest'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1689,10 +1693,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateDigest>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateDigest>>, {data?: BodyType<GenerateDigestInput>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  generateDigest(requestOptions)
+          return  generateDigest(data,requestOptions)
         }
 
 
@@ -1703,18 +1707,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type GenerateDigestMutationResult = NonNullable<Awaited<ReturnType<typeof generateDigest>>>
-
+    export type GenerateDigestMutationBody = BodyType<GenerateDigestInput> | undefined
     export type GenerateDigestMutationError = ErrorType<ErrorEnvelope>
 
     /**
  * @summary Manually generate a digest now, bypassing the automatic cadence
  */
 export const useGenerateDigest = <TError = ErrorType<ErrorEnvelope>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateDigest>>, TError,{data?: BodyType<GenerateDigestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof generateDigest>>,
         TError,
-        void,
+        {data?: BodyType<GenerateDigestInput>},
         TContext
       > => {
       return useMutation(getGenerateDigestMutationOptions(options));

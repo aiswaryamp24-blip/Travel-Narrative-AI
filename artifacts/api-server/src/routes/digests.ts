@@ -1,9 +1,10 @@
 import { Readable } from 'stream';
-import { db, digestsTable, type Digest } from '@workspace/db';
+import { db, digestsTable, digestStyleValues, type Digest } from '@workspace/db';
 import { desc, eq } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
 import { requireAuth } from '../middlewares/auth';
 import { getOrCreateDigestForUser } from '../lib/digestScheduler';
+import type { DigestStyleId } from '../lib/digestStyles';
 import { ObjectNotFoundError, ObjectStorageService } from '../lib/objectStorage';
 
 const router: IRouter = Router();
@@ -32,8 +33,15 @@ router.get('/digests', requireAuth, async (req: Request, res: Response) => {
 
 /** POST /digests/generate — manually trigger a digest now, bypassing the cadence check. */
 router.post('/digests/generate', requireAuth, async (req: Request, res: Response) => {
+  // Optional style override — validated against the known set.
+  const rawStyle = req.body?.style as string | undefined;
+  const styleId: DigestStyleId | undefined =
+    rawStyle && digestStyleValues.includes(rawStyle as any)
+      ? (rawStyle as DigestStyleId)
+      : undefined;
+
   try {
-    const result = await getOrCreateDigestForUser(req.userId!, { force: true });
+    const result = await getOrCreateDigestForUser(req.userId!, { force: true, styleId });
     if (result.status !== 'created') {
       res.status(400).json({
         error: 'No completed trips since your last digest — nothing to generate yet.',

@@ -8,9 +8,11 @@
 
 export * from './digest';
 export * from './digestCadenceMonths';
+export * from './digestStyle';
 export * from './errorEnvelope';
 export * from './feedTripSummary';
 export * from './followState';
+export * from './generateDigestInput';
 export * from './healthStatus';
 export * from './landmark';
 export * from './photo';
