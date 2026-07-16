@@ -20,7 +20,9 @@ import type { PhotoImageBlock } from "./photoContent";
 import type { DigestStyleValue } from "@workspace/db";
 
 const MODEL = "claude-sonnet-4-5";
-const MAX_TOOL_ROUNDS = 6;
+/** Reduced from 6 → 4 for faster per-day generation with no meaningful
+ * quality loss: most locations are fully researched within 3 rounds. */
+const MAX_TOOL_ROUNDS = 4;
 
 /** Tone/register instruction per chosen visual style, so the prose reads
  * like it belongs to the magazine the traveler picked rather than always

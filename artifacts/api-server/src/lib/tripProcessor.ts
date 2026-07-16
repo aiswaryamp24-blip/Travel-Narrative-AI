@@ -25,11 +25,10 @@ function sampleForVision(dayPhotos: Photo[]): Photo[] {
   return Array.from({ length: MAX_PHOTOS_FOR_VISION }, (_, i) => dayPhotos[Math.floor(i * step)]);
 }
 
-/** How many days are researched concurrently. Bounded (rather than unbounded
- * Promise.all) because the research pipeline calls Nominatim and Overpass,
- * whose usage policies for their free public instances prohibit bulk
- * parallel requests. */
-const RESEARCH_CONCURRENCY = 3;
+/** How many days are researched concurrently. Increased to 5 (from 3) for
+ * faster multi-day trips — Claude API is the primary bottleneck, not
+ * Nominatim, and 5 concurrent calls stays within free-tier rate limits. */
+const RESEARCH_CONCURRENCY = 5;
 
 async function mapWithConcurrency<T, R>(
   items: T[],

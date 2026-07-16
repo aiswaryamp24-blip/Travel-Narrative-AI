@@ -5,6 +5,7 @@ import { Map } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SocialShareModal } from '@/components/social-share-modal';
 
 export function TripCard({ trip }: { trip: FeedTripSummary }) {
   return (
@@ -43,17 +44,21 @@ export function TripCard({ trip }: { trip: FeedTripSummary }) {
         {trip.summary && (
           <p className="text-muted-foreground text-sm line-clamp-3 font-serif italic">"{trip.summary}"</p>
         )}
-        <Link href={`/users/${trip.owner.id}`} className="flex items-center gap-2 group w-fit">
-          <Avatar className="h-6 w-6 rounded-none border border-border">
-            <AvatarImage src={trip.owner.avatarUrl ?? undefined} alt={trip.owner.displayName} className="rounded-none" />
-            <AvatarFallback className="rounded-none text-xs font-serif">
-              {trip.owner.displayName.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
-            {trip.owner.displayName}
-          </span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href={`/users/${trip.owner.id}`} className="flex items-center gap-2 group w-fit">
+            <Avatar className="h-6 w-6 rounded-none border border-border">
+              <AvatarImage src={trip.owner.avatarUrl ?? undefined} alt={trip.owner.displayName} className="rounded-none" />
+              <AvatarFallback className="rounded-none text-xs font-serif">
+                {trip.owner.displayName.slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
+              {trip.owner.displayName}
+            </span>
+          </Link>
+          {/* Social share */}
+          <SocialShareModal trip={trip} />
+        </div>
       </div>
     </motion.article>
   );

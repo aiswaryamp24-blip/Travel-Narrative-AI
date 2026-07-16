@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
+import { TripReviews } from '@/components/trip-reviews';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
 import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
@@ -137,29 +138,45 @@ export default function Trip() {
 
   if (trip.status === 'pending' || trip.status === 'processing') {
     return (
-      <div className="min-h-[100dvh] flex flex-col bg-background relative overflow-hidden">
-        {/* Background texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-12 z-10">
-          <div className="relative">
-            <div className="absolute -inset-4 border border-primary/20 animate-spin-slow rounded-full border-dashed" style={{ animationDuration: '10s' }} />
-            <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          </div>
-          
-          <div className="space-y-4 max-w-md">
-            <h1 className="text-4xl font-serif italic">Filing the Story</h1>
-            <div className="h-[1px] w-24 bg-border mx-auto" />
-            <div className="text-muted-foreground font-mono text-sm uppercase tracking-widest leading-loose space-y-2">
-              {trip.days.length > 0 ? (
-                <p>{trip.days.length} {trip.days.length === 1 ? 'day' : 'days'} filed so far&hellip;</p>
-              ) : (
-                <p className="animate-pulse">Researching the first day&hellip;</p>
-              )}
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#f0f0f8] relative overflow-hidden p-6">
+        {/* Outer rounded card — matches the GIF aesthetic */}
+        <div className="w-full max-w-md bg-white/80 backdrop-blur border border-border/40 rounded-2xl shadow-xl overflow-hidden">
+          {/* Green progress stripe at top */}
+          <div className="h-[3px] bg-green-400 w-full" style={{ boxShadow: '0 0 8px rgba(74,222,128,0.6)' }} />
+
+          <div className="p-8 space-y-6 text-center">
+            <p className="font-mono text-xs uppercase tracking-[0.35em] text-muted-foreground">turasum</p>
+
+            {/* GIF progress animation */}
+            <div className="flex justify-center">
+              <img
+                src="/generating-progress.gif"
+                alt="Generating story…"
+                className="w-full max-w-xs"
+                style={{ imageRendering: 'auto' }}
+              />
             </div>
-            <p className="text-muted-foreground/70 text-xs normal-case tracking-normal font-sans max-w-sm mx-auto">
-              Each day is researched and written individually, with your photos reviewed along the way — longer trips can take a few minutes.
-            </p>
+
+            {/* Status text */}
+            <div className="space-y-2">
+              <h1 className="font-serif text-2xl font-black">Filing the Story…</h1>
+              <div className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
+                {trip.days.length > 0 ? (
+                  <p>{trip.days.length} {trip.days.length === 1 ? 'day' : 'days'} researched so far</p>
+                ) : (
+                  <p className="animate-pulse">Researching the first day…</p>
+                )}
+              </div>
+              <p className="text-muted-foreground/60 text-xs font-sans">
+                Longer trips take 2–4 minutes. Each day is written individually with your photos reviewed.
+              </p>
+            </div>
+          </div>
+
+          <div className="h-[1px] bg-border/30" />
+          <div className="px-8 py-3 flex justify-between text-[9px] font-mono uppercase tracking-widest text-muted-foreground/50">
+            <span>BBC Research Mode</span>
+            <span>Analysing photos &amp; landmarks</span>
           </div>
         </div>
       </div>
@@ -498,6 +515,9 @@ export default function Trip() {
             </section>
           );
         })()}
+
+        {/* Reviews */}
+        <TripReviews tripId={tripId} />
 
         {/* End Mark */}
         <div className="py-24 flex justify-center text-primary">

@@ -5,6 +5,7 @@ import { Camera, Compass, Newspaper, Volume2 } from 'lucide-react';
 import { Logo, FoxT } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
 import { ScrollVelocityStrip, type StripItem } from '@/components/scroll-velocity-strip';
+import { ThreeCubeBg } from '@/components/three-cube-bg';
 
 export default function Landing() {
   const { data: discoverTrips } = useGetDiscoverFeed();
@@ -47,11 +48,16 @@ export default function Landing() {
           <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Turasum · Field Correspondent Network</span>
           <AnimatedLogoMark className="h-4 w-4 text-background" />
         </div>
-        <div className="relative px-6 py-20 md:py-28 text-center bg-card/60 backdrop-blur-sm">
+        <div className="relative px-6 py-20 md:py-28 text-center bg-card/60 backdrop-blur-sm overflow-hidden">
+          {/* Three.js rotating cube grid — abstract hero accent (right side) */}
+          <div className="absolute right-0 top-0 bottom-0 w-64 md:w-80 pointer-events-none opacity-30">
+            <ThreeCubeBg className="w-full h-full" />
+          </div>
+
           {/* Fox-T embedded in the masthead headline */}
-          <h1 className="font-serif font-black tracking-tighter leading-none uppercase text-foreground"
+          <h1 className="relative z-10 font-serif font-black tracking-tighter leading-none uppercase text-foreground"
               style={{ fontSize: 'clamp(3.5rem,12vw,9rem)' }}>
-            <FoxT style={{ color: 'hsl(var(--primary))' }} />
+            <FoxT />
             <span>urasum</span>
           </h1>
           <div className="w-full h-[3px] bg-foreground mt-5 mb-5" />

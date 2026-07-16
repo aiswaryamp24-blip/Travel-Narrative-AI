@@ -6,6 +6,7 @@ import { FileText, Newspaper, UserCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useClerk } from '@clerk/react';
 import { Logo, FoxT } from '@/components/logo';
+import { ThreeCubeBg } from '@/components/three-cube-bg';
 import { MosaicTripCard, mosaicSpanClass } from '@/components/mosaic-trip-card';
 
 type StyleDef = {
@@ -143,11 +144,14 @@ export default function Home() {
           <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Field Correspondent Network</span>
           <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Est. 2025</span>
         </div>
-        <div className="px-6 py-14 md:py-20 text-center bg-card">
-          <h1 className="font-serif font-black tracking-tighter leading-none uppercase text-foreground"
+        <div className="relative px-6 py-14 md:py-20 text-center bg-card overflow-hidden">
+          {/* Three.js cube accent — left side background */}
+          <div className="absolute left-0 top-0 bottom-0 w-48 md:w-64 pointer-events-none opacity-20">
+            <ThreeCubeBg className="w-full h-full" />
+          </div>
+          <h1 className="relative z-10 font-serif font-black tracking-tighter leading-none uppercase text-foreground"
               style={{ fontSize: 'clamp(3rem,10vw,7rem)' }}>
-            {/* Fox-T mark replaces the "T" in Turasum */}
-            <FoxT style={{ color: 'hsl(var(--primary))' }} />
+            <FoxT />
             <span>urasum</span>
           </h1>
           <div className="w-full h-[2px] bg-foreground mt-4 mb-4" />
