@@ -11,158 +11,226 @@ import {
 import sharp from 'sharp';
 import type { Photo, Trip, TripDay, User } from '@workspace/db';
 import { ObjectStorageService } from './objectStorage';
+import {
+  DIGEST_STYLES,
+  DEFAULT_DIGEST_STYLE,
+  type DigestStyleId,
+  type DigestStylePreset,
+} from './digestStyles';
 
 const e = React.createElement;
 
-// A distinct "wrapped"-style recap identity — dark canvas + amber accent —
-// deliberately different from the warm paper/editorial look of the
-// full-trip PDF export (pdfExport.ts) so a digest reads as its own thing.
-const INK = '#0f172a';
-const INK_LIGHT = '#1e293b';
-const ACCENT = '#f59e0b';
-const MUTED = '#94a3b8';
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
 
-const styles = StyleSheet.create({
-  coverPage: {
-    backgroundColor: INK,
-    padding: 0,
-  },
-  coverContainer: {
-    width: A4_WIDTH,
-    height: A4_HEIGHT,
-    padding: 56,
-    justifyContent: 'space-between',
-  },
-  kicker: {
-    fontFamily: 'Courier-Bold',
-    fontSize: 10,
-    letterSpacing: 4,
-    color: ACCENT,
-    textTransform: 'uppercase',
-  },
-  coverTitle: {
-    fontFamily: 'Times-Bold',
-    fontSize: 54,
-    color: '#ffffff',
-    lineHeight: 1.05,
-    marginTop: 20,
-  },
-  coverSubtitle: {
-    fontFamily: 'Times-Italic',
-    fontSize: 16,
-    color: MUTED,
-    marginTop: 16,
-  },
-  coverFooter: {
-    fontFamily: 'Courier',
-    fontSize: 9,
-    letterSpacing: 1.5,
-    color: MUTED,
-    textTransform: 'uppercase',
-  },
-  statsPage: {
-    backgroundColor: INK,
-    padding: 56,
-    color: '#ffffff',
-  },
-  sectionTitle: {
-    fontFamily: 'Times-Bold',
-    fontSize: 24,
-    color: '#ffffff',
-    marginBottom: 24,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  statBox: {
-    width: '47%',
-    borderWidth: 1,
-    borderColor: INK_LIGHT,
-    backgroundColor: INK_LIGHT,
-    padding: 18,
-  },
-  statLabel: {
-    fontFamily: 'Courier',
-    fontSize: 8,
-    letterSpacing: 1.5,
-    color: MUTED,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  statValue: {
-    fontFamily: 'Times-Bold',
-    fontSize: 32,
-    color: ACCENT,
-  },
-  highlightPage: {
-    padding: 0,
-  },
-  highlightContainer: {
-    position: 'relative',
-    width: A4_WIDTH,
-    height: A4_HEIGHT,
-  },
-  highlightImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: A4_WIDTH,
-    height: A4_HEIGHT,
-    objectFit: 'cover',
-  },
-  highlightPlaceholder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: A4_WIDTH,
-    height: A4_HEIGHT,
-    backgroundColor: INK,
-  },
-  highlightOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: A4_WIDTH,
-    padding: 48,
-  },
-  highlightKicker: {
-    fontFamily: 'Courier-Bold',
-    fontSize: 9,
-    letterSpacing: 3,
-    color: ACCENT,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-  },
-  highlightTitle: {
-    fontFamily: 'Times-Bold',
-    fontSize: 30,
-    color: '#ffffff',
-    lineHeight: 1.1,
-  },
-  highlightHeadline: {
-    fontFamily: 'Times-Italic',
-    fontSize: 14,
-    color: '#e2e8f0',
-    marginTop: 12,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 48,
-    right: 48,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontFamily: 'Courier',
-    fontSize: 8,
-    color: MUTED,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-});
+function buildStyles(p: DigestStylePreset) {
+  return StyleSheet.create({
+    coverPage: {
+      backgroundColor: p.bg,
+      padding: 0,
+    },
+    coverContainer: {
+      width: A4_WIDTH,
+      height: A4_HEIGHT,
+      padding: 56,
+      justifyContent: 'space-between',
+    },
+    kicker: {
+      fontFamily: p.monoFont,
+      fontSize: 10,
+      letterSpacing: 4,
+      color: p.accent,
+      textTransform: 'uppercase',
+    },
+    coverTitle: {
+      fontFamily: p.displayFont,
+      fontSize: 54,
+      color: p.headlineFg,
+      lineHeight: 1.05,
+      marginTop: 20,
+    },
+    coverSubtitle: {
+      fontFamily: 'Times-Italic',
+      fontSize: 16,
+      color: p.subtitleFg,
+      marginTop: 16,
+    },
+    coverFooter: {
+      fontFamily: p.monoFont,
+      fontSize: 9,
+      letterSpacing: 1.5,
+      color: p.muted,
+      textTransform: 'uppercase',
+    },
+    // Cover accent bar (style-specific decoration)
+    accentBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: A4_WIDTH,
+      height: 8,
+      backgroundColor: p.accent,
+    },
+    // For pop-art: thick black border rectangle inside the cover
+    popArtBorder: {
+      position: 'absolute',
+      top: 28,
+      left: 28,
+      width: A4_WIDTH - 56,
+      height: A4_HEIGHT - 56,
+      borderWidth: 6,
+      borderColor: '#0D0D0D',
+    },
+    // For supermarket: barcode-style lines at bottom of cover
+    supermarketStripes: {
+      flexDirection: 'row',
+      gap: 3,
+      marginTop: 24,
+    },
+    supermarketStripe: {
+      height: 36,
+      backgroundColor: '#111111',
+    },
+    statsPage: {
+      backgroundColor: p.bg,
+      padding: 56,
+      color: p.fg,
+    },
+    sectionTitle: {
+      fontFamily: p.displayFont,
+      fontSize: 24,
+      color: p.fg,
+      marginBottom: 24,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 16,
+    },
+    statBox: {
+      width: '47%',
+      borderWidth: 1,
+      borderColor: p.surface,
+      backgroundColor: p.surface,
+      padding: 18,
+    },
+    statLabel: {
+      fontFamily: p.monoFont,
+      fontSize: 8,
+      letterSpacing: 1.5,
+      color: p.muted,
+      textTransform: 'uppercase',
+      marginBottom: 8,
+    },
+    statValue: {
+      fontFamily: p.displayFont,
+      fontSize: 32,
+      color: p.accent,
+    },
+    highlightPage: {
+      padding: 0,
+    },
+    highlightContainer: {
+      position: 'relative',
+      width: A4_WIDTH,
+      height: A4_HEIGHT,
+    },
+    highlightImage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: A4_WIDTH,
+      height: A4_HEIGHT,
+      objectFit: 'cover',
+    },
+    highlightPlaceholder: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: A4_WIDTH,
+      height: A4_HEIGHT,
+      backgroundColor: p.bg,
+    },
+    highlightOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: A4_WIDTH,
+      padding: 48,
+      backgroundColor: p.darkCover ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.82)',
+    },
+    highlightKicker: {
+      fontFamily: p.monoFont,
+      fontSize: 9,
+      letterSpacing: 3,
+      color: p.accent,
+      marginBottom: 10,
+      textTransform: 'uppercase',
+    },
+    highlightTitle: {
+      fontFamily: p.displayFont,
+      fontSize: 30,
+      color: p.headlineFg,
+      lineHeight: 1.1,
+    },
+    highlightHeadline: {
+      fontFamily: 'Times-Italic',
+      fontSize: 14,
+      color: p.subtitleFg,
+      marginTop: 12,
+    },
+    footer: {
+      position: 'absolute',
+      bottom: 20,
+      left: 48,
+      right: 48,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      fontFamily: p.monoFont,
+      fontSize: 8,
+      color: p.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    // Camera-style HUD elements
+    hudCornerTL: {
+      position: 'absolute',
+      top: 28,
+      left: 28,
+      width: 32,
+      height: 32,
+      borderTopWidth: 3,
+      borderLeftWidth: 3,
+      borderColor: p.accent,
+    },
+    hudCornerBR: {
+      position: 'absolute',
+      bottom: 28,
+      right: 28,
+      width: 32,
+      height: 32,
+      borderBottomWidth: 3,
+      borderRightWidth: 3,
+      borderColor: p.accent,
+    },
+    // iOS/Android pill badge
+    pillBadge: {
+      backgroundColor: p.accent,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 5,
+      alignSelf: 'flex-start',
+      marginBottom: 16,
+    },
+    pillBadgeText: {
+      fontFamily: p.monoFont,
+      fontSize: 9,
+      color: p.accentFg,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+    },
+  });
+}
 
 type EmbeddedImage = { data: Buffer; format: 'jpg' } | null;
 
@@ -203,18 +271,70 @@ export type DigestTripBundle = {
   photos: Photo[];
 };
 
+/** Render style-specific cover decorations */
+function renderCoverDecorations(styleId: DigestStyleId, styles: ReturnType<typeof buildStyles>) {
+  switch (styleId) {
+    case 'pop-art':
+      return e(View, { style: styles.popArtBorder });
+    case 'supermarket':
+      // Barcode stripes at bottom
+      return e(
+        View,
+        { style: { position: 'absolute', bottom: 56, left: 56 } },
+        e(
+          View,
+          { style: styles.supermarketStripes },
+          ...[4, 2, 5, 1, 3, 2, 4, 1, 3, 5, 2, 4, 1, 3, 2, 5, 1, 4, 2, 3].map((w, i) =>
+            e(View, { key: i, style: { ...styles.supermarketStripe, width: w * 3 } }),
+          ),
+        ),
+      );
+    case 'camera-interface':
+    case 'canon-camera':
+      return e(
+        React.Fragment,
+        {},
+        e(View, { style: styles.hudCornerTL }),
+        e(View, { style: styles.hudCornerBR }),
+      );
+    case 'ios-core':
+    case 'android-core':
+      return null;
+    default:
+      return null;
+  }
+}
+
+/** Render the style-specific kicker on highlight pages */
+function renderHighlightKicker(styleId: DigestStyleId, styles: ReturnType<typeof buildStyles>) {
+  switch (styleId) {
+    case 'ios-core':
+    case 'android-core':
+      return e(
+        View,
+        { style: styles.pillBadge },
+        e(Text, { style: styles.pillBadgeText }, 'Featured Dispatch'),
+      );
+    default:
+      return e(Text, { style: styles.highlightKicker }, 'Featured Dispatch');
+  }
+}
+
 /**
  * Generates a "wrapped"-style recap PDF covering a set of a user's completed
- * trips within a period: a cover, an aggregate stats page, then one
- * full-bleed highlight page per trip (cover photo + headline) rather than
- * the full day-by-day breakdown a single-trip export gives.
+ * trips within a period. Accepts a style preset id that controls the visual
+ * treatment throughout (colors, typography, accent decorations).
  */
 export async function generateDigestPdf(
   user: User,
   periodStart: Date,
   periodEnd: Date,
   bundles: DigestTripBundle[],
+  styleId: DigestStyleId = DEFAULT_DIGEST_STYLE,
 ): Promise<Buffer> {
+  const preset = DIGEST_STYLES[styleId] ?? DIGEST_STYLES[DEFAULT_DIGEST_STYLE];
+  const styles = buildStyles(preset);
+
   const objectStorageService = new ObjectStorageService();
 
   const allDays = bundles.flatMap((b) => b.days);
@@ -234,6 +354,8 @@ export async function generateDigestPdf(
       ? `${formatTemp(Math.min(...lowTemps, ...temps)) ?? '—'} to ${formatTemp(Math.max(...temps, ...lowTemps)) ?? '—'}`
       : '—';
 
+  const coverDecorations = renderCoverDecorations(styleId, styles);
+
   const coverPage = e(
     Page,
     { size: 'A4', style: styles.coverPage },
@@ -243,16 +365,19 @@ export async function generateDigestPdf(
       e(
         View,
         {},
-        e(Text, { style: styles.kicker }, 'Your Turasum Wrapped'),
+        e(Text, { style: styles.kicker }, 'Your Trip Correspondent Wrapped'),
         e(Text, { style: styles.coverTitle }, user.displayName),
         e(Text, { style: styles.coverSubtitle }, formatPeriod(periodStart, periodEnd)),
       ),
       e(
         Text,
         { style: styles.coverFooter },
-        `${bundles.length} trip${bundles.length === 1 ? '' : 's'} filed this season`,
+        `${bundles.length} trip${bundles.length === 1 ? '' : 's'} filed this season · ${preset.name}`,
       ),
     ),
+    coverDecorations,
+    // Accent bottom bar on all styles
+    e(View, { style: styles.accentBar }),
   );
 
   const statBoxes: Array<[string, string]> = [
@@ -282,7 +407,7 @@ export async function generateDigestPdf(
     e(
       View,
       { style: styles.footer, fixed: true },
-      e(Text, {}, 'Turasum · Wrapped'),
+      e(Text, {}, 'Trip Correspondent · Wrapped'),
       e(
         Text,
         { render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `${pageNumber} / ${totalPages}` },
@@ -311,7 +436,7 @@ export async function generateDigestPdf(
         e(
           View,
           { style: styles.highlightOverlay },
-          e(Text, { style: styles.highlightKicker }, 'Featured Dispatch'),
+          renderHighlightKicker(styleId, styles),
           e(Text, { style: styles.highlightTitle }, trip.title),
           headline && e(Text, { style: styles.highlightHeadline }, headline),
         ),
@@ -321,7 +446,7 @@ export async function generateDigestPdf(
 
   const doc = e(
     Document,
-    { title: `${user.displayName} — Turasum Wrapped` },
+    { title: `${user.displayName} — Trip Correspondent Wrapped` },
     coverPage,
     statsPage,
     ...highlightPages,

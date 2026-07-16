@@ -2,6 +2,7 @@ import { UpdateUserSettingsBody } from '@workspace/api-zod';
 import {
   db,
   digestCadenceMonthsValues,
+  digestStyleValues,
   followsTable,
   tripsTable,
   usersTable,
@@ -92,6 +93,7 @@ router.get('/users/:userId', optionalAuth, async (req: Request, res: Response) =
     followingCount,
     trips: visibleTrips,
     digestCadenceMonths: profileUser.digestCadenceMonths,
+    preferredDigestStyle: profileUser.preferredDigestStyle,
   });
 });
 
@@ -109,9 +111,19 @@ router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: R
     return;
   }
 
+  // Optional style preference update — ignore unknown values rather than erroring.
+  const preferredDigestStyle =
+    parsed.data.preferredDigestStyle &&
+    digestStyleValues.includes(parsed.data.preferredDigestStyle as any)
+      ? (parsed.data.preferredDigestStyle as string)
+      : undefined;
+
   const [updated] = await db
     .update(usersTable)
-    .set({ digestCadenceMonths: parsed.data.digestCadenceMonths })
+    .set({
+      digestCadenceMonths: parsed.data.digestCadenceMonths,
+      ...(preferredDigestStyle !== undefined ? { preferredDigestStyle } : {}),
+    })
     .where(eq(usersTable.id, userId))
     .returning();
 
@@ -141,6 +153,7 @@ router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: R
     followingCount,
     trips,
     digestCadenceMonths: updated.digestCadenceMonths,
+    preferredDigestStyle: updated.preferredDigestStyle,
   });
 });
 

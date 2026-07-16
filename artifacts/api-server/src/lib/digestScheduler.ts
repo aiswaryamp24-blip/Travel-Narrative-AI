@@ -7,8 +7,12 @@ import {
   tripDaysTable,
   tripsTable,
   usersTable,
+  DEFAULT_DIGEST_STYLE_VALUE,
+  digestStyleValues,
+  type DigestStyleValue,
 } from '@workspace/db';
 import { generateDigestPdf, type DigestTripBundle } from './digestExport';
+import type { DigestStyleId } from './digestStyles';
 import { ObjectStorageService } from './objectStorage';
 import { sendDigestReadyEmail } from './email';
 import { logger } from './logger';
@@ -38,7 +42,7 @@ export type DigestResult =
  */
 export async function getOrCreateDigestForUser(
   userId: string,
-  { force = false }: { force?: boolean } = {},
+  { force = false, styleId }: { force?: boolean; styleId?: DigestStyleId } = {},
 ): Promise<DigestResult> {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
@@ -89,7 +93,23 @@ export async function getOrCreateDigestForUser(
     }),
   );
 
-  const pdfBuffer = await generateDigestPdf(user, periodStart, periodEnd, bundles);
+  // Determine which style to use: explicit override > user's saved preference > default
+  const resolvedStyleId: DigestStyleId =
+    styleId ??
+    (digestStyleValues.includes(user.preferredDigestStyle as DigestStyleValue)
+      ? (user.preferredDigestStyle as DigestStyleId)
+      : DEFAULT_DIGEST_STYLE_VALUE);
+
+  // Persist the chosen style as the user's new preference (so the next
+  // scheduled digest will reuse it automatically).
+  if (styleId && styleId !== user.preferredDigestStyle) {
+    await db
+      .update(usersTable)
+      .set({ preferredDigestStyle: styleId })
+      .where(eq(usersTable.id, userId));
+  }
+
+  const pdfBuffer = await generateDigestPdf(user, periodStart, periodEnd, bundles, resolvedStyleId);
 
   const objectStorageService = new ObjectStorageService();
   const objectPath = await objectStorageService.uploadBufferAsObject(

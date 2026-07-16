@@ -583,6 +583,12 @@ paths:
         Covers completed trips since the user's last digest (or account
         creation, for their first one) through now. Fails if there are no
         completed trips in that period rather than creating an empty digest.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateDigestInput"
       responses:
         "201":
           description: Digest generated.
@@ -759,11 +765,26 @@ components:
       type: integer
       enum: [3, 4, 6]
       description: How often (in months) this user's wrapped digest is automatically generated.
+    GenerateDigestInput:
+      type: object
+      properties:
+        style:
+          $ref: "#/components/schemas/DigestStyle"
+    DigestStyle:
+      type: string
+      enum:
+        - pop-art
+        - supermarket
+        - camera-interface
+        - canon-camera
+        - ios-core
+        - android-core
+      description: Visual style preset for a wrapped digest PDF.
     UserProfile:
       allOf:
         - $ref: "#/components/schemas/UserSummary"
         - type: object
-          required: [isSelf, isFollowing, followerCount, followingCount, trips, digestCadenceMonths]
+          required: [isSelf, isFollowing, followerCount, followingCount, trips, digestCadenceMonths, preferredDigestStyle]
           properties:
             isSelf:
               type: boolean
@@ -781,12 +802,16 @@ components:
                 $ref: "#/components/schemas/TripSummary"
             digestCadenceMonths:
               $ref: "#/components/schemas/DigestCadenceMonths"
+            preferredDigestStyle:
+              $ref: "#/components/schemas/DigestStyle"
     UpdateUserSettingsInput:
       type: object
       required: [digestCadenceMonths]
       properties:
         digestCadenceMonths:
           $ref: "#/components/schemas/DigestCadenceMonths"
+        preferredDigestStyle:
+          $ref: "#/components/schemas/DigestStyle"
     FollowState:
       type: object
       required: [isFollowing]

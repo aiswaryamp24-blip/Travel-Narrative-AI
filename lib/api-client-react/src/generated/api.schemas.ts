@@ -108,6 +108,25 @@ export const DigestCadenceMonths = {
   NUMBER_6: 6,
 } as const;
 
+/**
+ * Visual style preset for a wrapped digest PDF.
+ */
+export type DigestStyle = typeof DigestStyle[keyof typeof DigestStyle];
+
+
+export const DigestStyle = {
+  'pop-art': 'pop-art',
+  supermarket: 'supermarket',
+  'camera-interface': 'camera-interface',
+  'canon-camera': 'canon-camera',
+  'ios-core': 'ios-core',
+  'android-core': 'android-core',
+} as const;
+
+export interface GenerateDigestInput {
+  style?: DigestStyle;
+}
+
 export type UserProfile = UserSummary & {
   /** Whether this profile belongs to the requesting viewer. */
   isSelf: boolean;
@@ -117,10 +136,12 @@ export type UserProfile = UserSummary & {
   followingCount: number;
   trips: TripSummary[];
   digestCadenceMonths: DigestCadenceMonths;
+  preferredDigestStyle: DigestStyle;
 };
 
 export interface UpdateUserSettingsInput {
   digestCadenceMonths: DigestCadenceMonths;
+  preferredDigestStyle?: DigestStyle;
 }
 
 export interface FollowState {

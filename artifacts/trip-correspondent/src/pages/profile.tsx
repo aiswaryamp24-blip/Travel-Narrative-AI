@@ -66,7 +66,11 @@ export default function Profile() {
 
       <main className="max-w-6xl mx-auto px-6 py-16 space-y-16">
         {profile.isSelf && (
-          <DigestsSection userId={profile.id} digestCadenceMonths={profile.digestCadenceMonths} />
+          <DigestsSection
+            userId={profile.id}
+            digestCadenceMonths={profile.digestCadenceMonths}
+            preferredDigestStyle={profile.preferredDigestStyle}
+          />
         )}
 
         <div className="flex items-end justify-between border-b border-border pb-4">
