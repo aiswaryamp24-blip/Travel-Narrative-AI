@@ -45,29 +45,42 @@ export default function Feed() {
   const { data: discoverTrips, isLoading: isDiscoverLoading } = useGetDiscoverFeed();
 
   return (
-    <div className="min-h-screen bg-background/95 pb-24">
-      <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
+    <div className="min-h-screen pb-24" style={{ background: 'hsl(var(--background))' }}>
+      <nav className="py-4 px-6 flex justify-between items-center border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-40">
         <Link href="/library"><Logo className="text-lg" /></Link>
-        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">The Feed</span>
+        <span className="text-xs font-bold font-mono uppercase tracking-widest text-muted-foreground border border-primary/30 px-3 py-1.5">The Feed</span>
       </nav>
 
-      <header className="relative py-12 px-6 border-b border-border overflow-hidden">
-        <video
-          src="/feed-bg.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-background/70" />
+      {/* Watercolor-inspired hero banner */}
+      <header className="relative py-16 px-6 border-b border-border overflow-hidden">
+        {/* Watercolor background layers */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Base gradient - soft blue-white watercolor */}
+          <div className="absolute inset-0" style={{
+            background: 'radial-gradient(ellipse 80% 60% at 15% 25%, rgba(147,197,253,0.35) 0%, transparent 65%), radial-gradient(ellipse 60% 50% at 80% 60%, rgba(196,219,255,0.3) 0%, transparent 60%), radial-gradient(ellipse 50% 70% at 50% 80%, rgba(224,239,255,0.25) 0%, transparent 55%), hsl(var(--background))'
+          }} />
+          {/* Watercolor blob top-right */}
+          <div className="absolute -top-8 right-0 w-64 h-64 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, rgba(147,197,253,0.8) 0%, rgba(196,219,255,0.4) 40%, transparent 70%)', transform: 'scale(1.5)' }} />
+          {/* Airplane trail SVG */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.12]" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice" fill="none">
+            {/* Dotted flight trail */}
+            <path d="M 50 200 Q 200 80 380 120 Q 550 160 700 60" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="6 8" />
+            {/* Airplane shape at end of trail */}
+            <g transform="translate(695, 48) rotate(-30)">
+              <path d="M0 0 L-8 4 L-6 0 L-8 -4 Z" fill="hsl(var(--primary))" />
+              <path d="M-4 0 L-10 -6 L-11 -5 L-6 0 L-11 5 L-10 6 Z" fill="hsl(var(--primary))" />
+              <path d="M-7 0 L-10 -2 L-10.5 -1.5 L-8.5 0 L-10.5 1.5 L-10 2 Z" fill="hsl(var(--primary))" />
+            </g>
+          </svg>
+        </div>
+
         <div className="relative max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Wire Service</span>
             <span className="h-[1px] w-12 bg-primary"></span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tight text-center uppercase">
+          <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tight text-center uppercase text-foreground">
             The Feed
           </h1>
           <p className="text-muted-foreground font-serif italic text-lg max-w-xl text-center">

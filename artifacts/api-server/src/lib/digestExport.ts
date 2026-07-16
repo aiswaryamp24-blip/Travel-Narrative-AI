@@ -338,6 +338,7 @@ export async function generateDigestPdf(
   const objectStorageService = new ObjectStorageService();
 
   const allDays = bundles.flatMap((b) => b.days);
+  const allPhotos = bundles.flatMap((b) => b.photos);
   const totalDays = allDays.length;
   const totalDistanceKm = allDays.reduce((sum, d) => sum + (d.distanceKm ?? 0), 0);
   const locations = new Set(
@@ -353,6 +354,21 @@ export async function generateDigestPdf(
     temps.length > 0 || lowTemps.length > 0
       ? `${formatTemp(Math.min(...lowTemps, ...temps)) ?? '—'} to ${formatTemp(Math.max(...temps, ...lowTemps)) ?? '—'}`
       : '—';
+
+  // Compile facts for the BBC-style news briefing page
+  const weatherDescriptions = [...new Set(
+    allDays.map((d) => (d.weather as any)?.description).filter(Boolean) as string[],
+  )];
+  const tripTitles = bundles.map((b) => b.trip.title);
+  const bbcFacts: string[] = [
+    `Field correspondent filed ${bundles.length} complete ${bundles.length === 1 ? 'report' : 'reports'} this season.`,
+    `${totalDays} days of active documentation across ${locations.size} ${locations.size === 1 ? 'location' : 'locations'}.`,
+    totalDistanceKm > 0 ? `${Math.round(totalDistanceKm).toLocaleString()} km traversed by our correspondent across all assignments.` : null,
+    allPhotos.length > 0 ? `${allPhotos.length} photographs submitted as evidence from the field.` : null,
+    tempRange !== '—' ? `Temperature conditions ranged from ${tempRange} across the period.` : null,
+    weatherDescriptions.length > 0 ? `Recorded conditions: ${weatherDescriptions.slice(0, 3).join(', ')}.` : null,
+    locations.size > 0 ? `Locations documented: ${[...locations].slice(0, 6).join(' · ')}.` : null,
+  ].filter((f): f is string => !!f);
 
   const coverDecorations = renderCoverDecorations(styleId, styles);
 
@@ -415,6 +431,72 @@ export async function generateDigestPdf(
     ),
   );
 
+  // BBC-style news briefing page — style-independent broadcast format
+  const bbcPage = e(
+    Page,
+    { size: 'A4', style: { padding: 0, backgroundColor: '#FFFFFF' } },
+    // Red broadcast header bar
+    e(
+      View,
+      { style: { backgroundColor: '#CC0000', paddingHorizontal: 48, paddingTop: 36, paddingBottom: 28 } },
+      e(
+        View,
+        { style: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 } },
+        e(View, { style: { width: 36, height: 36, backgroundColor: '#FFFFFF' } }),
+        e(View, { style: { flex: 1 } },
+          e(Text, { style: { fontFamily: 'Times-Bold', fontSize: 22, color: '#FFFFFF', letterSpacing: 1 } }, 'SPECIAL REPORT'),
+          e(View, { style: { height: 2, backgroundColor: 'rgba(255,255,255,0.5)', marginTop: 4 } }),
+        ),
+      ),
+      e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: 'rgba(255,255,255,0.85)', letterSpacing: 3, textTransform: 'uppercase' } },
+        `TURASUM FIELD CORRESPONDENT  ·  SEASON IN REVIEW  ·  ${formatPeriod(periodStart, periodEnd).toUpperCase()}`,
+      ),
+    ),
+    // Assignments ticker strip
+    e(
+      View,
+      { style: { backgroundColor: '#1A1A1A', paddingHorizontal: 48, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8 } },
+      e(View, { style: { backgroundColor: '#CC0000', paddingHorizontal: 8, paddingVertical: 3 } },
+        e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 7, color: '#FFFFFF', letterSpacing: 2 } }, 'FILED'),
+      ),
+      e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: '#E5E5E5', letterSpacing: 1, flex: 1 } },
+        tripTitles.join('  ·  '),
+      ),
+    ),
+    // Main content: "THE EVIDENCE" headline + fact list
+    e(
+      View,
+      { style: { paddingHorizontal: 48, paddingTop: 32, paddingBottom: 48, flex: 1 } },
+      e(Text, { style: { fontFamily: 'Times-Bold', fontSize: 28, color: '#1A1A1A', marginBottom: 6 } }, 'FROM THE FIELD: THE EVIDENCE'),
+      e(View, { style: { height: 3, backgroundColor: '#CC0000', marginBottom: 28 } }),
+      ...bbcFacts.map((fact, i) =>
+        e(
+          View,
+          {
+            key: i,
+            style: {
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              marginBottom: 18,
+              paddingBottom: 18,
+              borderBottomWidth: i < bbcFacts.length - 1 ? 1 : 0,
+              borderBottomColor: '#E8E8E8',
+            },
+          },
+          e(View, { style: { width: 5, height: 5, backgroundColor: '#CC0000', marginTop: 6, marginRight: 16, flexShrink: 0 } }),
+          e(Text, { style: { fontFamily: 'Times-Roman', fontSize: 13, color: '#1A1A1A', lineHeight: 1.55, flex: 1 } }, fact),
+        ),
+      ),
+    ),
+    // Footer ticker
+    e(
+      View,
+      { style: { backgroundColor: '#1A1A1A', paddingHorizontal: 48, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } },
+      e(Text, { style: { fontFamily: 'Courier', fontSize: 7, color: '#888888', letterSpacing: 2 } }, 'TURASUM · FIELD CORRESPONDENT NETWORK'),
+      e(Text, { style: { fontFamily: 'Courier', fontSize: 7, color: '#888888', letterSpacing: 2 } }, 'CORRESPONDENT WRAPPED'),
+    ),
+  );
+
   const highlightImages = await Promise.all(
     bundles.map(async ({ trip, days }) => {
       const image = await fetchEmbeddableImage(objectStorageService, trip.coverObjectPath, 1600);
@@ -449,6 +531,7 @@ export async function generateDigestPdf(
     { title: `${user.displayName} — Trip Correspondent Wrapped` },
     coverPage,
     statsPage,
+    bbcPage,
     ...highlightPages,
   );
 

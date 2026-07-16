@@ -36,19 +36,49 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background/95 pb-24">
-      <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
-        <Link href="/feed" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+    <div className="min-h-screen pb-24" style={{ background: 'hsl(var(--background))' }}>
+      <nav className="py-4 px-6 flex justify-between items-center border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-40">
+        <Link href="/feed" className="inline-flex items-center text-sm font-bold font-mono uppercase tracking-widest border border-primary/50 px-3 py-1.5 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200">
           <ChevronLeft className="h-4 w-4 mr-1" /> Feed
         </Link>
         <Logo className="text-lg" />
       </nav>
 
-      <header className="py-16 px-6 border-b border-border bg-card text-card-foreground">
-        <div className="max-w-3xl mx-auto flex flex-col items-center space-y-6 text-center">
-          <Avatar className="h-24 w-24 border border-border rounded-none">
+      {/* Aurora-inspired profile header */}
+      <header className="relative py-20 px-6 border-b border-border overflow-hidden">
+        {/* Aurora gradient background */}
+        <div className="absolute inset-0">
+          {/* Aurora color layers */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(160deg, rgba(216,180,254,0.28) 0%, rgba(147,197,253,0.22) 30%, rgba(196,181,253,0.18) 55%, rgba(255,255,255,0) 80%)'
+          }} />
+          <div className="absolute top-0 left-0 right-0 h-32" style={{
+            background: 'linear-gradient(180deg, rgba(216,180,254,0.2) 0%, transparent 100%)'
+          }} />
+          {/* Fox + world map SVG watermark */}
+          <svg className="absolute right-0 top-0 h-full w-auto opacity-[0.055] pointer-events-none" viewBox="0 0 500 600" fill="none" preserveAspectRatio="xMaxYMid meet">
+            {/* Simplified world map outline */}
+            <path d="M60 300 Q90 250 130 260 Q160 270 180 250 Q210 230 240 240 Q260 245 280 230 Q310 215 340 225 Q370 235 390 220 Q420 205 440 215" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" />
+            <path d="M70 320 Q100 310 130 320 Q160 330 190 315 Q220 300 250 310 Q280 320 310 305 Q340 290 370 300 Q400 310 430 295" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" />
+            <path d="M90 340 Q120 350 150 340 Q180 330 210 345 Q240 360 270 345 Q300 330 330 345 Q360 360 390 345 Q420 330 450 340" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" />
+            {/* Fox head simplified */}
+            <path d="M230 100 L210 60 L230 80" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" />
+            <path d="M270 80 L290 60 L270 100" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" />
+            <path d="M230 100 C220 115 218 130 225 142 C230 150 250 155 270 148 C282 140 285 125 278 110 L270 100" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M240 115 Q248 111 256 115" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M248 128 L250 132 L252 128" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            {/* Airplane contrail */}
+            <path d="M120 140 Q200 100 300 120" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="4 6" />
+            <g transform="translate(300, 118) rotate(-10)">
+              <path d="M0 0 L-6 3 L-4 0 L-6 -3 Z" fill="hsl(var(--primary))" />
+            </g>
+          </svg>
+        </div>
+
+        <div className="relative max-w-3xl mx-auto flex flex-col items-center space-y-6 text-center">
+          <Avatar className="h-24 w-24 border-2 border-primary/30 rounded-none shadow-[0_0_30px_rgba(99,102,241,0.2)]">
             <AvatarImage src={profile.avatarUrl ?? undefined} alt={profile.displayName} className="rounded-none" />
-            <AvatarFallback className="rounded-none text-2xl font-serif">
+            <AvatarFallback className="rounded-none text-2xl font-serif bg-primary/10 text-primary">
               {profile.displayName.slice(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -142,18 +172,19 @@ function ProfileSkeleton() {
         <Skeleton className="h-6 w-24" />
         <Skeleton className="h-6 w-32" />
       </nav>
-      <header className="py-16 px-6 flex flex-col items-center space-y-6 border-b border-border">
-        <Skeleton className="h-24 w-24 rounded-none" />
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </header>
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="aspect-[4/5] w-full rounded-none" />
-          ))}
+      <div className="py-16 px-6 border-b border-border">
+        <div className="max-w-3xl mx-auto flex flex-col items-center space-y-6">
+          <Skeleton className="h-24 w-24 rounded-none" />
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-48" />
         </div>
-      </main>
+      </div>
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <Skeleton className="h-8 w-48 mb-10" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-72 rounded-none" />)}
+        </div>
+      </div>
     </div>
   );
 }

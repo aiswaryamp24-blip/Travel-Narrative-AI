@@ -40,11 +40,6 @@ export default function Landing() {
         <HeroGlow />
         <div className="relative max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 text-center">
           <AnimatedLogoMark className="h-14 w-14 md:h-16 md:w-16 text-primary" />
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-primary"></span>
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Volume I</span>
-            <span className="h-[1px] w-12 bg-primary"></span>
-          </div>
           <div className="flex items-center gap-6 opacity-70">
             <img src="/icon-plane.png" alt="" className="h-8 w-8 object-contain" />
             <img src="/icon-train.png" alt="" className="h-8 w-8 object-contain" />

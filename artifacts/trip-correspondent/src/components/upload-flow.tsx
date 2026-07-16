@@ -117,7 +117,7 @@ export function UploadFlow() {
 
         <div className="space-y-3">
           <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex justify-between">
-            <span>The Negatives</span>
+            <span>The Evidence</span>
             {files.length > 0 && <span>{files.length} selected</span>}
           </label>
           
