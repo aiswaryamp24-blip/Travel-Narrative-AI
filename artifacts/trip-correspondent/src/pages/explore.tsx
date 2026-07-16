@@ -16,7 +16,7 @@ export default function Explore() {
   const { data: trips, isLoading } = useGetDiscoverFeed();
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background/95 pb-24">
       <nav className="py-6 px-6 flex justify-between items-center border-b border-border">
         <Link href="/"><Logo className="text-lg" /></Link>
         <div className="flex items-center gap-2">

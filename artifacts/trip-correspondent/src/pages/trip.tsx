@@ -165,7 +165,7 @@ export default function Trip() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background/95">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border py-4 px-6 flex justify-between items-center">
         <Link href="/" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">

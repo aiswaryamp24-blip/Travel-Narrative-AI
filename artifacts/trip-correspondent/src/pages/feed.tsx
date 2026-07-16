@@ -45,14 +45,23 @@ export default function Feed() {
   const { data: discoverTrips, isLoading: isDiscoverLoading } = useGetDiscoverFeed();
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background/95 pb-24">
       <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
         <Link href="/library"><Logo className="text-lg" /></Link>
         <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">The Feed</span>
       </nav>
 
-      <header className="py-12 px-6 border-b border-border bg-card text-card-foreground">
-        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
+      <header className="relative py-12 px-6 border-b border-border overflow-hidden">
+        <video
+          src="/feed-bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-background/70" />
+        <div className="relative max-w-6xl mx-auto flex flex-col items-center justify-center space-y-4">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Wire Service</span>

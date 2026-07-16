@@ -36,7 +36,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background/95 pb-24">
       <nav className="py-4 px-6 flex justify-between items-center border-b border-border">
         <Link href="/feed" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft className="h-4 w-4 mr-1" /> Feed

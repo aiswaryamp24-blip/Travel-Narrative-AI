@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -6,12 +6,15 @@ import { Route, Switch, Redirect, useLocation, Router as WouterRouter } from 'wo
 import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
+import { AnimatePresence, motion } from 'framer-motion';
 import Landing from '@/pages/landing';
 import Home from '@/pages/home';
 import Trip from '@/pages/trip';
 import Feed from '@/pages/feed';
 import Profile from '@/pages/profile';
 import Explore from '@/pages/explore';
+import { LoadingScreen } from '@/components/loading-screen';
+import { AppBackground } from '@/components/app-background';
 
 const queryClient = new QueryClient();
 
@@ -223,12 +226,36 @@ function ClerkProviderWithRoutes() {
   );
 }
 
+/** Fixed-duration splash overlay shown on initial mount, layered on top of
+ * the real app (which mounts and starts initializing immediately
+ * underneath, so nothing is actually delayed) — not tied to Clerk's
+ * internal loading state, since this project's Clerk wrapper's exact
+ * loading-state API wasn't something that could be verified. */
+function useShowSplash(durationMs = 1600) {
+  const [showSplash, setShowSplash] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), durationMs);
+    return () => clearTimeout(timer);
+  }, []);
+  return showSplash;
+}
+
 function App() {
+  const showSplash = useShowSplash();
+
   return (
     <TooltipProvider>
       <WouterRouter base={basePath}>
+        <AppBackground />
         <ClerkProviderWithRoutes />
       </WouterRouter>
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+            <LoadingScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </TooltipProvider>
   );
 }

@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
-import { Camera, Compass, Map, Newspaper, Volume2 } from 'lucide-react';
+import { Camera, Compass, Newspaper, Volume2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
 import { HeroGlow, ChromeText } from '@/components/hero-glow';
@@ -18,7 +18,7 @@ export default function Landing() {
     }));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background/95">
       <nav className="py-6 px-6 flex justify-between items-center border-b border-border">
         <Logo className="text-lg" />
         <div className="flex items-center gap-2">
@@ -44,6 +44,11 @@ export default function Landing() {
             <span className="h-[1px] w-12 bg-primary"></span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Volume I</span>
             <span className="h-[1px] w-12 bg-primary"></span>
+          </div>
+          <div className="flex items-center gap-6 opacity-70">
+            <img src="/icon-plane.png" alt="" className="h-8 w-8 object-contain" />
+            <img src="/icon-train.png" alt="" className="h-8 w-8 object-contain" />
+            <img src="/icon-bike.png" alt="" className="h-8 w-8 object-contain" />
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight uppercase">
             <ChromeText>Turasum</ChromeText>
@@ -82,7 +87,7 @@ export default function Landing() {
           description="Our correspondent researches the weather, landmarks, and history of each stop to write a magazine-style feature."
         />
         <Feature
-          icon={<Map className="h-6 w-6" />}
+          icon={<img src="/icon-plane.png" alt="" className="h-8 w-8 object-contain" />}
           title="Route Map & Stats"
           description="See your journey traced on a map, with distance, countries, and conditions summarized at a glance."
         />
