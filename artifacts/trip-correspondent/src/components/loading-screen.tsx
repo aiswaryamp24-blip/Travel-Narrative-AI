@@ -1,17 +1,64 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-function Y2KLoadingBar() {
+/** Counts 0 -> 100 over `durationMs`, driving both the percentage readout
+ * and the progress-track marker — matches the splash's real display
+ * duration (see App.tsx's useShowSplash) rather than an arbitrary pace. */
+function useCountUp(durationMs: number) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const start = performance.now();
+    let frame: number;
+    const tick = (now: number) => {
+      const pct = Math.min(100, Math.round(((now - start) / durationMs) * 100));
+      setProgress(pct);
+      if (pct < 100) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [durationMs]);
+
+  return progress;
+}
+
+function TurasumLoadingCard({ durationMs = 1500 }: { durationMs?: number }) {
+  const progress = useCountUp(durationMs);
+
   return (
-    <div className="relative w-56 md:w-64 h-2 rounded-full overflow-hidden bg-white/15 border border-white/30 backdrop-blur-sm">
-      <motion.div
-        className="absolute inset-y-0 w-1/3 rounded-full"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent, hsl(243 75% 65%), hsl(280 85% 78%), hsl(220 90% 72%), transparent)',
-        }}
-        animate={{ left: ['-40%', '107%'] }}
-        transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
-      />
+    <div className="w-72 md:w-80 rounded-3xl bg-card/80 backdrop-blur-md border border-border shadow-xl px-6 py-5 space-y-5">
+      <div className="text-center font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        turasum
+      </div>
+
+      <div className="flex items-center justify-between">
+        <motion.img
+          src="/icon-plane.png"
+          alt=""
+          className="h-10 w-10 md:h-12 md:w-12 object-contain"
+          animate={{ y: [0, -3, 0], rotate: [-6, -10, -6] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="text-3xl md:text-4xl font-serif font-black text-primary tabular-nums">
+          {progress}%
+        </div>
+      </div>
+
+      <div className="relative h-4">
+        <div
+          className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[2px]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(90deg, hsl(var(--muted-foreground)) 0, hsl(var(--muted-foreground)) 2px, transparent 2px, transparent 7px)',
+            opacity: 0.4,
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 -translate-y-1/2 h-4 w-[2px] bg-primary rounded-full"
+          animate={{ left: `${progress}%` }}
+          transition={{ ease: 'linear', duration: 0.1 }}
+        />
+      </div>
     </div>
   );
 }
@@ -34,12 +81,9 @@ export function LoadingScreen() {
           muted
           loop
           playsInline
-          className="w-44 md:w-56 drop-shadow-[0_0_30px_hsl(243_75%_60%/0.35)]"
+          className="w-40 md:w-48 drop-shadow-[0_0_30px_hsl(243_75%_60%/0.35)]"
         />
-        <Y2KLoadingBar />
-        <p className="font-mono text-[10px] md:text-xs uppercase tracking-[0.35em] text-foreground/60">
-          Filing your stories
-        </p>
+        <TurasumLoadingCard durationMs={1500} />
       </div>
     </div>
   );
