@@ -23,66 +23,39 @@ const CARAVAN = [
   { src: '/icon-bike.png', offset: 18, bobDelay: 0.4 },
 ];
 
-function GlassProgressBar({ durationMs = 1500 }: { durationMs?: number }) {
+function GlassBar({ durationMs = 1500 }: { durationMs?: number }) {
   const progress = useCountUp(durationMs);
-
   return (
-    <div className="w-full flex flex-col items-center gap-8">
-      {/* Large logo mark */}
-      <div className="flex flex-col items-center gap-3">
-        <img
-          src="/fox-logo.png"
-          alt="Turasum"
-          className="h-20 w-20 object-contain"
-          style={{
-            filter: 'drop-shadow(0 0 16px hsl(243 75% 55% / 0.7)) drop-shadow(0 0 6px hsl(243 75% 55% / 0.9))',
-          }}
-        />
-        <span
-          className="text-xs font-mono uppercase tracking-[0.45em] text-primary/80"
-          style={{ fontVariantNumeric: 'tabular-nums' }}
-        >
-          turasum
-        </span>
+    <div className="flex flex-col items-center gap-6 w-72 md:w-96">
+      {/* Wordmark over video */}
+      <div className="text-center">
+        <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/60">turasum</p>
+        <p className="font-mono text-3xl font-black tabular-nums text-white/90 mt-1">
+          {progress}<span className="text-lg text-white/50">%</span>
+        </p>
       </div>
-
-      {/* Percentage readout */}
-      <span
-        className="text-5xl font-black tabular-nums"
-        style={{
-          fontFamily: "'Space Grotesk', serif",
-          color: 'hsl(var(--foreground))',
-          letterSpacing: '-0.04em',
-        }}
-      >
-        {progress}<span className="text-2xl text-muted-foreground">%</span>
-      </span>
-
-      {/* Glass progress track — no box, just the line */}
-      <div className="relative w-80 md:w-[420px]">
-        {/* Track: frosted glass hairline */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[1px]"
-          style={{ background: 'hsl(var(--border))' }}
-        />
-        {/* Glass fill bar */}
+      {/* Glass hairline progress track */}
+      <div className="relative w-full">
+        {/* Track */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-px bg-white/20" />
+        {/* Lit fill */}
         <motion.div
           className="absolute top-1/2 -translate-y-1/2 left-0 h-[2px] origin-left"
           style={{
             width: `${progress}%`,
-            background: 'linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary)))',
-            boxShadow: '0 0 8px 1px hsl(var(--primary) / 0.4)',
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.85))',
+            boxShadow: '0 0 8px 2px rgba(180,200,255,0.45)',
           }}
           transition={{ ease: 'linear', duration: 0.1 }}
         />
-        {/* Travel icons riding the track */}
-        <div className="relative h-9">
+        {/* Caravan icons */}
+        <div className="relative h-10">
           {CARAVAN.map(({ src, offset, bobDelay }) => (
             <motion.img
               key={src}
               src={src}
               alt=""
-              className="absolute top-1/2 h-5 w-5 object-contain -translate-x-1/2"
+              className="absolute top-1/2 h-5 w-5 object-contain -translate-x-1/2 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
               animate={{
                 left: `${Math.max(0, progress - offset)}%`,
                 y: ['-50%', 'calc(-50% - 4px)', '-50%'],
@@ -101,22 +74,25 @@ function GlassProgressBar({ durationMs = 1500 }: { durationMs?: number }) {
 
 export function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-background">
-      {/* Subtle indigo aurora background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: [
-              'radial-gradient(ellipse 70% 55% at 20% 15%, hsl(243 75% 55% / 0.12) 0%, transparent 65%)',
-              'radial-gradient(ellipse 55% 45% at 80% 80%, hsl(260 70% 60% / 0.10) 0%, transparent 60%)',
-              'radial-gradient(ellipse 40% 60% at 55% 40%, hsl(243 60% 65% / 0.07) 0%, transparent 50%)',
-            ].join(', '),
-          }}
-        />
-      </div>
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-end pb-16 overflow-hidden bg-black">
+      {/* Main video — full screen, high quality */}
+      <video
+        src="/loading-main.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: 'center center' }}
+      />
+      {/* Subtle bottom vignette so the progress bar reads cleanly */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-48 pointer-events-none"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)' }}
+      />
+      {/* Progress bar overlay */}
       <div className="relative z-10">
-        <GlassProgressBar durationMs={1500} />
+        <GlassBar durationMs={1500} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Camera, Compass, Newspaper, Volume2 } from 'lucide-react';
-import { Logo } from '@/components/logo';
+import { Logo, FoxT } from '@/components/logo';
 import { AnimatedLogoMark } from '@/components/animated-logo';
 import { ScrollVelocityStrip, type StripItem } from '@/components/scroll-velocity-strip';
 
@@ -36,24 +36,23 @@ export default function Landing() {
 
       {/* Editorial masthead */}
       <header className="relative border-b border-border overflow-hidden">
-        {/* Indigo aurora */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: [
-            'radial-gradient(ellipse 65% 55% at 20% 20%, hsl(243 75% 55% / 0.13) 0%, transparent 65%)',
-            'radial-gradient(ellipse 50% 45% at 75% 75%, hsl(260 70% 60% / 0.10) 0%, transparent 60%)',
+            'radial-gradient(ellipse 65% 55% at 20% 20%, hsl(243 75% 55% / 0.11) 0%, transparent 65%)',
+            'radial-gradient(ellipse 50% 45% at 75% 75%, hsl(260 70% 60% / 0.09) 0%, transparent 60%)',
             'hsl(var(--background))',
           ].join(', '),
         }} />
-
-        {/* Top editorial bar */}
         <div className="relative bg-foreground text-background px-6 py-2 flex items-center justify-between">
           <span className="font-mono text-[9px] uppercase tracking-[0.4em]">Turasum · Field Correspondent Network</span>
           <AnimatedLogoMark className="h-4 w-4 text-background" />
         </div>
-
         <div className="relative px-6 py-20 md:py-28 text-center bg-card/60 backdrop-blur-sm">
-          <h1 className="text-[clamp(3.5rem,12vw,9rem)] font-serif font-black tracking-tighter leading-none uppercase text-foreground">
-            Turasum
+          {/* Fox-T embedded in the masthead headline */}
+          <h1 className="font-serif font-black tracking-tighter leading-none uppercase text-foreground"
+              style={{ fontSize: 'clamp(3.5rem,12vw,9rem)' }}>
+            <FoxT style={{ color: 'hsl(var(--primary))' }} />
+            <span>urasum</span>
           </h1>
           <div className="w-full h-[3px] bg-foreground mt-5 mb-5" />
           <p className="font-mono text-[10px] md:text-xs uppercase tracking-[0.35em] text-muted-foreground max-w-sm mx-auto">
@@ -79,10 +78,9 @@ export default function Landing() {
         </section>
       )}
 
-      {/* Features — magazine column layout */}
+      {/* Features */}
       <main className="border-b border-border">
         <div className="max-w-5xl mx-auto">
-          {/* Section head */}
           <div className="px-6 py-4 border-b border-border flex items-baseline justify-between">
             <h2 className="font-serif font-black text-sm uppercase tracking-tight">How It Works</h2>
             <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">4 Steps</span>
@@ -114,7 +112,7 @@ export default function Landing() {
 
 function Feature({ icon, step, title, description }: { icon: React.ReactNode; step: string; title: string; description: string }) {
   return (
-    <div className="p-8 md:p-10 space-y-4 group border-b border-border md:border-b-0">
+    <div className="p-8 md:p-10 space-y-4 border-b border-border md:border-b-0">
       <div className="flex items-center gap-3">
         <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground border border-border px-2 py-1">{step}</span>
         <div className="text-primary">{icon}</div>
