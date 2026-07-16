@@ -1,4 +1,12 @@
-import { db, photosTable, tripDaysTable, tripsTable, type Photo } from "@workspace/db";
+import {
+  db,
+  photosTable,
+  tripDaysTable,
+  tripsTable,
+  DEFAULT_DIGEST_STYLE_VALUE,
+  type Photo,
+  type DigestStyleValue,
+} from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { clusterPhotosByDay, computeDayDistanceKm, type RoutePoint } from "./geo";
 import { researchAndWriteDay, type DayStoryResult } from "./narrative";
@@ -79,7 +87,9 @@ export async function processTrip(tripId: number): Promise<void> {
       );
     }
 
-    const tripTitle = (await getTripTitle(tripId)) ?? "Untitled trip";
+    const tripMeta = await getTripMeta(tripId);
+    const tripTitle = tripMeta.title ?? "Untitled trip";
+    const visualStyle = tripMeta.visualStyle;
 
     // Distance is estimated from the actual chronological trail of
     // geotagged photos (intra-day movement + the arrival leg from the
@@ -131,6 +141,7 @@ export async function processTrip(tripId: number): Promise<void> {
           photoCount: cluster.photoIds.length,
           tripTitle,
           photoImages,
+          visualStyle,
         });
         log.info({ dayIndex: i, photosUsed: photoImages.length }, "Day research complete");
 
@@ -206,10 +217,15 @@ export async function processTrip(tripId: number): Promise<void> {
   }
 }
 
-async function getTripTitle(tripId: number): Promise<string | null> {
+async function getTripMeta(
+  tripId: number,
+): Promise<{ title: string | null; visualStyle: DigestStyleValue }> {
   const [trip] = await db
-    .select({ title: tripsTable.title })
+    .select({ title: tripsTable.title, visualStyle: tripsTable.visualStyle })
     .from(tripsTable)
     .where(eq(tripsTable.id, tripId));
-  return trip?.title ?? null;
+  return {
+    title: trip?.title ?? null,
+    visualStyle: trip?.visualStyle ?? DEFAULT_DIGEST_STYLE_VALUE,
+  };
 }

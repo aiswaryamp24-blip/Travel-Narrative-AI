@@ -1,5 +1,14 @@
 import { anthropic } from "@workspace/integrations-anthropic-ai";
-import type { MessageParam, ToolUnion } from "@anthropic-ai/sdk/resources/messages";
+import type Anthropic from "@anthropic-ai/sdk";
+
+// The SDK exposes these via TS namespace-merging on the default `Anthropic`
+// export (`declare namespace Anthropic { export { MessageParam, ... } }`),
+// not as flat subpath exports — `@anthropic-ai/sdk/resources/messages`
+// (and even `@anthropic-ai/sdk/resources`) has no "types" condition in the
+// package's exports map, so importing from those subpaths fails to resolve
+// under this project's "bundler" moduleResolution.
+type MessageParam = Anthropic.MessageParam;
+type ToolUnion = Anthropic.ToolUnion;
 import {
   getHistoricalWeather,
   getLandmarks,
@@ -8,9 +17,31 @@ import {
   type WeatherResult,
 } from "./research";
 import type { PhotoImageBlock } from "./photoContent";
+import type { DigestStyleValue } from "@workspace/db";
 
 const MODEL = "claude-sonnet-4-5";
 const MAX_TOOL_ROUNDS = 6;
+
+/** Tone/register instruction per chosen visual style, so the prose reads
+ * like it belongs to the magazine the traveler picked rather than always
+ * defaulting to one house voice. canon-camera is the fallback/default
+ * style, so its voice is the original BBC/broadsheet register this
+ * pipeline always used. */
+const STYLE_VOICE: Record<DigestStyleValue, string> = {
+  "pop-art":
+    "Write with punchy, high-energy pop-magazine verve: short, declarative sentences and bold, plainly stated claims, with a wink of playful attitude — like a glossy culture-magazine spread, not a breathless press release.",
+  supermarket:
+    "Write like a warm, practical weekend-supplement travel column: breezy, relatable, a little wry, favoring plain everyday language over literary flourish.",
+  "camera-interface":
+    "Write like precise field notes or a mission log: clipped, observational, almost technical — favor concrete data points and short declarative sentences over descriptive color.",
+  "canon-camera":
+    "Write in the register of a BBC Travel or broadsheet travel feature: precise, observational, quietly confident. Let specific, concrete detail carry the piece rather than breathless adjectives, superlatives, or exclamation points — understatement reads as more credible than enthusiasm.",
+  "ios-core":
+    "Write with clean, minimal, confident copy in the spirit of considered product writing: short declarative sentences, no wasted words, quietly polished rather than ornate.",
+  "android-core":
+    "Write with an open, detail-oriented, slightly technical enthusiast voice — precise and unpretentious, like a well-written project changelog crossed with a travel journal.",
+};
+const DEFAULT_STYLE_VOICE = STYLE_VOICE["canon-camera"];
 
 const GEO_TOOLS: ToolUnion[] = [
   {
@@ -64,7 +95,8 @@ const GEO_TOOLS: ToolUnion[] = [
  * guessed coordinates. Physically removing the tools makes this a hard
  * constraint instead of a prompt instruction Claude could ignore.
  */
-function buildTools(hasReliableCoordinates: boolean): ToolUnion[] {
+function buildTools(hasReliableCoordinates: boolean, visualStyle: DigestStyleValue): ToolUnion[] {
+  const voice = STYLE_VOICE[visualStyle] ?? DEFAULT_STYLE_VOICE;
   return [
     ...(hasReliableCoordinates ? GEO_TOOLS : []),
     {
@@ -92,11 +124,16 @@ function buildTools(hasReliableCoordinates: boolean): ToolUnion[] {
           narrative: {
             type: "string",
             description:
-              "2 tight paragraphs (roughly 90-150 words total) of vivid, specific travel journalism about this day. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting)" +
+              "A complete short feature (3 tight paragraphs, roughly 180-260 words total) structured like a proper magazine article, not a caption: an opening paragraph that hooks the reader with one specific, concrete scene (never a throat-clearing summary sentence); a middle paragraph carrying the substance of the day" +
+              (hasReliableCoordinates
+                ? ", weaving in at least one concrete researched fact (temperature, a named landmark, elevation, precipitation) where the research supports it"
+                : "") +
+              "; and a closing paragraph (or final sentence) that actually lands the piece — a specific detail or observation that closes the day, never a trailing-off summary. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting)" +
               (hasReliableCoordinates
                 ? " or the researched facts (weather, location, landmarks)"
                 : " — there are no researched facts available for this day, so do not state a specific place name, temperature, or weather condition unless it is unmistakably visible in a photo") +
-              " — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers.",
+              " — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers. " +
+              voice,
           },
         },
         required: ["locationName", "visualObservations", "headline", "narrative"],
@@ -117,6 +154,10 @@ export interface DayResearchContext {
   noGpsInTrip: boolean;
   photoCount: number;
   tripTitle: string;
+  /** The trip's chosen visual style — shapes the narrative's tone/register
+   * (see STYLE_VOICE) so the writing suits whatever magazine style the
+   * traveler picked, not just the story page's colors/fonts. */
+  visualStyle: DigestStyleValue;
   /** A representative sample of this day's actual photos, downsized for
    * vision input — lets Claude ground the narrative in what's genuinely
    * depicted (people, activity, setting) instead of inventing it. */
@@ -183,7 +224,8 @@ export async function researchAndWriteDay(
 ): Promise<DayStoryResult> {
   const hasPhotos = ctx.photoImages.length > 0;
   const hasReliableCoordinates = !ctx.noGpsInTrip;
-  const tools = buildTools(hasReliableCoordinates);
+  const voice = STYLE_VOICE[ctx.visualStyle] ?? DEFAULT_STYLE_VOICE;
+  const tools = buildTools(hasReliableCoordinates, ctx.visualStyle);
 
   const systemPrompt = `You are a travel correspondent for a magazine-style trip journal. You are researching day ${ctx.dayIndex + 1} of a trip titled "${ctx.tripTitle}".
 
@@ -218,8 +260,8 @@ ${
 }
 - If people are visible in photos, describe what they're actually doing (the action) rather than just noting their presence — specificity here is what makes the story feel true to the day.
 - Do not describe activities, objects, or people that aren't visible in the provided photos, and don't state a numeric distance traveled in the narrative — the app displays that separately.
-${hasPhotos ? `- Each photo below is labeled with its capture time. Use that to give the day genuine temporal shape — how it began, what happened by midday, how it wound down — rather than describing the photos as an undifferentiated list. Only reference specific times/sequence you can actually see in those labels, don't invent a schedule.\n` : ""}- Write in the register of a BBC Travel or broadsheet travel feature: precise, observational, quietly confident. Let specific, concrete detail carry the piece rather than breathless adjectives, superlatives, or exclamation points — understatement reads as more credible than enthusiasm. Prefer plain, exact nouns and verbs over flowery description.
-- Keep it succinct and compelling: two tight, information-dense paragraphs beat four padded ones. Cut any sentence that isn't doing real work.`;
+${hasPhotos ? `- Each photo below is labeled with its capture time. Use that to give the day genuine temporal shape — how it began, what happened by midday, how it wound down — rather than describing the photos as an undifferentiated list. Only reference specific times/sequence you can actually see in those labels, don't invent a schedule.\n` : ""}- ${voice}
+- Structure the piece like a proper feature article, not a photo caption: a hook to open, the substance of the day in the middle${hasReliableCoordinates ? " (grounded in at least one concrete researched fact when the research supports it)" : ""}, and a closing line that actually closes — never trail off into a summary sentence. Three tight, information-dense paragraphs beat two thin ones or five padded ones. Cut any sentence that isn't doing real work.`;
 
   const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
 ${hasReliableCoordinates ? `Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}\n` : ""}Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at, each labeled with its capture time)` : ""}
@@ -265,13 +307,19 @@ Research this day and write the story.`;
         headline: string;
         narrative: string;
       };
+      // Type assertion (not just an annotation) is required here: `weather`
+      // is mutated inside a nested closure (see the tool-result Promise.all
+      // below), which collapses TS's control-flow narrowing on read to
+      // `never` — an assertion bypasses CFA instead of relying on it.
+      const weather = capturedWeather as WeatherResult | null;
+      const elevationMeters: number | null = weather === null ? null : weather.elevationMeters;
       return {
         locationName: input.locationName,
         headline: input.headline,
         narrative: input.narrative,
-        weather: capturedWeather,
+        weather,
         landmarks: capturedLandmarks,
-        elevationMeters: capturedWeather?.elevationMeters ?? null,
+        elevationMeters,
       };
     }
 

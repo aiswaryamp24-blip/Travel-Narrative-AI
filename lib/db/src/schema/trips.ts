@@ -10,7 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
+import { digestStyleValues, usersTable } from "./users";
 
 export const tripStatusValues = [
   "pending",
@@ -35,6 +35,12 @@ export const tripsTable = pgTable("trips", {
   // until the app associates them with a real signed-in user.
   userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
   privacy: text("privacy", { enum: tripPrivacyValues }).notNull().default("private"),
+  // Visual style preset chosen when the trip is created (see digestStyleValues
+  // in ./users) — reuses the same 6 IDs as the wrapped-digest style system,
+  // but applied per-trip to the story page rather than per-user to a PDF.
+  visualStyle: text("visual_style", { enum: digestStyleValues })
+    .notNull()
+    .default("canon-camera"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

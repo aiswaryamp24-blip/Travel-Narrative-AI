@@ -29,6 +29,7 @@ function toTripSummary(trip: Trip) {
     summary: trip.summary,
     errorMessage: trip.errorMessage,
     privacy: trip.privacy,
+    visualStyle: trip.visualStyle,
     isOwner: false,
     startDate: null as string | null,
     endDate: null as string | null,
@@ -92,7 +93,11 @@ router.post('/trips', requireAuth, async (req: Request, res: Response) => {
 
   const [trip] = await db
     .insert(tripsTable)
-    .values({ title: parsed.data.title, userId: req.userId! })
+    .values({
+      title: parsed.data.title,
+      userId: req.userId!,
+      visualStyle: parsed.data.visualStyle ?? 'canon-camera',
+    })
     .returning();
 
   res.status(201).json({

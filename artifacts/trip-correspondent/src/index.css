@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Anton&family=Cormorant:ital,wght@0,400..700;1,400..700&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400..800&family=Noto+Sans+JP:wght@400..900&family=Inter:wght@400..900&family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&family=Space+Grotesk:wght@400..700&display=swap');
 
 @layer theme, base, clerk, components, utilities;
 @import 'tailwindcss';
@@ -42,6 +42,7 @@
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
+  --font-y2k: var(--app-font-y2k);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -83,8 +84,9 @@
   --ring: 243 65% 48%;
 
   --app-font-sans: 'DM Sans', sans-serif;
-  --app-font-serif: 'Playfair Display', serif;
+  --app-font-serif: 'Space Grotesk', sans-serif;
   --app-font-mono: Menlo, monospace;
+  --app-font-y2k: 'Space Grotesk', sans-serif;
 
   --radius: 0.25rem;
 }
@@ -119,6 +121,157 @@
   --border: 234 35% 18%;
   --input: 234 35% 18%;
   --ring: 243 70% 62%;
+}
+
+/* Per-trip visual style overrides — applied via data-trip-style="<id>" on a
+   wrapper around the trip story page (see pages/trip.tsx). Reuses every
+   existing Tailwind class already keyed to these variables (bg-background,
+   text-primary, font-serif, etc.), so the page re-skins without touching
+   its className usage. Kept in sync by hand with the color/font values in
+   lib/trip-styles.ts (which the style-picker UI reads from directly). */
+[data-trip-style="pop-art"] {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 7%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 7%;
+  --card-border: 0 0% 7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 7%;
+  --popover-border: 0 0% 7%;
+  --primary: 355 100% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 100% 50%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 50 100% 95%;
+  --muted-foreground: 0 0% 30%;
+  --accent: 50 100% 50%;
+  --accent-foreground: 0 0% 7%;
+  --border: 0 0% 7%;
+  --input: 0 0% 7%;
+  --ring: 355 100% 45%;
+  --app-font-serif: 'Bricolage Grotesque', sans-serif;
+  --app-font-sans: 'Noto Sans JP', sans-serif;
+}
+
+[data-trip-style="supermarket"] {
+  --background: 0 0% 100%;
+  --foreground: 226 100% 22%;
+  --card: 0 0% 100%;
+  --card-foreground: 226 100% 22%;
+  --card-border: 226 100% 22%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 226 100% 22%;
+  --popover-border: 226 100% 22%;
+  --primary: 1 75% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 51 100% 50%;
+  --secondary-foreground: 226 100% 22%;
+  --muted: 31 41% 92%;
+  --muted-foreground: 226 40% 35%;
+  --accent: 148 100% 32%;
+  --accent-foreground: 0 0% 100%;
+  --border: 226 100% 22%;
+  --input: 226 100% 22%;
+  --ring: 1 75% 52%;
+  --app-font-serif: 'Anton', sans-serif;
+  --app-font-sans: 'DM Sans', sans-serif;
+}
+
+[data-trip-style="camera-interface"] {
+  --background: 150 17% 5%;
+  --foreground: 42 25% 90%;
+  --card: 147 9% 19%;
+  --card-foreground: 42 25% 90%;
+  --card-border: 147 20% 25%;
+  --popover: 147 9% 19%;
+  --popover-foreground: 42 25% 90%;
+  --popover-border: 147 20% 25%;
+  --primary: 147 70% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 46 65% 52%;
+  --secondary-foreground: 150 17% 5%;
+  --muted: 147 9% 15%;
+  --muted-foreground: 42 15% 65%;
+  --accent: 346 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --border: 147 20% 25%;
+  --input: 147 20% 25%;
+  --ring: 147 70% 35%;
+  --app-font-serif: 'Cormorant', serif;
+  --app-font-sans: 'Space Mono', monospace;
+}
+
+[data-trip-style="canon-camera"] {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 95%;
+  --card-border: 214 3% 30%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 0 0% 95%;
+  --popover-border: 214 3% 30%;
+  --primary: 208 100% 37%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 290 35% 45%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 214 3% 20%;
+  --muted-foreground: 214 3% 65%;
+  --accent: 138 25% 39%;
+  --accent-foreground: 0 0% 100%;
+  --border: 214 3% 30%;
+  --input: 214 3% 30%;
+  --ring: 208 100% 37%;
+  --app-font-serif: 'Playfair Display', serif;
+  --app-font-sans: 'JetBrains Mono', monospace;
+}
+
+[data-trip-style="ios-core"] {
+  --background: 220 16% 96%;
+  --foreground: 210 12% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 12% 13%;
+  --card-border: 228 14% 88%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 12% 13%;
+  --popover-border: 228 14% 88%;
+  --primary: 355 73% 47%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 39 91% 57%;
+  --secondary-foreground: 210 12% 13%;
+  --muted: 228 14% 93%;
+  --muted-foreground: 206 6% 44%;
+  --accent: 136 30% 42%;
+  --accent-foreground: 0 0% 100%;
+  --border: 228 14% 88%;
+  --input: 228 14% 88%;
+  --ring: 355 73% 47%;
+  --app-font-serif: 'Inter', sans-serif;
+  --app-font-sans: 'Inter', sans-serif;
+  --radius: 1rem;
+}
+
+[data-trip-style="android-core"] {
+  --background: 255 7% 11%;
+  --foreground: 312 9% 89%;
+  --card: 257 8% 17%;
+  --card-foreground: 312 9% 89%;
+  --card-border: 257 8% 25%;
+  --popover: 257 8% 17%;
+  --popover-foreground: 312 9% 89%;
+  --popover-border: 257 8% 25%;
+  --primary: 258 100% 87%;
+  --primary-foreground: 255 7% 11%;
+  --secondary: 147 66% 58%;
+  --secondary-foreground: 255 7% 11%;
+  --muted: 257 8% 22%;
+  --muted-foreground: 264 5% 65%;
+  --accent: 147 66% 58%;
+  --accent-foreground: 255 7% 11%;
+  --border: 257 8% 25%;
+  --input: 257 8% 25%;
+  --ring: 258 100% 87%;
+  --app-font-serif: 'Roboto', sans-serif;
+  --app-font-sans: 'Roboto Mono', monospace;
 }
 
 @layer base {

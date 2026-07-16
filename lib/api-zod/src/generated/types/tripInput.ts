@@ -6,7 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+import type { DigestStyle } from './digestStyle';
+
 export interface TripInput {
   /** @minLength 1 */
   title: string;
+  /** Visual style preset for this trip's story page. Defaults to canon-camera if omitted. */
+  visualStyle?: DigestStyle;
 }

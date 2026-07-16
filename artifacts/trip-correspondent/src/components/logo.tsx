@@ -1,9 +1,8 @@
 /**
- * Turasum's mark: a fox's perked ears form the crossbar of a "T", the
- * stem doubles as the muzzle, with minimal line-art eyes/nose. Single
- * continuous stroke weight to match the thin topographic-line poster
- * aesthetic the brand is drawing from — deliberately not a filled/solid
- * icon, even though that costs a little legibility at very small sizes.
+ * Turasum's mark: a sleepy arctic fox's head, closed eyes, single flowing
+ * cheek line with the small hook flourish that recurs across the brand's
+ * reference renders — matches the fox used in the loading screen video so
+ * the mark reads as the same character everywhere, not two different foxes.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -11,19 +10,18 @@ export function LogoMark({ className }: { className?: string }) {
       viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"
-      strokeWidth={4}
+      strokeWidth={3.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
       aria-hidden="true"
     >
-      <path d="M14 20 L6 4 L22 16" />
-      <path d="M50 20 L58 4 L42 16" />
-      <line x1="10" y1="20" x2="54" y2="20" />
-      <line x1="32" y1="20" x2="32" y2="56" />
-      <path d="M24 28 L28 31" />
-      <path d="M40 28 L36 31" />
-      <path d="M29 44 L32 48 L35 44" />
+      <path d="M22 26 L13 6 L28 18" />
+      <path d="M36 18 L51 6 L42 26" />
+      <path d="M22 26 C16 33, 16 44, 24 51 C28 54, 36 54, 40 51 C48 44, 48 33, 42 26" />
+      <path d="M24 34 Q27.5 31 31 34" />
+      <path d="M33 34 Q36.5 31 40 34" />
+      <path d="M29 45 L32 48 L35 45" />
     </svg>
   );
 }

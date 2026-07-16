@@ -32,6 +32,7 @@ function toTripSummary(trip: Trip, isOwner: boolean) {
     summary: trip.summary,
     errorMessage: trip.errorMessage,
     privacy: trip.privacy,
+    visualStyle: trip.visualStyle,
     isOwner,
     startDate: null as string | null,
     endDate: null as string | null,

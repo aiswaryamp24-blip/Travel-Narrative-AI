@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DigestStyle } from './digestStyle';
 import type { TripPrivacy } from './tripPrivacy';
 import type { TripStatus } from './tripStatus';
 
@@ -19,6 +20,7 @@ export interface TripSummary {
   /** @nullable */
   errorMessage?: string | null;
   privacy: TripPrivacy;
+  visualStyle: DigestStyle;
   /** Whether the requesting viewer owns this trip. */
   isOwner: boolean;
   /** @nullable */

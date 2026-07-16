@@ -25,6 +25,8 @@ import { DayAudioPlayer } from '@/components/day-audio-player';
 import { ShareCard } from '@/components/share-card';
 import { RevealOnScroll } from '@/components/reveal-on-scroll';
 import { Logo } from '@/components/logo';
+import { StyleDecoration } from '@/components/style-decoration';
+import { getTripStyle } from '@/lib/trip-styles';
 
 export default function Trip() {
   const { id } = useParams();
@@ -165,7 +167,7 @@ export default function Trip() {
   }
 
   return (
-    <div className="min-h-screen bg-background/95">
+    <div className="min-h-screen bg-background/95" data-trip-style={trip.visualStyle}>
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border py-4 px-6 flex justify-between items-center">
         <Link href="/" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
@@ -243,7 +245,9 @@ export default function Trip() {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
             </div>
           )}
-          
+
+          <StyleDecoration pattern={getTripStyle(trip.visualStyle).pattern} />
+
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 mt-16">
             <div className="flex items-center justify-center gap-4 text-xs font-mono uppercase tracking-[0.2em] text-secondary-foreground/80">
               <span>{trip.startDate ? format(new Date(trip.startDate), 'MMMM yyyy') : 'Date Unknown'}</span>

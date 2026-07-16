@@ -22,29 +22,29 @@ function useCountUp(durationMs: number) {
   return progress;
 }
 
+/** Trailing caravan riding the progress track — each icon lags the readout
+ * percentage by a fixed offset (so they arrive staggered, not stacked) and
+ * bobs slightly out of phase with the others for a lively, non-uniform feel. */
+const CARAVAN = [
+  { src: '/icon-plane.png', offset: 0, bobDelay: 0 },
+  { src: '/icon-train.png', offset: 9, bobDelay: 0.2 },
+  { src: '/icon-bike.png', offset: 18, bobDelay: 0.4 },
+];
+
 function TurasumLoadingCard({ durationMs = 1500 }: { durationMs?: number }) {
   const progress = useCountUp(durationMs);
 
   return (
-    <div className="w-72 md:w-80 rounded-3xl bg-card/80 backdrop-blur-md border border-border shadow-xl px-6 py-5 space-y-5">
-      <div className="text-center font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+    <div className="w-72 md:w-80 rounded-3xl bg-card/30 backdrop-blur-xl border border-white/40 shadow-xl px-6 py-5 space-y-5">
+      <div className="text-center font-y2k text-xs uppercase tracking-[0.3em] text-muted-foreground">
         turasum
       </div>
 
-      <div className="flex items-center justify-between">
-        <motion.img
-          src="/icon-plane.png"
-          alt=""
-          className="h-10 w-10 md:h-12 md:w-12 object-contain"
-          animate={{ y: [0, -3, 0], rotate: [-6, -10, -6] }}
-          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <div className="text-3xl md:text-4xl font-serif font-black text-primary tabular-nums">
-          {progress}%
-        </div>
+      <div className="text-right text-3xl md:text-4xl font-y2k font-black text-primary tabular-nums">
+        {progress}%
       </div>
 
-      <div className="relative h-4">
+      <div className="relative h-8">
         <div
           className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[2px]"
           style={{
@@ -53,11 +53,22 @@ function TurasumLoadingCard({ durationMs = 1500 }: { durationMs?: number }) {
             opacity: 0.4,
           }}
         />
-        <motion.div
-          className="absolute top-1/2 -translate-y-1/2 h-4 w-[2px] bg-primary rounded-full"
-          animate={{ left: `${progress}%` }}
-          transition={{ ease: 'linear', duration: 0.1 }}
-        />
+        {CARAVAN.map(({ src, offset, bobDelay }) => (
+          <motion.img
+            key={src}
+            src={src}
+            alt=""
+            className="absolute top-1/2 h-5 w-5 md:h-6 md:w-6 object-contain -translate-x-1/2"
+            animate={{
+              left: `${Math.max(0, progress - offset)}%`,
+              y: ['-50%', 'calc(-50% - 3px)', '-50%'],
+            }}
+            transition={{
+              left: { ease: 'linear', duration: 0.1 },
+              y: { duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: bobDelay },
+            }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -72,17 +83,17 @@ function TurasumLoadingCard({ durationMs = 1500 }: { durationMs?: number }) {
  */
 export function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-end pb-4 md:pb-6 overflow-hidden bg-background">
       <img src="/loading-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <video
+        src="/loading-fox-bg.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      />
       <div className="relative z-10 flex flex-col items-center gap-8">
-        <video
-          src="/loading-fox-reveal.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-40 md:w-48 drop-shadow-[0_0_30px_hsl(243_75%_60%/0.35)]"
-        />
         <TurasumLoadingCard durationMs={1500} />
       </div>
     </div>

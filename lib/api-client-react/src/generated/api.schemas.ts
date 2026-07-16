@@ -61,6 +61,8 @@ export const TripPrivacy = {
 export interface TripInput {
   /** @minLength 1 */
   title: string;
+  /** Visual style preset for this trip's story page. Defaults to canon-camera if omitted. */
+  visualStyle?: DigestStyle;
 }
 
 export interface UpdateTripPrivacyInput {
@@ -78,6 +80,7 @@ export interface TripSummary {
   /** @nullable */
   errorMessage?: string | null;
   privacy: TripPrivacy;
+  visualStyle: DigestStyle;
   /** Whether the requesting viewer owns this trip. */
   isOwner: boolean;
   /** @nullable */

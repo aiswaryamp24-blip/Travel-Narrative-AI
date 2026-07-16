@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "trip-correspondent",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "BASE_PATH=/ VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZmFrZS1wcmV2aWV3LWtleS5jbGVyay5hY2NvdW50cy5kZXYk pnpm --filter @workspace/trip-correspondent run dev"
+      ],
+      "port": 25222,
+      "autoPort": true
+    }
+  ]
+}

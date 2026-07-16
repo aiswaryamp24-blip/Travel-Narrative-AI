@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
+import type { DigestStyle } from '@workspace/api-client-react';
 import { useUploadFlow } from '@/hooks/use-upload-flow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { TripStyleStep } from '@/components/trip-style-step';
 import { UploadCloud, Image as ImageIcon, MapPin, Loader2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +12,8 @@ export function UploadFlow() {
   const [title, setTitle] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  
+  const [showStyleStep, setShowStyleStep] = useState(false);
+
   const { progress, startUpload } = useUploadFlow();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -42,13 +45,26 @@ export function UploadFlow() {
 
   const handleStart = () => {
     if (!title.trim() || files.length === 0) return;
-    startUpload(title, files);
+    setShowStyleStep(true);
+  };
+
+  const handleStyleConfirm = (style: DigestStyle) => {
+    setShowStyleStep(false);
+    startUpload(title, files, style);
   };
 
   const isUploading = progress.status !== 'idle' && progress.status !== 'error' && progress.status !== 'done';
   const progressPercent = progress.totalPhotos > 0 
     ? Math.round((progress.uploadedPhotos / progress.totalPhotos) * 100) 
     : 0;
+
+  if (showStyleStep) {
+    return (
+      <div className="bg-card border border-card-border rounded-none p-6 md:p-10 shadow-sm max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
+        <TripStyleStep onConfirm={handleStyleConfirm} onBack={() => setShowStyleStep(false)} />
+      </div>
+    );
+  }
 
   if (isUploading) {
     return (

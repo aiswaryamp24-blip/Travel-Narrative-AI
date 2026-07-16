@@ -715,6 +715,10 @@ components:
         title:
           type: string
           minLength: 1
+        visualStyle:
+          allOf:
+            - $ref: "#/components/schemas/DigestStyle"
+          description: Visual style preset for this trip's story page. Defaults to canon-camera if omitted.
     UpdateTripPrivacyInput:
       type: object
       required: [privacy]
@@ -723,7 +727,7 @@ components:
           $ref: "#/components/schemas/TripPrivacy"
     TripSummary:
       type: object
-      required: [id, title, status, coverObjectPath, privacy, isOwner, startDate, endDate, createdAt]
+      required: [id, title, status, coverObjectPath, privacy, isOwner, startDate, endDate, createdAt, visualStyle]
       properties:
         id:
           type: integer
@@ -739,6 +743,8 @@ components:
           type: ["string", "null"]
         privacy:
           $ref: "#/components/schemas/TripPrivacy"
+        visualStyle:
+          $ref: "#/components/schemas/DigestStyle"
         isOwner:
           type: boolean
           description: Whether the requesting viewer owns this trip.

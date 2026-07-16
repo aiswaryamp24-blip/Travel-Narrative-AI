@@ -7,6 +7,7 @@ import {
   useProcessTrip,
   useListTrips,
 } from '@workspace/api-client-react';
+import type { DigestStyle } from '@workspace/api-client-react';
 import { useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { getListTripsQueryKey } from '@workspace/api-client-react';
@@ -34,7 +35,7 @@ export function useUploadFlow() {
   const processTrip = useProcessTrip();
 
   const startUpload = useCallback(
-    async (title: string, files: File[]) => {
+    async (title: string, files: File[], style: DigestStyle) => {
       try {
         if (!files.length) {
           toast.error("Please select at least one photo.");
@@ -44,7 +45,7 @@ export function useUploadFlow() {
         setProgress({ status: 'creating', totalPhotos: files.length, uploadedPhotos: 0 });
 
         // 1. Create Trip
-        const trip = await createTrip.mutateAsync({ data: { title } });
+        const trip = await createTrip.mutateAsync({ data: { title, visualStyle: style } });
         
         setProgress({ status: 'uploading', totalPhotos: files.length, uploadedPhotos: 0 });
 

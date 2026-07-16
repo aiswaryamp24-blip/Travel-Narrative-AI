@@ -83,6 +83,7 @@ export const ListTripsResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -99,7 +100,8 @@ export const ListTripsResponse = zod.array(ListTripsResponseItem)
 
 
 export const CreateTripBody = zod.object({
-  "title": zod.string().min(1)
+  "title": zod.string().min(1),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for this trip\'s story page. Defaults to canon-camera if omitted.')
 })
 
 export const CreateTripResponse = zod.object({
@@ -110,6 +112,7 @@ export const CreateTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -178,6 +181,7 @@ export const GetTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -274,6 +278,7 @@ export const UpdateTripPrivacyResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -334,6 +339,7 @@ export const ProcessTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -461,6 +467,7 @@ export const GetUserProfileResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -501,6 +508,7 @@ export const UpdateUserSettingsResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -549,6 +557,7 @@ export const GetFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -575,6 +584,7 @@ export const GetDiscoverFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -601,6 +611,7 @@ export const GetFollowersFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
