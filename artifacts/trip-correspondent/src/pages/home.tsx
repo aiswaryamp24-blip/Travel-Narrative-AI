@@ -163,7 +163,7 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/35" />
 
-          <div className="relative z-10 px-6 py-8 md:py-10 text-center">
+          <div className="relative z-10 px-6 pt-8 md:pt-10 pb-0 text-center">
             <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/70 mb-3">
               Vol. I — Special Correspondent Edition
             </div>
@@ -177,9 +177,13 @@ export default function Home() {
             </SparkleGlow>
             {/* Holographic stripe rule */}
             <div className="holo-stripe h-[3px] w-full mt-3 mb-3 opacity-80" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/80">
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/80 mb-6">
               Your camera roll · Turned into a story you remember
             </p>
+          </div>
+          {/* New Assignment sits flush against the title inside the hero */}
+          <div className="relative z-10">
+            <UploadFlow />
           </div>
         </div>
       </header>
@@ -196,11 +200,7 @@ export default function Home() {
              style={{ animation: 'holo-spin 32s linear infinite reverse' }} />
         <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
 
-        <main className="relative max-w-5xl mx-auto px-6 pt-4 pb-16 space-y-24">
-          {/* Upload — moved to the top of the page content so the primary
-              action is immediately visible below the hero. */}
-          <section><UploadFlow /></section>
-
+        <main className="relative max-w-5xl mx-auto px-6 pt-10 pb-16 space-y-24">
           {/* Special Edition Covers */}
           <section className="space-y-0">
             <div className="border border-white/10">
