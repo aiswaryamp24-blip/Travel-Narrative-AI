@@ -39,8 +39,12 @@ type StyleDef = {
   bg: string;
   surface: string;
   accent: string;
+  accentFg: string;
   fg: string;
   muted: string;
+  headlineFg: string;
+  subtitleFg: string;
+  darkCover: boolean;
   description: string;
 };
 
@@ -51,8 +55,12 @@ const STYLE_DEFS: StyleDef[] = [
     bg: '#FFEC00',
     surface: '#FFFFFF',
     accent: '#E8112D',
+    accentFg: '#FFFFFF',
     fg: '#0D0D0D',
     muted: '#3D3D3D',
+    headlineFg: '#0D0D0D',
+    subtitleFg: '#E8112D',
+    darkCover: false,
     description: 'Bold primaries, thick borders, Ben-day energy',
   },
   {
@@ -61,18 +69,26 @@ const STYLE_DEFS: StyleDef[] = [
     bg: '#F5F5F0',
     surface: '#FFFFFF',
     accent: '#CC0000',
+    accentFg: '#FFFFFF',
     fg: '#111111',
     muted: '#555555',
+    headlineFg: '#111111',
+    subtitleFg: '#555555',
+    darkCover: false,
     description: 'Receipt paper white, barcode accents',
   },
   {
     id: 'camera-interface',
-    name: 'Camera Interface',
+    name: 'Viewfinder Interface',
     bg: '#0A0A0A',
     surface: '#1A1A1A',
     accent: '#00FF41',
+    accentFg: '#0A0A0A',
     fg: '#E8E8E8',
     muted: '#6B6B6B',
+    headlineFg: '#FFFFFF',
+    subtitleFg: '#6B6B6B',
+    darkCover: true,
     description: 'Black EVF, green CRT readouts',
   },
   {
@@ -81,8 +97,12 @@ const STYLE_DEFS: StyleDef[] = [
     bg: '#1A1A1A',
     surface: '#2A2A2A',
     accent: '#E0051E',
+    accentFg: '#FFFFFF',
     fg: '#F0F0F0',
     muted: '#8A8A8A',
+    headlineFg: '#FFFFFF',
+    subtitleFg: '#8A8A8A',
+    darkCover: true,
     description: 'Classic body black, signature red',
   },
   {
@@ -91,8 +111,12 @@ const STYLE_DEFS: StyleDef[] = [
     bg: '#F2F2F7',
     surface: '#FFFFFF',
     accent: '#007AFF',
+    accentFg: '#FFFFFF',
     fg: '#1C1C1E',
     muted: '#8E8E93',
+    headlineFg: '#1C1C1E',
+    subtitleFg: '#8E8E93',
+    darkCover: false,
     description: 'Light grouped backgrounds, system blue',
   },
   {
@@ -101,11 +125,188 @@ const STYLE_DEFS: StyleDef[] = [
     bg: '#1C1B1F',
     surface: '#2B2930',
     accent: '#D0BCFF',
+    accentFg: '#381E72',
     fg: '#E6E1E5',
     muted: '#938F99',
+    headlineFg: '#FFFFFF',
+    subtitleFg: '#938F99',
+    darkCover: true,
     description: 'Material dark surface, tertiary purple',
   },
 ];
+
+// --- Large PDF page preview ---
+
+const SAMPLE_STATS = [
+  { label: 'Destinations', value: '12' },
+  { label: 'Photos taken', value: '847' },
+  { label: 'Days abroad', value: '143' },
+  { label: 'Trips covered', value: '8' },
+  { label: 'Countries', value: '9' },
+  { label: 'Cities visited', value: '31' },
+];
+
+function DigestPagePreview({ style }: { style: StyleDef }) {
+  return (
+    <div className="w-full flex flex-col gap-3">
+      {/* Cover page mock — A4 ratio ~0.707 */}
+      <div
+        className="w-full relative overflow-hidden"
+        style={{ backgroundColor: style.bg, aspectRatio: '1 / 1.414' }}
+      >
+        {/* Top accent stripe */}
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{ height: '6px', backgroundColor: style.accent }}
+        />
+
+        {/* Cover content */}
+        <div className="absolute inset-0 flex flex-col justify-between p-[8%]">
+          {/* Top section */}
+          <div>
+            {/* Kicker label */}
+            <div
+              className="text-[9px] font-mono uppercase tracking-widest mb-3"
+              style={{ color: style.accent }}
+            >
+              ✦ Trip Correspondent
+            </div>
+            {/* Main headline */}
+            <div
+              className="font-serif leading-tight mb-2"
+              style={{ color: style.headlineFg, fontSize: 'clamp(18px, 5cqw, 28px)' }}
+            >
+              Your Travel<br />Year in Review
+            </div>
+            {/* Subtitle / year */}
+            <div
+              className="text-[10px] font-mono uppercase tracking-widest"
+              style={{ color: style.subtitleFg }}
+            >
+              Wrapped · 2025
+            </div>
+          </div>
+
+          {/* Decorative divider */}
+          <div className="flex items-center gap-2 my-auto">
+            <div className="flex-1 h-px" style={{ backgroundColor: style.muted, opacity: 0.4 }} />
+            <div
+              className="text-[8px] font-mono uppercase tracking-widest px-2"
+              style={{ color: style.muted }}
+            >
+              ◈
+            </div>
+            <div className="flex-1 h-px" style={{ backgroundColor: style.muted, opacity: 0.4 }} />
+          </div>
+
+          {/* Bottom stats teaser */}
+          <div>
+            <div
+              className="text-[8px] font-mono uppercase tracking-widest mb-2"
+              style={{ color: style.muted }}
+            >
+              Highlights inside
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {SAMPLE_STATS.slice(0, 3).map((stat) => (
+                <div
+                  key={stat.label}
+                  className="p-2"
+                  style={{ backgroundColor: style.surface }}
+                >
+                  <div
+                    className="text-[7px] font-mono uppercase tracking-wide leading-tight mb-1"
+                    style={{ color: style.muted }}
+                  >
+                    {stat.label}
+                  </div>
+                  <div
+                    className="font-mono font-bold"
+                    style={{ color: style.accent, fontSize: 'clamp(11px, 2.5cqw, 16px)' }}
+                  >
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom accent bar */}
+        <div
+          className="absolute bottom-0 left-0 right-0"
+          style={{ height: '6px', backgroundColor: style.accent }}
+        />
+      </div>
+
+      {/* Stats page mock */}
+      <div
+        className="w-full relative overflow-hidden"
+        style={{ backgroundColor: style.surface, aspectRatio: '1 / 1.414' }}
+      >
+        <div className="absolute inset-0 flex flex-col p-[8%]">
+          {/* Page header */}
+          <div className="mb-4">
+            <div
+              className="text-[8px] font-mono uppercase tracking-widest mb-1"
+              style={{ color: style.accent }}
+            >
+              ✦ Your Stats
+            </div>
+            <div
+              className="font-serif"
+              style={{ color: style.fg, fontSize: 'clamp(14px, 4cqw, 20px)' }}
+            >
+              By the Numbers
+            </div>
+            <div
+              className="h-px mt-2"
+              style={{ backgroundColor: style.muted, opacity: 0.3 }}
+            />
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-2 flex-1">
+            {SAMPLE_STATS.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col justify-between p-3"
+                style={{ backgroundColor: style.bg }}
+              >
+                <div
+                  className="text-[7px] font-mono uppercase tracking-wide leading-tight"
+                  style={{ color: style.muted }}
+                >
+                  {stat.label}
+                </div>
+                <div
+                  className="font-mono font-bold mt-1"
+                  style={{ color: style.accent, fontSize: 'clamp(16px, 4cqw, 24px)' }}
+                >
+                  {stat.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer rule */}
+          <div className="mt-auto pt-3">
+            <div
+              className="h-px mb-2"
+              style={{ backgroundColor: style.muted, opacity: 0.3 }}
+            />
+            <div
+              className="text-[7px] font-mono uppercase tracking-widest text-center"
+              style={{ color: style.muted }}
+            >
+              Trip Correspondent · Wrapped 2025
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // --- Style Picker Modal ---
 
@@ -121,16 +322,17 @@ function StylePickerModal({
   isGenerating: boolean;
 }) {
   const [selected, setSelected] = useState<DigestStyle>(current);
+  const selectedStyle = STYLE_DEFS.find((s) => s.id === selected)!;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="bg-background border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div className="bg-background border border-border w-full max-w-5xl max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <div>
             <h3 className="font-serif text-xl">Choose Your Wrapped Style</h3>
             <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
-              Your choice is saved for future digests
+              Select a style to see a full preview · your choice is saved
             </p>
           </div>
           <button
@@ -142,89 +344,93 @@ function StylePickerModal({
           </button>
         </div>
 
-        {/* Style grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-6">
-          {STYLE_DEFS.map((style) => {
-            const isSelected = selected === style.id;
-            return (
-              <button
-                key={style.id}
-                onClick={() => setSelected(style.id)}
-                className={`relative text-left border-2 transition-all focus:outline-none ${
-                  isSelected
-                    ? 'border-primary shadow-lg scale-[1.02]'
-                    : 'border-border hover:border-muted-foreground'
-                }`}
-              >
-                {/* Preview swatch */}
-                <div
-                  className="relative h-28 overflow-hidden"
-                  style={{ backgroundColor: style.bg }}
-                >
-                  {/* Mini cover page simulation */}
-                  <div className="absolute inset-0 p-3 flex flex-col justify-between">
-                    <div>
+        {/* Body: two-panel layout */}
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+          {/* Left: style selector */}
+          <div className="md:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r border-border overflow-y-auto">
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-0">
+              {STYLE_DEFS.map((style) => {
+                const isSelected = selected === style.id;
+                return (
+                  <button
+                    key={style.id}
+                    onClick={() => setSelected(style.id)}
+                    className={`flex items-center gap-3 px-4 py-3 text-left border-b border-border transition-all focus:outline-none ${
+                      isSelected
+                        ? 'bg-accent'
+                        : 'hover:bg-accent/50'
+                    }`}
+                  >
+                    {/* Colour chip */}
+                    <div
+                      className="flex-shrink-0 w-10 h-10 border border-border/50 relative overflow-hidden"
+                      style={{ backgroundColor: style.bg }}
+                    >
                       <div
-                        className="h-1.5 w-8 mb-1.5 rounded-none"
+                        className="absolute bottom-0 left-0 right-0 h-1"
                         style={{ backgroundColor: style.accent }}
                       />
-                      <div
-                        className="h-2 w-16 rounded-none opacity-80"
-                        style={{ backgroundColor: style.fg }}
-                      />
-                      <div
-                        className="h-1.5 w-12 mt-1 rounded-none"
-                        style={{ backgroundColor: style.muted, opacity: 0.5 }}
-                      />
-                    </div>
-                    {/* Stats grid mini */}
-                    <div className="grid grid-cols-2 gap-1">
-                      {[0, 1].map((i) => (
+                      <div className="absolute inset-0 p-1.5 flex flex-col gap-0.5">
                         <div
-                          key={i}
-                          className="p-1.5"
-                          style={{ backgroundColor: style.surface, opacity: 0.9 }}
-                        >
-                          <div
-                            className="h-1 w-6 mb-1 rounded-none"
-                            style={{ backgroundColor: style.muted, opacity: 0.5 }}
-                          />
-                          <div
-                            className="h-2 w-8 rounded-none"
-                            style={{ backgroundColor: style.accent }}
-                          />
-                        </div>
-                      ))}
+                          className="h-0.5 w-4 rounded-none"
+                          style={{ backgroundColor: style.headlineFg, opacity: 0.7 }}
+                        />
+                        <div
+                          className="h-0.5 w-3 rounded-none"
+                          style={{ backgroundColor: style.muted, opacity: 0.5 }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  {/* Bottom accent bar */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-1"
-                    style={{ backgroundColor: style.accent }}
-                  />
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[11px] font-mono uppercase tracking-widest font-bold truncate">
+                          {style.name}
+                        </span>
+                        {isSelected && (
+                          <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight truncate">
+                        {style.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Label */}
-                <div className="p-2.5" style={{ backgroundColor: 'hsl(var(--card))' }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-widest font-bold">
-                      {style.name}
-                    </span>
-                    {isSelected && (
-                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
-                    {style.description}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+          {/* Right: full-bleed preview */}
+          <div className="flex-1 overflow-y-auto bg-muted/30">
+            <div className="p-4 md:p-6">
+              {/* Preview label */}
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className="h-px flex-1"
+                  style={{ backgroundColor: selectedStyle.accent, opacity: 0.6 }}
+                />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {selectedStyle.name} · Cover &amp; Stats Preview
+                </span>
+                <div
+                  className="h-px flex-1"
+                  style={{ backgroundColor: selectedStyle.accent, opacity: 0.6 }}
+                />
+              </div>
+
+              <div className="max-w-xs mx-auto">
+                <DigestPagePreview style={selectedStyle} />
+              </div>
+
+              <p className="text-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-4">
+                Sample data shown · your real trips &amp; stats will appear in the PDF
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
+        {/* Footer — always visible */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border flex-shrink-0">
           <Button
             variant="outline"
             size="sm"
@@ -245,7 +451,7 @@ function StylePickerModal({
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5" />
-                Generate with {STYLE_DEFS.find((s) => s.id === selected)?.name}
+                Generate with {selectedStyle.name}
               </>
             )}
           </Button>
