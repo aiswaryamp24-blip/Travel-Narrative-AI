@@ -37,7 +37,7 @@ export default function Landing() {
 
       {/* Hero — scroll-driven portal zoom into the image */}
       <header className="relative border-b-4 border-foreground">
-        <DayNightHero daySrc="/plane-exterior.jpg" nightSrc="/plane-exterior.jpg">
+        <DayNightHero daySrc="/window-interior.jpg" nightSrc="/window-interior.jpg">
           <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
             Fall 2025 · Vol. I · Issue 1
           </div>

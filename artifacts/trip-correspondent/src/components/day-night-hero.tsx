@@ -25,10 +25,10 @@ const GRID_BG = [
   'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
 ].join(', ');
 
-// Viewport-% position of the target window in the plane image.
-// Tune these to match the actual generated image composition.
-const WIN_X = 60; // % from left
-const WIN_Y = 44; // % from top
+// Viewport-% position of the oval window in the interior cabin image.
+// Window is centred in the frame and sits in the upper half.
+const WIN_X = 50; // % from left
+const WIN_Y = 40; // % from top
 
 export function DayNightHero({
   daySrc,
