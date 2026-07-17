@@ -188,79 +188,62 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Everything past the hero — same electric-cobalt Y2K retro
-          treatment (deep blue, grid overlay, floating CD discs) used on
-          Feed and the landing page, so signed-in and signed-out pages read
-          as one consistent system. */}
-      <div className="relative" style={{ background: 'hsl(213 70% 8%)' }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: GRID_BACKGROUND_IMAGE }} />
-        <div className="cd-disc absolute -top-16 -right-16 w-64 h-64 opacity-25 pointer-events-none"
-             style={{ animation: 'holo-spin 26s linear infinite' }} />
-        <div className="cd-disc absolute top-1/3 -left-20 w-48 h-48 opacity-20 pointer-events-none"
-             style={{ animation: 'holo-spin 32s linear infinite reverse' }} />
-        <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
-
-        <main className="relative max-w-5xl mx-auto px-6 pt-10 pb-16 space-y-24">
-          {/* Special Edition Covers */}
-          <section className="space-y-0">
-            <div className="border border-white/10">
-              <div className="bg-white text-[hsl(213_70%_8%)] px-6 py-3 flex items-baseline justify-between">
-                <h2 className="text-xl font-serif font-black uppercase tracking-tight">Special Edition Covers</h2>
-                <span className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-60">Hover to preview · 6 Editions</span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10 border-t border-white/10">
-                {COVER_STYLES.map(style => (
-                  <CoverCard key={style.id} style={style} />
-                ))}
-              </div>
+      <main className="max-w-5xl mx-auto px-6 pt-10 pb-16 space-y-16">
+        {/* Special Edition Covers */}
+        <section className="space-y-0">
+          <div className="border border-border">
+            <div className="bg-foreground text-background px-6 py-3 flex items-baseline justify-between">
+              <h2 className="text-xl font-serif font-black uppercase tracking-tight">Special Edition Covers</h2>
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-60">Hover to preview · 6 Editions</span>
             </div>
-          </section>
-
-          {/* Format showcase — sits between "style your story" (Special
-              Edition Covers) and "here are your finished stories" (the
-              Archive), since it's about what you can do once a story
-              exists rather than the upload step itself. */}
-          <FormatShowcase />
-
-          {/* Archive */}
-          <section>
-            <div className="border border-white/10">
-              <div className="relative border-b border-white/10 px-6 py-4 flex items-baseline justify-between bg-white/5">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
-                <h2 className="text-2xl font-serif font-black uppercase tracking-tight pl-2 text-white">The Archive</h2>
-                <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/50">Your Stories</span>
-              </div>
-              <div className="p-6">
-                {isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-6 md:auto-rows-[180px] gap-4">
-                    {[0, 1, 2, 3, 4].map(i => <div key={i} className={mosaicSpanClass(i)}><Skeleton className="w-full h-full min-h-[220px] rounded-none" /></div>)}
-                  </div>
-                ) : !Array.isArray(trips) || trips.length === 0 ? (
-                  <div className="text-center py-20 border border-dashed border-white/20">
-                    <FileText className="mx-auto h-10 w-10 text-white/40 mb-4 opacity-30" />
-                    <h3 className="font-serif text-xl mb-1 text-white">No Stories Filed</h3>
-                    <p className="text-white/50 font-mono text-xs uppercase tracking-widest">Submit a folder of photos above to begin</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-6 md:auto-rows-[180px] gap-4" style={{ gridAutoFlow: 'dense' }}>
-                    {trips.map((trip, i) => <MosaicTripCard key={trip.id} trip={trip} index={i} />)}
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <footer className="relative border-t border-white/10 py-8 px-6">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <Logo className="text-sm opacity-60 text-white" />
-            <div className="flex items-center gap-6 text-[10px] font-mono uppercase tracking-[0.25em] text-white/50">
-              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <div className="grid grid-cols-2 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border border-t border-border">
+              {COVER_STYLES.map(style => (
+                <CoverCard key={style.id} style={style} />
+              ))}
             </div>
           </div>
-        </footer>
-      </div>
+        </section>
+
+        <FormatShowcase />
+
+        {/* Archive */}
+        <section>
+          <div className="border border-border">
+            <div className="relative border-b border-border px-6 py-4 flex items-baseline justify-between bg-muted/30">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+              <h2 className="text-2xl font-serif font-black uppercase tracking-tight pl-2">The Archive</h2>
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">Your Stories</span>
+            </div>
+            <div className="p-6">
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-6 md:auto-rows-[180px] gap-4">
+                  {[0, 1, 2, 3, 4].map(i => <div key={i} className={mosaicSpanClass(i)}><Skeleton className="w-full h-full min-h-[220px] rounded-none" /></div>)}
+                </div>
+              ) : !Array.isArray(trips) || trips.length === 0 ? (
+                <div className="text-center py-20 border border-dashed border-border">
+                  <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-4 opacity-30" />
+                  <h3 className="font-serif text-xl mb-1">No Stories Filed</h3>
+                  <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">Submit a folder of photos above to begin</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-6 md:auto-rows-[180px] gap-4" style={{ gridAutoFlow: 'dense' }}>
+                  {trips.map((trip, i) => <MosaicTripCard key={trip.id} trip={trip} index={i} />)}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-border py-8 px-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <Logo className="text-sm opacity-60" />
+          <div className="flex items-center gap-6 text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
