@@ -103,7 +103,7 @@ export function FormatShowcase() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10 border border-white/10">
+      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-black border border-black">
         {FORMATS.map(({ id, title, copy, tag, Mockup }) => (
           <div key={id} className="p-8 flex flex-col items-center text-center gap-4">
             <Mockup />
