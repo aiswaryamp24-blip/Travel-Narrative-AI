@@ -35,13 +35,12 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero — scroll-driven day-to-night crossfade through an airplane
-          window (the sandracreates.com technique, day/night variant):
-          scrolling fades the night keyframe in over the day keyframe.
-          TODO: dayImgSrc is a placeholder (same file as night) until a real
-          daytime companion shot is generated — swap it in once available. */}
+      {/* Hero — scroll-driven plane-window portal zoom:
+          the plane exterior fills the screen; scrolling zooms toward one of
+          the porthole windows; an expanding clip-path reveals the cobalt grid
+          scene through the window, releasing seamlessly into normal page flow. */}
       <header className="relative border-b-4 border-foreground overflow-hidden">
-        <DayNightHero daySrc="/window-night.jpg" nightSrc="/window-night.jpg">
+        <DayNightHero daySrc="/plane-exterior.jpg" nightSrc="/plane-exterior.jpg">
           <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
             Fall 2025 · Vol. I · Issue 1
           </div>
