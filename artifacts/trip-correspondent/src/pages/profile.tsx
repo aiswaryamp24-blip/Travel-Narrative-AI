@@ -207,7 +207,7 @@ function ProfileContent({
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-16 space-y-16">
-        {profile.isSelf && profile.pendingCompanionInvites.length > 0 && (
+        {profile.isSelf && (profile.pendingCompanionInvites?.length ?? 0) > 0 && (
           <div className="border border-primary/30 bg-primary/5">
             <div className="px-6 py-3 border-b border-primary/30">
               <h2 className="font-mono text-xs uppercase tracking-widest text-primary">
@@ -215,7 +215,7 @@ function ProfileContent({
               </h2>
             </div>
             <div className="divide-y divide-border">
-              {profile.pendingCompanionInvites.map(({ trip, taggedBy }) => (
+              {(profile.pendingCompanionInvites ?? []).map(({ trip, taggedBy }) => (
                 <div key={trip.id} className="px-6 py-4 flex items-center justify-between gap-4">
                   <div>
                     <p className="font-serif text-lg">{trip.title}</p>
@@ -258,17 +258,17 @@ function ProfileContent({
 
         {Array.isArray(tripDayLocations) && <EverywhereMap locations={tripDayLocations} />}
 
-        {profile.companionTrips.length > 0 && (
+        {(profile.companionTrips?.length ?? 0) > 0 && (
           <div className="border border-border">
             <div className="relative border-b border-border px-6 py-4 flex items-baseline justify-between bg-card">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
               <h2 className="text-2xl font-serif font-black uppercase tracking-tight pl-2">Tagged In</h2>
               <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-                {profile.companionTrips.length} {profile.companionTrips.length === 1 ? 'Story' : 'Stories'}
+                {profile.companionTrips?.length ?? 0} {(profile.companionTrips?.length ?? 0) === 1 ? 'Story' : 'Stories'}
               </span>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profile.companionTrips.map((trip) => (
+              {(profile.companionTrips ?? []).map((trip) => (
                 <Link key={trip.id} href={`/trips/${trip.id}`} className="group block">
                   <article className="relative bg-card border border-border h-full flex flex-col hover:border-primary/50 transition-colors duration-300">
                     <div className="relative aspect-[4/5] overflow-hidden bg-muted border-b border-border">
@@ -302,12 +302,12 @@ function ProfileContent({
               {profile.isSelf ? 'Your Stories' : 'Filed Stories'}
             </h2>
             <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-              {profile.trips.length} {profile.trips.length === 1 ? 'Story' : 'Stories'}
+              {profile.trips?.length ?? 0} {(profile.trips?.length ?? 0) === 1 ? 'Story' : 'Stories'}
             </span>
           </div>
 
           <div className="p-6">
-            {profile.trips.length === 0 ? (
+            {(profile.trips?.length ?? 0) === 0 ? (
               <div className="text-center py-20 border border-dashed border-border">
                 <FileText className="mx-auto h-10 w-10 text-muted-foreground mb-4 opacity-30" />
                 <h3 className="font-serif text-xl mb-1">No Stories Visible</h3>
@@ -319,7 +319,7 @@ function ProfileContent({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profile.trips.map(trip => (
+                {(profile.trips ?? []).map(trip => (
                   <Link key={trip.id} href={`/trips/${trip.id}`} className="group block">
                     <article className="relative bg-card border border-border h-full flex flex-col hover:border-primary/50 transition-colors duration-300">
                       <div className="relative aspect-[4/5] overflow-hidden bg-muted border-b border-border">
