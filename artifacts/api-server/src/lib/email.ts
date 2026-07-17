@@ -3,8 +3,25 @@ import { logger } from './logger';
 
 const connectors = new ReplitConnectors();
 
-/** Default "from" address — Resend's shared sandbox sender, usable without a verified domain. */
-const DEFAULT_FROM_ADDRESS = 'Turasum <onboarding@resend.dev>';
+/**
+ * Fallback "from" address — Resend's shared sandbox sender.
+ * Only usable for testing; has strict sending limits and hurts deliverability.
+ * Set EMAIL_FROM_ADDRESS (as a Replit Secret) to an address on a Resend-verified
+ * domain (e.g. "Turasum <noreply@yourdomain.com>") to send from your own domain.
+ */
+const SANDBOX_FROM_ADDRESS = 'Turasum <onboarding@resend.dev>';
+
+/** Resolve the configured sender and warn loudly if we're still on the sandbox address. */
+function resolveFromAddress(): string {
+  const configured = process.env.EMAIL_FROM_ADDRESS;
+  if (configured) return configured;
+  logger.warn(
+    { sender: SANDBOX_FROM_ADDRESS },
+    'EMAIL_FROM_ADDRESS is not set — emails will be sent from the Resend sandbox sender. ' +
+      'Verify a domain in the Resend account and set EMAIL_FROM_ADDRESS to a real address on that domain.',
+  );
+  return SANDBOX_FROM_ADDRESS;
+}
 
 interface SendEmailOptions {
   to: string;
@@ -18,7 +35,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
   const response = await connectors.proxy('resend', '/emails', {
     method: 'POST',
     body: {
-      from: process.env.EMAIL_FROM_ADDRESS || DEFAULT_FROM_ADDRESS,
+      from: resolveFromAddress(),
       to: [to],
       subject,
       html,
