@@ -196,7 +196,7 @@ export default function Home() {
              style={{ animation: 'holo-spin 32s linear infinite reverse' }} />
         <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
 
-        <main className="relative max-w-5xl mx-auto px-6 py-16 space-y-24">
+        <main className="relative max-w-5xl mx-auto px-6 pt-4 pb-16 space-y-24">
           {/* Upload — moved to the top of the page content so the primary
               action is immediately visible below the hero. */}
           <section><UploadFlow /></section>
