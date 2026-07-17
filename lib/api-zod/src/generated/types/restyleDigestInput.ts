@@ -7,12 +7,6 @@
  */
 import type { DigestStyle } from './digestStyle';
 
-export interface Digest {
-  id: number;
-  periodStart: Date;
-  periodEnd: Date;
-  /** Number of completed trips covered by this digest. */
-  tripCount: number;
+export interface RestyleDigestInput {
   style: DigestStyle;
-  createdAt: Date;
 }

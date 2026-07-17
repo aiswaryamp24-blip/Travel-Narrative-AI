@@ -30,6 +30,7 @@ import type {
   Photo,
   PhotoBatchInput,
   RespondCompanionInput,
+  RestyleDigestInput,
   TagCompanionInput,
   Trip,
   TripComment,
@@ -2625,5 +2626,81 @@ export const useDeleteDigest = <TError = ErrorType<ErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteDigestMutationOptions(options));
+    }
+
+export const getRestyleDigestUrl = (digestId: number,) => {
+
+
+
+
+  return `/api/digests/${digestId}/restyle`
+}
+
+/**
+ * Re-generates the digest PDF using the requested style, replaces the
+ * object-storage file in-place, and updates the digest row's style field.
+ * The period, trips covered, and digest record are all preserved — no
+ * duplicate is created.
+ * @summary Re-render an existing digest PDF in a different style (owner only)
+ */
+export const restyleDigest = async (digestId: number,
+    restyleDigestInput: RestyleDigestInput, options?: RequestInit): Promise<Digest> => {
+
+  return customFetch<Digest>(getRestyleDigestUrl(digestId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(restyleDigestInput)
+  }
+);}
+
+
+
+
+
+export const getRestyleDigestMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restyleDigest>>, TError,{digestId: number;data: BodyType<RestyleDigestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restyleDigest>>, TError,{digestId: number;data: BodyType<RestyleDigestInput>}, TContext> => {
+
+const mutationKey = ['restyleDigest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restyleDigest>>, {digestId: number;data: BodyType<RestyleDigestInput>}> = (props) => {
+          const {digestId,data} = props ?? {};
+
+          return  restyleDigest(digestId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestyleDigestMutationResult = NonNullable<Awaited<ReturnType<typeof restyleDigest>>>
+    export type RestyleDigestMutationBody = BodyType<RestyleDigestInput>
+    export type RestyleDigestMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Re-render an existing digest PDF in a different style (owner only)
+ */
+export const useRestyleDigest = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restyleDigest>>, TError,{digestId: number;data: BodyType<RestyleDigestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restyleDigest>>,
+        TError,
+        {digestId: number;data: BodyType<RestyleDigestInput>},
+        TContext
+      > => {
+      return useMutation(getRestyleDigestMutationOptions(options));
     }
 

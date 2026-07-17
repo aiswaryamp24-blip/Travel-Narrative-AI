@@ -995,6 +995,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /digests/{digestId}/restyle:
+    patch:
+      tags: [Digests]
+      operationId: restyleDigest
+      summary: Re-render an existing digest PDF in a different style (owner only)
+      description: |
+        Re-generates the digest PDF using the requested style, replaces the
+        object-storage file in-place, and updates the digest row's style field.
+        The period, trips covered, and digest record are all preserved — no
+        duplicate is created.
+      parameters:
+        - name: digestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestyleDigestInput"
+      responses:
+        "200":
+          description: Digest re-rendered in the new style.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Digest"
+        "404":
+          description: Digest not found, or the requester does not own it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to re-render digest.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
@@ -1263,9 +1304,15 @@ components:
           properties:
             owner:
               $ref: "#/components/schemas/UserSummary"
+    RestyleDigestInput:
+      type: object
+      required: [style]
+      properties:
+        style:
+          $ref: "#/components/schemas/DigestStyle"
     Digest:
       type: object
-      required: [id, periodStart, periodEnd, tripCount, createdAt]
+      required: [id, periodStart, periodEnd, tripCount, style, createdAt]
       properties:
         id:
           type: integer
@@ -1278,6 +1325,8 @@ components:
         tripCount:
           type: integer
           description: Number of completed trips covered by this digest.
+        style:
+          $ref: "#/components/schemas/DigestStyle"
         createdAt:
           type: string
           format: date-time

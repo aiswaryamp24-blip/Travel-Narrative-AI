@@ -220,12 +220,17 @@ export type FeedTripSummary = TripSummary & {
   owner: UserSummary;
 };
 
+export interface RestyleDigestInput {
+  style: DigestStyle;
+}
+
 export interface Digest {
   id: number;
   periodStart: string;
   periodEnd: string;
   /** Number of completed trips covered by this digest. */
   tripCount: number;
+  style: DigestStyle;
   createdAt: string;
 }
 

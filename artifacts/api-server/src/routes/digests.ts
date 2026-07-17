@@ -3,7 +3,7 @@ import { db, digestsTable, digestStyleValues, type Digest } from '@workspace/db'
 import { desc, eq } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
 import { requireAuth } from '../middlewares/auth';
-import { getOrCreateDigestForUser } from '../lib/digestScheduler';
+import { getOrCreateDigestForUser, restyleExistingDigest } from '../lib/digestScheduler';
 import type { DigestStyleId } from '../lib/digestStyles';
 import { ObjectNotFoundError, ObjectStorageService } from '../lib/objectStorage';
 
@@ -16,6 +16,7 @@ function toDigestSummary(digest: Digest) {
     periodStart: digest.periodStart.toISOString(),
     periodEnd: digest.periodEnd.toISOString(),
     tripCount: digest.tripCount,
+    style: digest.style as import('../lib/digestStyles').DigestStyleId,
     createdAt: digest.createdAt.toISOString(),
   };
 }
@@ -97,6 +98,44 @@ router.get(
       }
       req.log.error({ err: error, digestId }, 'Error serving digest download');
       res.status(500).json({ error: 'Failed to serve digest' });
+    }
+  },
+);
+
+/** PATCH /digests/:digestId/restyle — re-render a digest in a different style (owner only). */
+router.patch(
+  '/digests/:digestId/restyle',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const digestId = Number(req.params.digestId);
+    if (!Number.isInteger(digestId)) {
+      res.status(404).json({ error: 'Digest not found' });
+      return;
+    }
+
+    const rawStyle = req.body?.style as string | undefined;
+    if (!rawStyle || !digestStyleValues.includes(rawStyle as any)) {
+      res.status(400).json({ error: 'Invalid or missing style' });
+      return;
+    }
+    const styleId = rawStyle as DigestStyleId;
+
+    const [digest] = await db
+      .select()
+      .from(digestsTable)
+      .where(eq(digestsTable.id, digestId));
+
+    if (!digest || digest.userId !== req.userId) {
+      res.status(404).json({ error: 'Digest not found' });
+      return;
+    }
+
+    try {
+      const updated = await restyleExistingDigest(digest, styleId);
+      res.json(toDigestSummary(updated));
+    } catch (error) {
+      req.log.error({ err: error, digestId }, 'Error restyling digest');
+      res.status(500).json({ error: 'Failed to restyle digest' });
     }
   },
 );

@@ -20,6 +20,7 @@ export * from './photo';
 export * from './photoBatchInput';
 export * from './photoInput';
 export * from './respondCompanionInput';
+export * from './restyleDigestInput';
 export * from './tagCompanionInput';
 export * from './trip';
 export * from './tripComment';

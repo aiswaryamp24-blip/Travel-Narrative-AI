@@ -2,17 +2,18 @@ import {
   useListDigests,
   useGenerateDigest,
   useDeleteDigest,
+  useRestyleDigest,
   useUpdateUserSettings,
   getListDigestsQueryKey,
   getGetUserProfileQueryKey,
   downloadDigest,
 } from '@workspace/api-client-react';
-import type { DigestCadenceMonths, DigestStyle } from '@workspace/api-client-react';
+import type { Digest, DigestCadenceMonths, DigestStyle } from '@workspace/api-client-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Sparkles, Download, Trash2, X, Check } from 'lucide-react';
+import { Sparkles, Download, Trash2, X, Check, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -310,19 +311,25 @@ function DigestPagePreview({ style }: { style: StyleDef }) {
 
 // --- Style Picker Modal ---
 
+type StylePickerMode = 'generate' | 'restyle';
+
 function StylePickerModal({
   current,
   onSelect,
   onClose,
-  isGenerating,
+  isPending,
+  mode,
 }: {
   current: DigestStyle;
   onSelect: (style: DigestStyle) => void;
   onClose: () => void;
-  isGenerating: boolean;
+  isPending: boolean;
+  mode: StylePickerMode;
 }) {
   const [selected, setSelected] = useState<DigestStyle>(current);
   const selectedStyle = STYLE_DEFS.find((s) => s.id === selected)!;
+
+  const isRestyle = mode === 'restyle';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
@@ -330,9 +337,13 @@ function StylePickerModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <div>
-            <h3 className="font-serif text-xl">Choose Your Wrapped Style</h3>
+            <h3 className="font-serif text-xl">
+              {isRestyle ? 'Change Digest Style' : 'Choose Your Wrapped Style'}
+            </h3>
             <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
-              Select a style to see a full preview · your choice is saved
+              {isRestyle
+                ? 'Re-renders this digest PDF · same period, new look'
+                : 'Select a style to see a full preview · your choice is saved'}
             </p>
           </div>
           <button
@@ -351,6 +362,7 @@ function StylePickerModal({
             <div className="grid grid-cols-2 md:grid-cols-1 gap-0">
               {STYLE_DEFS.map((style) => {
                 const isSelected = selected === style.id;
+                const isCurrent = isRestyle && style.id === current;
                 return (
                   <button
                     key={style.id}
@@ -386,9 +398,16 @@ function StylePickerModal({
                         <span className="text-[11px] font-mono uppercase tracking-widest font-bold truncate">
                           {style.name}
                         </span>
-                        {isSelected && (
-                          <Check className="h-3 w-3 text-primary flex-shrink-0" />
-                        )}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {isCurrent && (
+                            <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+                              current
+                            </span>
+                          )}
+                          {isSelected && (
+                            <Check className="h-3 w-3 text-primary" />
+                          )}
+                        </div>
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight truncate">
                         {style.description}
@@ -436,7 +455,7 @@ function StylePickerModal({
             size="sm"
             className="rounded-none font-mono text-xs uppercase tracking-widest"
             onClick={onClose}
-            disabled={isGenerating}
+            disabled={isPending}
           >
             Cancel
           </Button>
@@ -444,10 +463,15 @@ function StylePickerModal({
             size="sm"
             className="rounded-none font-mono text-xs uppercase tracking-widest gap-2"
             onClick={() => onSelect(selected)}
-            disabled={isGenerating}
+            disabled={isPending}
           >
-            {isGenerating ? (
-              'Generating…'
+            {isPending ? (
+              isRestyle ? 'Restyling…' : 'Generating…'
+            ) : isRestyle ? (
+              <>
+                <Palette className="h-3.5 w-3.5" />
+                Apply {selectedStyle.name}
+              </>
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5" />
@@ -480,7 +504,11 @@ export function DigestsSection({
   const deleteDigest = useDeleteDigest();
   const updateSettings = useUpdateUserSettings();
 
+  const restyleDigest = useRestyleDigest();
+
   const [showStylePicker, setShowStylePicker] = useState(false);
+  // When set, we're restyling an existing digest rather than generating a new one.
+  const [restyleTarget, setRestyleTarget] = useState<Digest | null>(null);
 
   const handleCadenceChange = async (value: string) => {
     try {
@@ -523,6 +551,18 @@ export function DigestsSection({
     }
   };
 
+  const handleRestyleWithStyle = async (style: DigestStyle) => {
+    if (!restyleTarget) return;
+    try {
+      await restyleDigest.mutateAsync({ digestId: restyleTarget.id, data: { style } });
+      queryClient.invalidateQueries({ queryKey: getListDigestsQueryKey() });
+      setRestyleTarget(null);
+      toast.success('Digest re-rendered in the new style.');
+    } catch (err: any) {
+      toast.error(err?.data?.error ?? 'Failed to restyle digest.');
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this wrapped digest? This cannot be undone.')) {
       return;
@@ -559,7 +599,17 @@ export function DigestsSection({
           current={preferredDigestStyle}
           onSelect={handleGenerateWithStyle}
           onClose={() => setShowStylePicker(false)}
-          isGenerating={generateDigest.isPending}
+          isPending={generateDigest.isPending}
+          mode="generate"
+        />
+      )}
+      {restyleTarget && (
+        <StylePickerModal
+          current={restyleTarget.style}
+          onSelect={handleRestyleWithStyle}
+          onClose={() => setRestyleTarget(null)}
+          isPending={restyleDigest.isPending}
+          mode="restyle"
         />
       )}
 
@@ -629,36 +679,62 @@ export function DigestsSection({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {digests.map((digest) => (
-              <div key={digest.id} className="border border-border bg-card p-5 space-y-3">
-                <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                  {format(new Date(digest.periodStart), 'MMM yyyy')} – {format(new Date(digest.periodEnd), 'MMM yyyy')}
+            {digests.map((digest) => {
+              const styleDef = STYLE_DEFS.find((s) => s.id === digest.style);
+              return (
+                <div key={digest.id} className="border border-border bg-card p-5 space-y-3">
+                  <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                    {format(new Date(digest.periodStart), 'MMM yyyy')} – {format(new Date(digest.periodEnd), 'MMM yyyy')}
+                  </div>
+                  <div className="font-serif text-lg">
+                    {digest.tripCount} {digest.tripCount === 1 ? 'trip' : 'trips'} covered
+                  </div>
+                  {styleDef && (
+                    <div className="flex items-center gap-1.5">
+                      {/* Style colour chip */}
+                      <div
+                        className="w-3 h-3 flex-shrink-0 border border-border/50"
+                        style={{ backgroundColor: styleDef.accent }}
+                      />
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        {styleDef.name}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-none font-mono text-xs uppercase tracking-widest gap-2 flex-1"
+                      onClick={() => handleDownload(digest.id)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-none font-mono text-xs uppercase tracking-widest gap-1.5"
+                      disabled={restyleDigest.isPending}
+                      onClick={() => setRestyleTarget(digest)}
+                      aria-label="Change style"
+                      title="Change style"
+                    >
+                      <Palette className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-none font-mono text-xs uppercase tracking-widest text-destructive hover:text-destructive"
+                      disabled={deleteDigest.isPending}
+                      onClick={() => handleDelete(digest.id)}
+                      aria-label="Delete digest"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="font-serif text-lg">
-                  {digest.tripCount} {digest.tripCount === 1 ? 'trip' : 'trips'} covered
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-none font-mono text-xs uppercase tracking-widest gap-2 flex-1"
-                    onClick={() => handleDownload(digest.id)}
-                  >
-                    <Download className="h-3.5 w-3.5" /> Download PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-none font-mono text-xs uppercase tracking-widest text-destructive hover:text-destructive"
-                    disabled={deleteDigest.isPending}
-                    onClick={() => handleDelete(digest.id)}
-                    aria-label="Delete digest"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

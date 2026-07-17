@@ -1012,6 +1012,7 @@ export const ListDigestsResponseItem = zod.object({
   "periodStart": zod.coerce.date(),
   "periodEnd": zod.coerce.date(),
   "tripCount": zod.number().describe('Number of completed trips covered by this digest.'),
+  "style": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "createdAt": zod.coerce.date()
 })
 export const ListDigestsResponse = zod.array(ListDigestsResponseItem)
@@ -1032,6 +1033,7 @@ export const GenerateDigestResponse = zod.object({
   "periodStart": zod.coerce.date(),
   "periodEnd": zod.coerce.date(),
   "tripCount": zod.number().describe('Number of completed trips covered by this digest.'),
+  "style": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "createdAt": zod.coerce.date()
 })
 
@@ -1054,5 +1056,30 @@ export const DeleteDigestParams = zod.object({
 })
 
 export const DeleteDigestResponse = zod.void()
+
+
+/**
+ * Re-generates the digest PDF using the requested style, replaces the
+ * object-storage file in-place, and updates the digest row's style field.
+ * The period, trips covered, and digest record are all preserved — no
+ * duplicate is created.
+ * @summary Re-render an existing digest PDF in a different style (owner only)
+ */
+export const RestyleDigestParams = zod.object({
+  "digestId": zod.coerce.number()
+})
+
+export const RestyleDigestBody = zod.object({
+  "style": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.')
+})
+
+export const RestyleDigestResponse = zod.object({
+  "id": zod.number(),
+  "periodStart": zod.coerce.date(),
+  "periodEnd": zod.coerce.date(),
+  "tripCount": zod.number().describe('Number of completed trips covered by this digest.'),
+  "style": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "createdAt": zod.coerce.date()
+})
 
 

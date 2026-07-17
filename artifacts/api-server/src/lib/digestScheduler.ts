@@ -13,7 +13,7 @@ import {
 } from '@workspace/db';
 import { generateDigestPdf, type DigestTripBundle } from './digestExport';
 import type { DigestStyleId } from './digestStyles';
-import { ObjectStorageService } from './objectStorage';
+import { ObjectNotFoundError, ObjectStorageService } from './objectStorage';
 import { sendDigestReadyEmail } from './email';
 import { logger } from './logger';
 
@@ -125,10 +125,98 @@ export async function getOrCreateDigestForUser(
       periodEnd,
       objectPath,
       tripCount: trips.length,
+      style: resolvedStyleId,
     })
     .returning();
 
   return { status: 'created', digest };
+}
+
+/**
+ * Re-renders an existing digest PDF in a different style.
+ *
+ * Uploads the new PDF to object storage, deletes the old file, then updates
+ * the digest row in-place (same id, same period — no duplicate is created).
+ */
+export async function restyleExistingDigest(
+  digest: typeof digestsTable.$inferSelect,
+  newStyleId: DigestStyleId,
+): Promise<typeof digestsTable.$inferSelect> {
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, digest.userId));
+  if (!user) {
+    throw new Error(`User ${digest.userId} not found`);
+  }
+
+  // Fetch the same trips that were originally covered by this digest.
+  const trips = await db
+    .select()
+    .from(tripsTable)
+    .where(
+      and(
+        eq(tripsTable.userId, digest.userId),
+        eq(tripsTable.status, 'ready'),
+        gt(tripsTable.createdAt, digest.periodStart),
+        lte(tripsTable.createdAt, digest.periodEnd),
+      ),
+    )
+    .orderBy(tripsTable.createdAt);
+
+  const bundles: DigestTripBundle[] = await Promise.all(
+    trips.map(async (trip) => {
+      const [days, photos] = await Promise.all([
+        db.select().from(tripDaysTable).where(eq(tripDaysTable.tripId, trip.id)),
+        db.select().from(photosTable).where(eq(photosTable.tripId, trip.id)),
+      ]);
+      return { trip, days, photos };
+    }),
+  );
+
+  const pdfBuffer = await generateDigestPdf(
+    user,
+    digest.periodStart,
+    digest.periodEnd,
+    bundles,
+    newStyleId,
+  );
+
+  const objectStorageService = new ObjectStorageService();
+  const oldObjectPath = digest.objectPath;
+
+  // 1. Upload the new PDF first (non-destructive — old file still intact).
+  const newObjectPath = await objectStorageService.uploadBufferAsObject(pdfBuffer, 'application/pdf');
+
+  let updated: typeof digestsTable.$inferSelect;
+  try {
+    // 2. Commit: point the DB row at the new file.
+    const [row] = await db
+      .update(digestsTable)
+      .set({ objectPath: newObjectPath, style: newStyleId })
+      .where(eq(digestsTable.id, digest.id))
+      .returning();
+    updated = row;
+  } catch (dbError) {
+    // DB update failed — roll back by deleting the freshly uploaded file so
+    // we don't leave an orphaned blob, then re-throw so the caller returns 500.
+    try {
+      const newFile = await objectStorageService.getObjectEntityFile(newObjectPath);
+      await newFile.delete();
+    } catch (cleanupError) {
+      logger.warn({ err: cleanupError, digestId: digest.id }, 'Could not clean up orphaned digest PDF after DB failure');
+    }
+    throw dbError;
+  }
+
+  // 3. Best-effort cleanup of the old file — only after the DB row is safely updated.
+  try {
+    const oldFile = await objectStorageService.getObjectEntityFile(oldObjectPath);
+    await oldFile.delete();
+  } catch (error) {
+    if (!(error instanceof ObjectNotFoundError)) {
+      logger.warn({ err: error, digestId: digest.id }, 'Could not delete old digest file during restyle');
+    }
+  }
+
+  return updated;
 }
 
 /** Evaluates every user and generates a digest for anyone who is due. Never throws. */
