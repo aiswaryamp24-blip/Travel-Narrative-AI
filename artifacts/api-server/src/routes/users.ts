@@ -11,7 +11,7 @@ import {
   type Trip,
   type User,
 } from '@workspace/db';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
 import { requireAuth, optionalAuth } from '../middlewares/auth';
 import { canViewTrip } from '../lib/tripAccess';
@@ -323,77 +323,83 @@ router.delete('/users/:userId/follow', requireAuth, async (req: Request, res: Re
 });
 
 router.get('/feed', requireAuth, async (req: Request, res: Response) => {
-  const followedRows = await db
-    .select({ followedId: followsTable.followedId })
+  // Single query: join follows → trips → users with privacy filter, sorted and limited in SQL.
+  // "friends" trips from followed users are visible because the follow relationship
+  // grants that access tier.
+  const rows = await db
+    .select({ trip: tripsTable, owner: usersTable })
     .from(followsTable)
-    .where(eq(followsTable.followerId, req.userId!));
-  const followedIds = followedRows.map((r) => r.followedId);
+    .innerJoin(
+      tripsTable,
+      and(
+        eq(tripsTable.userId, followsTable.followedId),
+        inArray(tripsTable.privacy, ['public', 'friends']),
+      ),
+    )
+    .innerJoin(usersTable, eq(usersTable.id, followsTable.followedId))
+    .where(eq(followsTable.followerId, req.userId!))
+    .orderBy(desc(tripsTable.createdAt))
+    .limit(50);
 
-  if (followedIds.length === 0) {
-    res.json([]);
-    return;
-  }
-
-  const trips = await db
-    .select()
-    .from(tripsTable)
-    .where(inArray(tripsTable.userId, followedIds));
-
-  const visible = trips.filter((t) => t.privacy === 'public' || t.privacy === 'friends');
-  const owners = await db.select().from(usersTable).where(inArray(usersTable.id, followedIds));
-  const ownerById = new Map(owners.map((o) => [o.id, o]));
-
-  const results = visible
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((trip) => ({
+  res.json(
+    rows.map(({ trip, owner }) => ({
       ...toTripSummary(trip, false),
-      owner: toUserSummary(ownerById.get(trip.userId!)!),
-    }));
-
-  res.json(results);
+      owner: toUserSummary(owner),
+    })),
+  );
 });
 
 router.get('/followers-feed', requireAuth, async (req: Request, res: Response) => {
-  const followerRows = await db
-    .select({ followerId: followsTable.followerId })
-    .from(followsTable)
-    .where(eq(followsTable.followedId, req.userId!));
-  const followerIds = followerRows.map((r) => r.followerId);
+  // Being followed by someone doesn't mean you follow them back, so their
+  // friends-tier trips aren't automatically visible — only their public
+  // trips are, unless you also follow them (in which case those
+  // friends-tier trips already show up in the Following feed too).
+  //
+  // Fetch both sets in parallel; they're small (user's social graph).
+  const [followerRows, myFollowedRows] = await Promise.all([
+    db
+      .select({ followerId: followsTable.followerId })
+      .from(followsTable)
+      .where(eq(followsTable.followedId, req.userId!)),
+    db
+      .select({ followedId: followsTable.followedId })
+      .from(followsTable)
+      .where(eq(followsTable.followerId, req.userId!)),
+  ]);
 
+  const followerIds = followerRows.map((r) => r.followerId);
   if (followerIds.length === 0) {
     res.json([]);
     return;
   }
 
-  // Being followed by someone doesn't mean you follow them back, so their
-  // friends-tier trips aren't automatically visible — only their public
-  // trips are, unless you also follow them (in which case those
-  // friends-tier trips already show up in the Following feed too).
-  const myFollowedRows = await db
-    .select({ followedId: followsTable.followedId })
-    .from(followsTable)
-    .where(eq(followsTable.followerId, req.userId!));
-  const myFollowedIds = new Set(myFollowedRows.map((r) => r.followedId));
+  const myFollowedIds = myFollowedRows.map((r) => r.followedId);
 
-  const trips = await db
-    .select()
+  // Build the privacy predicate in SQL:
+  //   public trips from any follower
+  //   OR friends-tier trips from followers I also follow back
+  const privacyCondition =
+    myFollowedIds.length > 0
+      ? or(
+          eq(tripsTable.privacy, 'public'),
+          and(eq(tripsTable.privacy, 'friends'), inArray(tripsTable.userId, myFollowedIds)),
+        )
+      : eq(tripsTable.privacy, 'public');
+
+  const rows = await db
+    .select({ trip: tripsTable, owner: usersTable })
     .from(tripsTable)
-    .where(inArray(tripsTable.userId, followerIds));
+    .innerJoin(usersTable, eq(usersTable.id, tripsTable.userId))
+    .where(and(inArray(tripsTable.userId, followerIds), privacyCondition))
+    .orderBy(desc(tripsTable.createdAt))
+    .limit(50);
 
-  const visible = trips.filter(
-    (t) => t.privacy === 'public' || (t.privacy === 'friends' && t.userId != null && myFollowedIds.has(t.userId)),
-  );
-  const owners = await db.select().from(usersTable).where(inArray(usersTable.id, followerIds));
-  const ownerById = new Map(owners.map((o) => [o.id, o]));
-
-  const results = visible
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((trip) => ({
+  res.json(
+    rows.map(({ trip, owner }) => ({
       ...toTripSummary(trip, false),
-      owner: toUserSummary(ownerById.get(trip.userId!)!),
-    }));
-
-  res.json(results);
+      owner: toUserSummary(owner),
+    })),
+  );
 });
 
 // optionalAuth (not requireAuth): this also powers the logged-out public
@@ -401,36 +407,37 @@ router.get('/followers-feed', requireAuth, async (req: Request, res: Response) =
 // visitors additionally get trips they already follow (and their own)
 // excluded, since those already show up in their "Following" feed.
 router.get('/discover', optionalAuth, async (req: Request, res: Response) => {
-  const followedRows = req.userId
-    ? await db
-        .select({ followedId: followsTable.followedId })
-        .from(followsTable)
-        .where(eq(followsTable.followerId, req.userId))
-    : [];
-  const excludedIds = new Set(
-    req.userId ? [...followedRows.map((r) => r.followedId), req.userId] : [],
-  );
+  // For authenticated users, exclude trips from people they already follow
+  // (those appear in the feed) and their own trips.
+  let excludedIds: string[] = [];
+  if (req.userId) {
+    const followedRows = await db
+      .select({ followedId: followsTable.followedId })
+      .from(followsTable)
+      .where(eq(followsTable.followerId, req.userId));
+    excludedIds = [...followedRows.map((r) => r.followedId), req.userId];
+  }
 
-  const trips = await db
-    .select()
+  const whereClause =
+    excludedIds.length > 0
+      ? and(eq(tripsTable.privacy, 'public'), notInArray(tripsTable.userId, excludedIds))
+      : eq(tripsTable.privacy, 'public');
+
+  // Join users table directly so no second round-trip is needed.
+  const rows = await db
+    .select({ trip: tripsTable, owner: usersTable })
     .from(tripsTable)
-    .where(eq(tripsTable.privacy, 'public'));
+    .innerJoin(usersTable, eq(usersTable.id, tripsTable.userId))
+    .where(whereClause)
+    .orderBy(desc(tripsTable.createdAt))
+    .limit(50);
 
-  const discoverable = trips.filter((t) => t.userId && !excludedIds.has(t.userId));
-  const ownerIds = [...new Set(discoverable.map((t) => t.userId!))];
-  const owners = ownerIds.length
-    ? await db.select().from(usersTable).where(inArray(usersTable.id, ownerIds))
-    : [];
-  const ownerById = new Map(owners.map((o) => [o.id, o]));
-
-  const results = discoverable
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((trip) => ({
+  res.json(
+    rows.map(({ trip, owner }) => ({
       ...toTripSummary(trip, false),
-      owner: toUserSummary(ownerById.get(trip.userId!)!),
-    }));
-
-  res.json(results);
+      owner: toUserSummary(owner),
+    })),
+  );
 });
 
 export default router;
