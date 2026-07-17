@@ -41,7 +41,15 @@ export default function Landing() {
           the How It Works section that sits immediately below. */}
       <header className="relative">
         <DayNightHero daySrc="/window-interior.jpg" nightSrc="/window-interior.jpg">
-          <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
+          <div
+            className="font-mono text-[9px] uppercase tracking-[0.5em] text-white mb-6 inline-block"
+            style={{
+              textShadow: '0 1px 8px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.7)',
+              background: 'rgba(0,0,0,0.28)',
+              padding: '4px 10px',
+              letterSpacing: '0.5em',
+            }}
+          >
             Fall 2025 · Vol. I · Issue 1
           </div>
 
@@ -57,8 +65,11 @@ export default function Landing() {
           <div className="holo-stripe h-[3px] w-full max-w-xl mt-5 mb-5 opacity-90" />
 
           <p
-            className="font-serif italic text-white/85 mb-8"
-            style={{ fontSize: 'clamp(0.9rem,2.5vw,1.4rem)' }}
+            className="font-serif italic text-white mb-8"
+            style={{
+              fontSize: 'clamp(0.9rem,2.5vw,1.4rem)',
+              textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 0 32px rgba(0,0,0,0.7)',
+            }}
           >
             Turned into a story you remember
           </p>
