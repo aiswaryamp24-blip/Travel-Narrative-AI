@@ -54,7 +54,7 @@ export default function Feed() {
       <header className="relative border-b-4 border-foreground overflow-hidden" style={{ minHeight: '32vh' }}>
         <CursorSpotlight color="180,160,255" opacity={0.18} radius={500} />
         <motion.img
-          src="/plane-exterior.jpg"
+          src="/feed-hero-sunset.jpg"
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
           initial={{ scale: 1.04 }}
