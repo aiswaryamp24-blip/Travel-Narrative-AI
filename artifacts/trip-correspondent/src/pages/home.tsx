@@ -152,7 +152,7 @@ export default function Home() {
           landing impression does. A slow idle Ken Burns drift keeps it
           from feeling static. */}
       <header className="relative overflow-hidden border-b-4 border-foreground">
-        <div className="relative overflow-hidden" style={{ minHeight: '38vh' }}>
+        <div className="relative overflow-hidden" style={{ minHeight: '26vh' }}>
           <motion.img
             src="/window-night.jpg"
             alt=""
@@ -163,8 +163,8 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/35" />
 
-          <div className="relative z-10 px-6 py-14 md:py-20 text-center">
-            <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/70 mb-6">
+          <div className="relative z-10 px-6 py-8 md:py-10 text-center">
+            <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/70 mb-3">
               Vol. I — Special Correspondent Edition
             </div>
             <SparkleGlow>
@@ -176,7 +176,7 @@ export default function Home() {
               </h1>
             </SparkleGlow>
             {/* Holographic stripe rule */}
-            <div className="holo-stripe h-[3px] w-full mt-5 mb-5 opacity-80" />
+            <div className="holo-stripe h-[3px] w-full mt-3 mb-3 opacity-80" />
             <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/80">
               Your camera roll · Turned into a story you remember
             </p>
