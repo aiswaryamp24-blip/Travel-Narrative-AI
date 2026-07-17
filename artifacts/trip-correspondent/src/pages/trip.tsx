@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import ReactMarkdown from 'react-markdown';
 import { TripStats } from '@/components/trip-stats';
 import { TripRouteMap } from '@/components/trip-route-map';
 import { DayAudioPlayer } from '@/components/day-audio-player';
@@ -28,6 +27,10 @@ import { RevealOnScroll } from '@/components/reveal-on-scroll';
 import { Logo } from '@/components/logo';
 import { StyleDecoration } from '@/components/style-decoration';
 import { getTripStyle } from '@/lib/trip-styles';
+import { HeroPhotoPicker } from '@/components/hero-photo-picker';
+import { EditableDayNarrative } from '@/components/editable-day-narrative';
+import { TripComments } from '@/components/trip-comments';
+import { TripCompanions } from '@/components/trip-companions';
 
 export default function Trip() {
   const { id } = useParams();
@@ -294,6 +297,12 @@ export default function Trip() {
           </div>
         </header>
 
+        {(trip.companions.length > 0 || trip.isOwner) && (
+          <div className="py-8 px-6 max-w-6xl mx-auto border-b border-border">
+            <TripCompanions tripId={tripId} isOwner={trip.isOwner} companions={trip.companions} />
+          </div>
+        )}
+
         <TripStats trip={trip} />
         <TripRouteMap trip={trip} />
 
@@ -376,79 +385,55 @@ export default function Trip() {
               <div className="lg:col-span-9 space-y-12">
                 
                 {/* Hero Photo for Day */}
-                {day.heroPhotoId && (
-                  <RevealOnScroll className="mb-12">
-                    {(() => {
-                      const heroPhoto = trip.photos.find(p => p.id === day.heroPhotoId);
-                      if (!heroPhoto) return null;
-                      return (
-                        <figure className="space-y-4">
-                          <div className="aspect-[3/2] overflow-hidden bg-muted">
-                            <img
-                              src={`/api/storage${heroPhoto.objectPath}`}
-                              alt="Hero photo of the day"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          {day.locationName && (
-                            <figcaption className="text-xs font-mono uppercase tracking-widest text-muted-foreground text-right">
-                              {day.locationName}
-                            </figcaption>
-                          )}
-                        </figure>
-                      );
-                    })()}
-                  </RevealOnScroll>
-                )}
+                {(() => {
+                  const dayPhotos = trip.photos.filter(p => p.tripDayId === day.id);
+                  const heroPhoto = trip.photos.find(p => p.id === day.heroPhotoId);
 
-                <RevealOnScroll delayMs={100} className="prose prose-lg dark:prose-invert prose-headings:font-serif prose-p:font-sans prose-p:leading-loose prose-p:text-muted-foreground max-w-3xl">
-                  {day.headline && (
-                    <h3 className="text-4xl md:text-5xl font-serif mb-8 text-foreground leading-tight">
-                      {day.headline}
-                    </h3>
-                  )}
-                  
-                  {day.narrative ? (
-                    <div className="text-lg">
-                      {/* We use a tiny hack to apply the drop-cap class to the first paragraph */}
-                      <ReactMarkdown
-                        components={{
-                          p: ({node, ...props}) => {
-                            // Only target the very first paragraph
-                            const isFirstP = node?.position?.start?.line === 1;
-                            if (isFirstP && typeof props.children === 'string' && props.children.length > 0) {
-                              const firstChar = props.children.charAt(0);
-                              const rest = props.children.slice(1);
-                              return (
-                                <p className="mb-6 clear-left">
-                                  <span className="drop-cap">{firstChar}</span>
-                                  {rest}
-                                </p>
-                              );
-                            }
-                            // Also handle arrays of children where the first might be a string
-                            if (isFirstP && Array.isArray(props.children) && typeof props.children[0] === 'string' && props.children[0].length > 0) {
-                               const firstChar = props.children[0].charAt(0);
-                               const restFirstString = props.children[0].slice(1);
-                               return (
-                                 <p className="mb-6 clear-left">
-                                   <span className="drop-cap">{firstChar}</span>
-                                   {restFirstString}
-                                   {props.children.slice(1)}
-                                 </p>
-                               );
-                            }
-                            return <p className="mb-6 clear-left" {...props} />;
-                          }
-                        }}
-                      >
-                        {day.narrative}
-                      </ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="italic text-muted-foreground opacity-50">No narrative filed for this day.</p>
-                  )}
-                </RevealOnScroll>
+                  if (!heroPhoto) {
+                    if (!trip.isOwner || dayPhotos.length === 0) return null;
+                    return (
+                      <RevealOnScroll className="mb-12">
+                        <div className="relative aspect-[3/2] overflow-hidden bg-muted flex items-center justify-center">
+                          <HeroPhotoPicker
+                            tripId={tripId}
+                            dayId={day.id}
+                            currentHeroPhotoId={day.heroPhotoId}
+                            dayPhotos={dayPhotos}
+                          />
+                        </div>
+                      </RevealOnScroll>
+                    );
+                  }
+
+                  return (
+                    <RevealOnScroll className="mb-12">
+                      <figure className="space-y-4">
+                        <div className="relative aspect-[3/2] overflow-hidden bg-muted">
+                          <img
+                            src={`/api/storage${heroPhoto.objectPath}`}
+                            alt="Hero photo of the day"
+                            className="w-full h-full object-cover"
+                          />
+                          {trip.isOwner && (
+                            <HeroPhotoPicker
+                              tripId={tripId}
+                              dayId={day.id}
+                              currentHeroPhotoId={day.heroPhotoId}
+                              dayPhotos={dayPhotos}
+                            />
+                          )}
+                        </div>
+                        {day.locationName && (
+                          <figcaption className="text-xs font-mono uppercase tracking-widest text-muted-foreground text-right">
+                            {day.locationName}
+                          </figcaption>
+                        )}
+                      </figure>
+                    </RevealOnScroll>
+                  );
+                })()}
+
+                <EditableDayNarrative tripId={tripId} day={day} isOwner={trip.isOwner} />
 
                 {/* Day Photo Grid — a curated handful, not every leftover
                     shot, so the story stays magazine-paced rather than
@@ -518,6 +503,7 @@ export default function Trip() {
 
         {/* Reviews */}
         <TripReviews tripId={tripId} />
+        <TripComments tripId={tripId} isOwner={trip.isOwner} />
 
         {/* End Mark */}
         <div className="py-24 flex justify-center text-primary">

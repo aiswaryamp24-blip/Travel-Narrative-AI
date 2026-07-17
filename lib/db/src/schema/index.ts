@@ -21,3 +21,5 @@ export * from "./users";
 export * from "./trips";
 export * from "./follows";
 export * from "./digests";
+export * from "./trip-comments";
+export * from "./trip-companions";

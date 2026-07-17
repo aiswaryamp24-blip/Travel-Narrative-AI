@@ -286,6 +286,286 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/days/{dayId}/hero-photo:
+    patch:
+      tags: [Trips]
+      operationId: updateDayHeroPhoto
+      summary: Set which photo represents a trip day (owner only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDayHeroPhotoInput"
+      responses:
+        "200":
+          description: Hero photo updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripDay"
+        "400":
+          description: Missing or invalid required fields, or the photo does not belong to this day.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip or day not found, or the requester does not own the trip.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/days/{dayId}/narrative:
+    patch:
+      tags: [Trips]
+      operationId: updateTripDayNarrative
+      summary: Edit a trip day's headline/narrative text directly (owner only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dayId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTripDayNarrativeInput"
+      responses:
+        "200":
+          description: Narrative updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripDay"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip or day not found, or the requester does not own the trip.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/comments:
+    get:
+      tags: [Trips]
+      operationId: listTripComments
+      summary: List a trip's comments
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The trip's comments, oldest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripComment"
+        "404":
+          description: Trip not found, or the requester cannot view it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    post:
+      tags: [Trips]
+      operationId: createTripComment
+      summary: Post a comment on a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTripCommentInput"
+      responses:
+        "201":
+          description: Comment posted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripComment"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip not found, or the requester cannot view it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/comments/{commentId}:
+    delete:
+      tags: [Trips]
+      operationId: deleteTripComment
+      summary: Delete a comment (author or trip owner only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Comment deleted.
+        "404":
+          description: Trip or comment not found, or the requester may not delete it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/companions:
+    post:
+      tags: [Trips]
+      operationId: tagTripCompanion
+      summary: Tag a followed user as a companion on a trip (owner only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCompanionInput"
+      responses:
+        "201":
+          description: Companion tagged (pending their confirmation).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripCompanion"
+        "400":
+          description: Invalid target, or the owner does not follow that user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip not found, or the requester does not own it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/companions/{userId}/respond:
+    patch:
+      tags: [Trips]
+      operationId: respondToCompanionTag
+      summary: Accept or decline a companion tag (tagged user only)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondCompanionInput"
+      responses:
+        "200":
+          description: Response recorded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripCompanion"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Trip or companion tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /trips/{tripId}/companions/{userId}:
+    delete:
+      tags: [Trips]
+      operationId: untagTripCompanion
+      summary: Remove a companion tag (trip owner or the tagged user themself)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tag removed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripCompanion"
+        "404":
+          description: Trip not found, or the requester may not remove this tag.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /trips/{tripId}/photos:
     post:
       tags: [Trips]
@@ -422,6 +702,62 @@ paths:
                 $ref: "#/components/schemas/UserProfile"
         "404":
           description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /users/{userId}/trip-days:
+    get:
+      tags: [Social]
+      operationId: getUserTripDayLocations
+      summary: Get every day-location across a user's visible trips, for a world map
+      description: |
+        Same visibility rule as GET /users/{userId}'s trip list — flattened
+        to one entry per trip day, excluding days with no real GPS
+        coordinates.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Day locations across the user's visible trips.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TripDayLocation"
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /users/{userId}/following:
+    get:
+      tags: [Social]
+      operationId: listFollowing
+      summary: List who you follow (self only — powers the companion-tag picker)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users the requester follows.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserSummary"
+        "404":
+          description: Not your own userId.
           content:
             application/json:
               schema:
@@ -725,6 +1061,44 @@ components:
       properties:
         privacy:
           $ref: "#/components/schemas/TripPrivacy"
+    UpdateDayHeroPhotoInput:
+      type: object
+      required: [heroPhotoId]
+      properties:
+        heroPhotoId:
+          type: ["integer", "null"]
+          description: Must belong to this trip day, or null to clear it.
+    UpdateTripDayNarrativeInput:
+      type: object
+      required: [headline, narrative]
+      properties:
+        headline:
+          type: string
+          minLength: 1
+        narrative:
+          type: string
+          minLength: 1
+    TagCompanionInput:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+          description: Must be someone the trip owner already follows.
+    RespondCompanionInput:
+      type: object
+      required: [accept]
+      properties:
+        accept:
+          type: boolean
+    CreateTripCommentInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
     TripSummary:
       type: object
       required: [id, title, status, coverObjectPath, privacy, isOwner, startDate, endDate, createdAt, visualStyle]
@@ -767,6 +1141,41 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+    TripDayLocation:
+      type: object
+      required: [tripId, tripTitle, dayIndex, date, lat, lon, locationName]
+      properties:
+        tripId:
+          type: integer
+        tripTitle:
+          type: string
+        dayIndex:
+          type: integer
+        date:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        locationName:
+          type: ["string", "null"]
+    TripComment:
+      type: object
+      required: [id, tripId, userId, body, createdAt, author]
+      properties:
+        id:
+          type: integer
+        tripId:
+          type: integer
+        userId:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/UserSummary"
     DigestCadenceMonths:
       type: integer
       enum: [3, 4, 6]
@@ -790,7 +1199,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/UserSummary"
         - type: object
-          required: [isSelf, isFollowing, followerCount, followingCount, trips, digestCadenceMonths, preferredDigestStyle]
+          required: [isSelf, isFollowing, followerCount, followingCount, trips, companionTrips, pendingCompanionInvites, digestCadenceMonths, preferredDigestStyle]
           properties:
             isSelf:
               type: boolean
@@ -806,6 +1215,22 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/TripSummary"
+            companionTrips:
+              type: array
+              description: Trips belonging to other people where this profile's user is a confirmed tagged companion, filtered by the trip's own privacy.
+              items:
+                $ref: "#/components/schemas/TripSummary"
+            pendingCompanionInvites:
+              type: array
+              description: Companion tags awaiting this profile's response. Only populated when viewing your own profile.
+              items:
+                type: object
+                required: [trip, taggedBy]
+                properties:
+                  trip:
+                    $ref: "#/components/schemas/TripSummary"
+                  taggedBy:
+                    $ref: "#/components/schemas/UserSummary"
             digestCadenceMonths:
               $ref: "#/components/schemas/DigestCadenceMonths"
             preferredDigestStyle:
@@ -850,11 +1275,22 @@ components:
         createdAt:
           type: string
           format: date-time
+    TripCompanionStatus:
+      type: string
+      enum: [pending, confirmed]
+    TripCompanion:
+      type: object
+      required: [user, status]
+      properties:
+        user:
+          $ref: "#/components/schemas/UserSummary"
+        status:
+          $ref: "#/components/schemas/TripCompanionStatus"
     Trip:
       allOf:
         - $ref: "#/components/schemas/TripSummary"
         - type: object
-          required: [days, photos]
+          required: [days, photos, companions]
           properties:
             days:
               type: array
@@ -864,6 +1300,11 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/Photo"
+            companions:
+              type: array
+              description: Confirmed companions, plus pending ones if the viewer owns this trip.
+              items:
+                $ref: "#/components/schemas/TripCompanion"
     PhotoInput:
       type: object
       required: [objectPath, filename]
@@ -940,7 +1381,7 @@ components:
           type: number
     TripDay:
       type: object
-      required: [id, tripId, dayIndex, date, locationName, lat, lon, distanceKm, weather, landmarks, headline, narrative, heroPhotoId, audioObjectPath]
+      required: [id, tripId, dayIndex, date, locationName, lat, lon, distanceKm, weather, landmarks, headline, narrative, aiOriginalHeadline, aiOriginalNarrative, heroPhotoId, audioObjectPath]
       properties:
         id:
           type: integer
@@ -985,6 +1426,12 @@ components:
           type: ["string", "null"]
         narrative:
           type: ["string", "null"]
+        aiOriginalHeadline:
+          type: ["string", "null"]
+          description: The AI's original headline, captured once and never overwritten by manual edits — lets an edit be reverted.
+        aiOriginalNarrative:
+          type: ["string", "null"]
+          description: The AI's original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.
         heroPhotoId:
           type: ["integer", "null"]
         audioObjectPath:

@@ -163,6 +163,8 @@ export async function processTrip(tripId: number): Promise<void> {
             landmarks: story.landmarks,
             headline: story.headline,
             narrative: story.narrative,
+            aiOriginalHeadline: story.headline,
+            aiOriginalNarrative: story.narrative,
             heroPhotoId,
           })
           .returning();

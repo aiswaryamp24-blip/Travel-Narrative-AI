@@ -32,7 +32,16 @@ import type {
   TripDay,
   TripInput,
   TripSummary,
+  UpdateDayHeroPhotoInput,
+  UpdateTripDayNarrativeInput,
   UpdateTripPrivacyInput,
+  CreateTripCommentInput,
+  TripComment,
+  TripDayLocation,
+  TagCompanionInput,
+  RespondCompanionInput,
+  TripCompanion,
+  UserSummary,
   UpdateUserSettingsInput,
   UploadUrlRequest,
   UploadUrlResponse,
@@ -1046,6 +1055,567 @@ export const useGenerateDayNarration = <TError = ErrorType<ErrorEnvelope>,
       return useMutation(getGenerateDayNarrationMutationOptions(options));
     }
 
+export const getUpdateDayHeroPhotoUrl = (tripId: number,
+    dayId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/days/${dayId}/hero-photo`
+}
+
+/**
+ * @summary Set which photo represents a trip day (owner only)
+ */
+export const updateDayHeroPhoto = async (tripId: number,
+    dayId: number,
+    updateDayHeroPhotoInput: UpdateDayHeroPhotoInput, options?: RequestInit): Promise<TripDay> => {
+
+  return customFetch<TripDay>(getUpdateDayHeroPhotoUrl(tripId,dayId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateDayHeroPhotoInput)
+  }
+);}
+
+
+
+
+export const getUpdateDayHeroPhotoMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDayHeroPhoto>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateDayHeroPhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDayHeroPhoto>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateDayHeroPhotoInput>}, TContext> => {
+
+const mutationKey = ['updateDayHeroPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDayHeroPhoto>>, {tripId: number;dayId: number;data: BodyType<UpdateDayHeroPhotoInput>}> = (props) => {
+          const {tripId,dayId,data} = props ?? {};
+
+          return  updateDayHeroPhoto(tripId,dayId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDayHeroPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateDayHeroPhoto>>>
+    export type UpdateDayHeroPhotoMutationBody = BodyType<UpdateDayHeroPhotoInput>
+    export type UpdateDayHeroPhotoMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Set which photo represents a trip day (owner only)
+ */
+export const useUpdateDayHeroPhoto = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDayHeroPhoto>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateDayHeroPhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDayHeroPhoto>>,
+        TError,
+        {tripId: number;dayId: number;data: BodyType<UpdateDayHeroPhotoInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateDayHeroPhotoMutationOptions(options));
+    }
+
+export const getUpdateTripDayNarrativeUrl = (tripId: number,
+    dayId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/days/${dayId}/narrative`
+}
+
+/**
+ * @summary Edit a trip day's headline/narrative text directly (owner only)
+ */
+export const updateTripDayNarrative = async (tripId: number,
+    dayId: number,
+    updateTripDayNarrativeInput: UpdateTripDayNarrativeInput, options?: RequestInit): Promise<TripDay> => {
+
+  return customFetch<TripDay>(getUpdateTripDayNarrativeUrl(tripId,dayId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateTripDayNarrativeInput)
+  }
+);}
+
+
+
+
+export const getUpdateTripDayNarrativeMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripDayNarrative>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateTripDayNarrativeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTripDayNarrative>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateTripDayNarrativeInput>}, TContext> => {
+
+const mutationKey = ['updateTripDayNarrative'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTripDayNarrative>>, {tripId: number;dayId: number;data: BodyType<UpdateTripDayNarrativeInput>}> = (props) => {
+          const {tripId,dayId,data} = props ?? {};
+
+          return  updateTripDayNarrative(tripId,dayId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTripDayNarrativeMutationResult = NonNullable<Awaited<ReturnType<typeof updateTripDayNarrative>>>
+    export type UpdateTripDayNarrativeMutationBody = BodyType<UpdateTripDayNarrativeInput>
+    export type UpdateTripDayNarrativeMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Edit a trip day's headline/narrative text directly (owner only)
+ */
+export const useUpdateTripDayNarrative = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripDayNarrative>>, TError,{tripId: number;dayId: number;data: BodyType<UpdateTripDayNarrativeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTripDayNarrative>>,
+        TError,
+        {tripId: number;dayId: number;data: BodyType<UpdateTripDayNarrativeInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateTripDayNarrativeMutationOptions(options));
+    }
+
+export const getListTripCommentsUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/comments`
+}
+
+/**
+ * @summary List a trip's comments
+ */
+export const listTripComments = async (tripId: number, options?: RequestInit): Promise<TripComment[]> => {
+
+  return customFetch<TripComment[]>(getListTripCommentsUrl(tripId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+export const getListTripCommentsQueryKey = (tripId: number,) => {
+    return [
+    `/api/trips/${tripId}/comments`
+    ] as const;
+    }
+
+
+export const getListTripCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listTripComments>>, TError = ErrorType<ErrorEnvelope>>(tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTripComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTripCommentsQueryKey(tripId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTripComments>>> = ({ signal }) => listTripComments(tripId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: tripId !== null && tripId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTripComments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTripCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listTripComments>>>
+export type ListTripCommentsQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary List a trip's comments
+ */
+
+export function useListTripComments<TData = Awaited<ReturnType<typeof listTripComments>>, TError = ErrorType<ErrorEnvelope>>(
+ tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTripComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTripCommentsQueryOptions(tripId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCreateTripCommentUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/comments`
+}
+
+/**
+ * @summary Post a comment on a trip
+ */
+export const createTripComment = async (tripId: number,
+    createTripCommentInput: CreateTripCommentInput, options?: RequestInit): Promise<TripComment> => {
+
+  return customFetch<TripComment>(getCreateTripCommentUrl(tripId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createTripCommentInput)
+  }
+);}
+
+
+
+
+export const getCreateTripCommentMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTripComment>>, TError,{tripId: number;data: BodyType<CreateTripCommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTripComment>>, TError,{tripId: number;data: BodyType<CreateTripCommentInput>}, TContext> => {
+
+const mutationKey = ['createTripComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTripComment>>, {tripId: number;data: BodyType<CreateTripCommentInput>}> = (props) => {
+          const {tripId,data} = props ?? {};
+
+          return  createTripComment(tripId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTripCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createTripComment>>>
+    export type CreateTripCommentMutationBody = BodyType<CreateTripCommentInput>
+    export type CreateTripCommentMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Post a comment on a trip
+ */
+export const useCreateTripComment = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTripComment>>, TError,{tripId: number;data: BodyType<CreateTripCommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTripComment>>,
+        TError,
+        {tripId: number;data: BodyType<CreateTripCommentInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTripCommentMutationOptions(options));
+    }
+
+export const getDeleteTripCommentUrl = (tripId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/comments/${commentId}`
+}
+
+/**
+ * @summary Delete a comment (author or trip owner only)
+ */
+export const deleteTripComment = async (tripId: number,
+    commentId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTripCommentUrl(tripId,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTripCommentMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTripComment>>, TError,{tripId: number;commentId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTripComment>>, TError,{tripId: number;commentId: number}, TContext> => {
+
+const mutationKey = ['deleteTripComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTripComment>>, {tripId: number;commentId: number}> = (props) => {
+          const {tripId,commentId} = props ?? {};
+
+          return  deleteTripComment(tripId,commentId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTripCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTripComment>>>
+
+    export type DeleteTripCommentMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Delete a comment (author or trip owner only)
+ */
+export const useDeleteTripComment = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTripComment>>, TError,{tripId: number;commentId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTripComment>>,
+        TError,
+        {tripId: number;commentId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTripCommentMutationOptions(options));
+    }
+
+export const getTagTripCompanionUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/companions`
+}
+
+/**
+ * @summary Tag a followed user as a companion on a trip (owner only)
+ */
+export const tagTripCompanion = async (tripId: number,
+    tagCompanionInput: TagCompanionInput, options?: RequestInit): Promise<TripCompanion[]> => {
+
+  return customFetch<TripCompanion[]>(getTagTripCompanionUrl(tripId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(tagCompanionInput)
+  }
+);}
+
+
+
+
+export const getTagTripCompanionMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tagTripCompanion>>, TError,{tripId: number;data: BodyType<TagCompanionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof tagTripCompanion>>, TError,{tripId: number;data: BodyType<TagCompanionInput>}, TContext> => {
+
+const mutationKey = ['tagTripCompanion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tagTripCompanion>>, {tripId: number;data: BodyType<TagCompanionInput>}> = (props) => {
+          const {tripId,data} = props ?? {};
+
+          return  tagTripCompanion(tripId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TagTripCompanionMutationResult = NonNullable<Awaited<ReturnType<typeof tagTripCompanion>>>
+    export type TagTripCompanionMutationBody = BodyType<TagCompanionInput>
+    export type TagTripCompanionMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Tag a followed user as a companion on a trip (owner only)
+ */
+export const useTagTripCompanion = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tagTripCompanion>>, TError,{tripId: number;data: BodyType<TagCompanionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof tagTripCompanion>>,
+        TError,
+        {tripId: number;data: BodyType<TagCompanionInput>},
+        TContext
+      > => {
+      return useMutation(getTagTripCompanionMutationOptions(options));
+    }
+
+export const getRespondToCompanionTagUrl = (tripId: number,
+    userId: string,) => {
+
+
+
+
+  return `/api/trips/${tripId}/companions/${userId}/respond`
+}
+
+/**
+ * @summary Accept or decline a companion tag (tagged user only)
+ */
+export const respondToCompanionTag = async (tripId: number,
+    userId: string,
+    respondCompanionInput: RespondCompanionInput, options?: RequestInit): Promise<TripCompanion[]> => {
+
+  return customFetch<TripCompanion[]>(getRespondToCompanionTagUrl(tripId,userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(respondCompanionInput)
+  }
+);}
+
+
+
+
+export const getRespondToCompanionTagMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToCompanionTag>>, TError,{tripId: number;userId: string;data: BodyType<RespondCompanionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof respondToCompanionTag>>, TError,{tripId: number;userId: string;data: BodyType<RespondCompanionInput>}, TContext> => {
+
+const mutationKey = ['respondToCompanionTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof respondToCompanionTag>>, {tripId: number;userId: string;data: BodyType<RespondCompanionInput>}> = (props) => {
+          const {tripId,userId,data} = props ?? {};
+
+          return  respondToCompanionTag(tripId,userId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RespondToCompanionTagMutationResult = NonNullable<Awaited<ReturnType<typeof respondToCompanionTag>>>
+    export type RespondToCompanionTagMutationBody = BodyType<RespondCompanionInput>
+    export type RespondToCompanionTagMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Accept or decline a companion tag (tagged user only)
+ */
+export const useRespondToCompanionTag = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToCompanionTag>>, TError,{tripId: number;userId: string;data: BodyType<RespondCompanionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof respondToCompanionTag>>,
+        TError,
+        {tripId: number;userId: string;data: BodyType<RespondCompanionInput>},
+        TContext
+      > => {
+      return useMutation(getRespondToCompanionTagMutationOptions(options));
+    }
+
+export const getUntagTripCompanionUrl = (tripId: number,
+    userId: string,) => {
+
+
+
+
+  return `/api/trips/${tripId}/companions/${userId}`
+}
+
+/**
+ * @summary Remove a companion tag (trip owner or the tagged user themself)
+ */
+export const untagTripCompanion = async (tripId: number,
+    userId: string, options?: RequestInit): Promise<TripCompanion[]> => {
+
+  return customFetch<TripCompanion[]>(getUntagTripCompanionUrl(tripId,userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getUntagTripCompanionMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof untagTripCompanion>>, TError,{tripId: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof untagTripCompanion>>, TError,{tripId: number;userId: string}, TContext> => {
+
+const mutationKey = ['untagTripCompanion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof untagTripCompanion>>, {tripId: number;userId: string}> = (props) => {
+          const {tripId,userId} = props ?? {};
+
+          return  untagTripCompanion(tripId,userId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UntagTripCompanionMutationResult = NonNullable<Awaited<ReturnType<typeof untagTripCompanion>>>
+
+    export type UntagTripCompanionMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Remove a companion tag (trip owner or the tagged user themself)
+ */
+export const useUntagTripCompanion = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof untagTripCompanion>>, TError,{tripId: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof untagTripCompanion>>,
+        TError,
+        {tripId: number;userId: string},
+        TContext
+      > => {
+      return useMutation(getUntagTripCompanionMutationOptions(options));
+    }
+
 export const getGetUserProfileUrl = (userId: string,) => {
 
 
@@ -1114,6 +1684,149 @@ export function useGetUserProfile<TData = Awaited<ReturnType<typeof getUserProfi
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetUserProfileQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getListFollowingUrl = (userId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/following`
+}
+
+/**
+ * @summary List who you follow (self only — powers the companion-tag picker)
+ */
+export const listFollowing = async (userId: string, options?: RequestInit): Promise<UserSummary[]> => {
+
+  return customFetch<UserSummary[]>(getListFollowingUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+export const getListFollowingQueryKey = (userId: string,) => {
+    return [
+    `/api/users/${userId}/following`
+    ] as const;
+    }
+
+
+export const getListFollowingQueryOptions = <TData = Awaited<ReturnType<typeof listFollowing>>, TError = ErrorType<ErrorEnvelope>>(userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFollowing>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFollowingQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFollowing>>> = ({ signal }) => listFollowing(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFollowing>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFollowingQueryResult = NonNullable<Awaited<ReturnType<typeof listFollowing>>>
+export type ListFollowingQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary List who you follow (self only — powers the companion-tag picker)
+ */
+
+export function useListFollowing<TData = Awaited<ReturnType<typeof listFollowing>>, TError = ErrorType<ErrorEnvelope>>(
+ userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFollowing>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFollowingQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetUserTripDayLocationsUrl = (userId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/trip-days`
+}
+
+/**
+ * Same visibility rule as GET /users/{userId}'s trip list — flattened
+ * to one entry per trip day, excluding days with no real GPS
+ * coordinates.
+ * @summary Get every day-location across a user's visible trips, for a world map
+ */
+export const getUserTripDayLocations = async (userId: string, options?: RequestInit): Promise<TripDayLocation[]> => {
+
+  return customFetch<TripDayLocation[]>(getGetUserTripDayLocationsUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+export const getGetUserTripDayLocationsQueryKey = (userId: string,) => {
+    return [
+    `/api/users/${userId}/trip-days`
+    ] as const;
+    }
+
+
+export const getGetUserTripDayLocationsQueryOptions = <TData = Awaited<ReturnType<typeof getUserTripDayLocations>>, TError = ErrorType<ErrorEnvelope>>(userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserTripDayLocations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserTripDayLocationsQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserTripDayLocations>>> = ({ signal }) => getUserTripDayLocations(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserTripDayLocations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUserTripDayLocationsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserTripDayLocations>>>
+export type GetUserTripDayLocationsQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary Get every day-location across a user's visible trips, for a world map
+ */
+
+export function useGetUserTripDayLocations<TData = Awaited<ReturnType<typeof getUserTripDayLocations>>, TError = ErrorType<ErrorEnvelope>>(
+ userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserTripDayLocations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUserTripDayLocationsQueryOptions(userId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

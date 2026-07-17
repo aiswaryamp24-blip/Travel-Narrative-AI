@@ -679,3 +679,190 @@ export const DeleteDigestParams = zod.object({
 export const DeleteDigestResponse = zod.void()
 
 
+/**
+ * @summary Set which photo represents a trip day (owner only)
+ */
+export const UpdateDayHeroPhotoParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "dayId": zod.coerce.number()
+})
+
+export const UpdateDayHeroPhotoBody = zod.object({
+  "heroPhotoId": zod.number().nullable()
+})
+
+export const UpdateDayHeroPhotoResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "dayIndex": zod.number(),
+  "date": zod.string(),
+  "locationName": zod.string().nullable(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "elevationMeters": zod.number().nullish(),
+  "distanceKm": zod.number().nullable(),
+  "weather": zod.union([zod.object({
+  "tempMaxC": zod.number().nullish(),
+  "tempMinC": zod.number().nullish(),
+  "precipitationMm": zod.number().nullish(),
+  "windSpeedMaxKmh": zod.number().nullish(),
+  "weatherCode": zod.number().nullish(),
+  "conditions": zod.string().nullish()
+}),zod.null()]),
+  "landmarks": zod.array(zod.object({
+  "name": zod.string(),
+  "kind": zod.string(),
+  "distanceMeters": zod.number().nullish(),
+  "lat": zod.number().optional(),
+  "lon": zod.number().optional()
+})),
+  "headline": zod.string().nullable(),
+  "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable(),
+  "aiOriginalNarrative": zod.string().nullable(),
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable()
+})
+
+
+/**
+ * @summary Edit a trip day's headline/narrative text directly (owner only)
+ */
+export const UpdateTripDayNarrativeParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "dayId": zod.coerce.number()
+})
+
+export const UpdateTripDayNarrativeBody = zod.object({
+  "headline": zod.string().min(1),
+  "narrative": zod.string().min(1)
+})
+
+export const UpdateTripDayNarrativeResponse = UpdateDayHeroPhotoResponse
+
+
+const TripCommentResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "userId": zod.string(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "author": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+})
+
+/**
+ * @summary List a trip's comments
+ */
+export const ListTripCommentsParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const ListTripCommentsResponse = zod.array(TripCommentResponse)
+
+/**
+ * @summary Post a comment on a trip
+ */
+export const CreateTripCommentParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const CreateTripCommentBody = zod.object({
+  "body": zod.string().min(1).max(2000)
+})
+
+export const CreateTripCommentResponse = TripCommentResponse
+
+/**
+ * @summary Delete a comment (author or trip owner only)
+ */
+export const DeleteTripCommentParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "commentId": zod.coerce.number()
+})
+
+export const DeleteTripCommentResponse = zod.void()
+
+
+/**
+ * @summary Get every day-location across a user's visible trips, for a world map
+ */
+export const GetUserTripDayLocationsParams = zod.object({
+  "userId": zod.string()
+})
+
+export const GetUserTripDayLocationsResponse = zod.array(zod.object({
+  "tripId": zod.number(),
+  "tripTitle": zod.string(),
+  "dayIndex": zod.number(),
+  "date": zod.string(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "locationName": zod.string().nullable()
+}))
+
+
+const TripCompanionResponse = zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})
+
+/**
+ * @summary Tag a followed user as a companion on a trip (owner only)
+ */
+export const TagTripCompanionParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const TagTripCompanionBody = zod.object({
+  "userId": zod.string()
+})
+
+export const TagTripCompanionResponse = zod.array(TripCompanionResponse)
+
+/**
+ * @summary Accept or decline a companion tag (tagged user only)
+ */
+export const RespondToCompanionTagParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "userId": zod.coerce.string()
+})
+
+export const RespondToCompanionTagBody = zod.object({
+  "accept": zod.boolean()
+})
+
+export const RespondToCompanionTagResponse = zod.array(TripCompanionResponse)
+
+/**
+ * @summary Remove a companion tag (trip owner or the tagged user themself)
+ */
+export const UntagTripCompanionParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "userId": zod.coerce.string()
+})
+
+export const UntagTripCompanionResponse = zod.array(TripCompanionResponse)
+
+
+/**
+ * @summary List who you follow (self only — powers the companion-tag picker)
+ */
+export const ListFollowingParams = zod.object({
+  "userId": zod.string()
+})
+
+export const ListFollowingResponse = zod.array(zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}))
+
+

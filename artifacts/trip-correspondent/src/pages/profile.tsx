@@ -1,12 +1,24 @@
-import { useGetUserProfile, getGetUserProfileQueryKey } from '@workspace/api-client-react';
+import {
+  useGetUserProfile,
+  getGetUserProfileQueryKey,
+  useGetUserTripDayLocations,
+  getGetUserTripDayLocationsQueryKey,
+  useRespondToCompanionTag,
+  type UserProfile,
+  type TripDayLocation,
+} from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, AlertTriangle, Map, FileText, AlertCircle } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, Map, FileText, AlertCircle, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FollowButton } from '@/components/follow-button';
 import { DigestsSection } from '@/components/digests-section';
 import { Logo } from '@/components/logo';
+import { EverywhereMap } from '@/components/everywhere-map';
 
 /** Compass-rose + fox SVG watermark, inspired by the indigo line-art reference. */
 function CompassFoxWatermark() {
@@ -80,6 +92,9 @@ export default function Profile() {
   const { data: profile, isLoading, isError } = useGetUserProfile(userId, {
     query: { queryKey: getGetUserProfileQueryKey(userId), enabled: !!userId },
   });
+  const { data: tripDayLocations } = useGetUserTripDayLocations(userId, {
+    query: { queryKey: getGetUserTripDayLocationsQueryKey(userId), enabled: !!userId },
+  });
 
   if (isLoading) return <ProfileSkeleton />;
 
@@ -97,6 +112,29 @@ export default function Profile() {
       </div>
     );
   }
+
+  return <ProfileContent profile={profile} tripDayLocations={tripDayLocations} />;
+}
+
+function ProfileContent({
+  profile,
+  tripDayLocations,
+}: {
+  profile: UserProfile;
+  tripDayLocations: TripDayLocation[] | undefined;
+}) {
+  const queryClient = useQueryClient();
+  const respondToInvite = useRespondToCompanionTag();
+
+  const handleRespond = async (tripId: number, accept: boolean) => {
+    try {
+      await respondToInvite.mutateAsync({ tripId, userId: profile.id, data: { accept } });
+      queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(profile.id) });
+      toast.success(accept ? 'Invite accepted.' : 'Invite declined.');
+    } catch {
+      toast.error('Failed to respond to invite.');
+    }
+  };
 
   return (
     <div className="min-h-screen pb-24 bg-background">
@@ -169,12 +207,92 @@ export default function Profile() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-16 space-y-16">
+        {profile.isSelf && profile.pendingCompanionInvites.length > 0 && (
+          <div className="border border-primary/30 bg-primary/5">
+            <div className="px-6 py-3 border-b border-primary/30">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-primary">
+                Trip Invites Waiting On You
+              </h2>
+            </div>
+            <div className="divide-y divide-border">
+              {profile.pendingCompanionInvites.map(({ trip, taggedBy }) => (
+                <div key={trip.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-serif text-lg">{trip.title}</p>
+                    <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">
+                      Tagged by {taggedBy.displayName}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-none gap-1.5"
+                      onClick={() => handleRespond(trip.id, false)}
+                    >
+                      <X className="h-3.5 w-3.5" /> Decline
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="rounded-none gap-1.5"
+                      onClick={() => handleRespond(trip.id, true)}
+                    >
+                      <Check className="h-3.5 w-3.5" /> Accept
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {profile.isSelf && (
           <DigestsSection
             userId={profile.id}
             digestCadenceMonths={profile.digestCadenceMonths}
             preferredDigestStyle={profile.preferredDigestStyle}
           />
+        )}
+
+        {Array.isArray(tripDayLocations) && <EverywhereMap locations={tripDayLocations} />}
+
+        {profile.companionTrips.length > 0 && (
+          <div className="border border-border">
+            <div className="relative border-b border-border px-6 py-4 flex items-baseline justify-between bg-card">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+              <h2 className="text-2xl font-serif font-black uppercase tracking-tight pl-2">Tagged In</h2>
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                {profile.companionTrips.length} {profile.companionTrips.length === 1 ? 'Story' : 'Stories'}
+              </span>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {profile.companionTrips.map((trip) => (
+                <Link key={trip.id} href={`/trips/${trip.id}`} className="group block">
+                  <article className="relative bg-card border border-border h-full flex flex-col hover:border-primary/50 transition-colors duration-300">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-muted border-b border-border">
+                      {trip.coverObjectPath ? (
+                        <img
+                          src={`/api/storage${trip.coverObjectPath}`}
+                          alt={trip.title}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-accent">
+                          <Map className="h-16 w-16 text-muted-foreground opacity-20" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <h3 className="text-2xl font-serif leading-tight drop-shadow-md">{trip.title}</h3>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
 
         <div className="border border-border">

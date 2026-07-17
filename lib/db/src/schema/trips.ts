@@ -118,6 +118,11 @@ export const tripDaysTable = pgTable("trip_days", {
     .default([]),
   headline: text("headline"),
   narrative: text("narrative"),
+  // The AI's original headline/narrative, captured once when the day is
+  // first written and never touched again — lets a manual edit be reverted
+  // without losing what the pipeline actually produced.
+  aiOriginalHeadline: text("ai_original_headline"),
+  aiOriginalNarrative: text("ai_original_narrative"),
   heroPhotoId: integer("hero_photo_id"),
   audioObjectPath: text("audio_object_path"),
 });

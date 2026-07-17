@@ -2,13 +2,23 @@ import {
   AddTripPhotosBody,
   CreateTripBody,
   UpdateTripPrivacyBody,
+  UpdateDayHeroPhotoBody,
+  UpdateTripDayNarrativeBody,
+  CreateTripCommentBody,
+  TagTripCompanionBody,
+  RespondToCompanionTagBody,
 } from '@workspace/api-zod';
 import {
   db,
   photosTable,
   tripDaysTable,
   tripsTable,
+  tripCommentsTable,
+  tripCompanionsTable,
+  followsTable,
+  usersTable,
   type Trip,
+  type TripDay,
 } from '@workspace/db';
 import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
@@ -36,6 +46,46 @@ function toTripSummary(trip: Trip) {
     totalDistanceKm: null as number | null,
     createdAt: trip.createdAt.toISOString(),
   };
+}
+
+function toTripDayDetail(day: TripDay) {
+  return {
+    id: day.id,
+    tripId: day.tripId,
+    dayIndex: day.dayIndex,
+    date: day.date,
+    locationName: day.locationName,
+    lat: day.lat,
+    lon: day.lon,
+    elevationMeters: day.elevationMeters,
+    distanceKm: day.distanceKm,
+    weather: day.weather,
+    landmarks: day.landmarks,
+    headline: day.headline,
+    narrative: day.narrative,
+    aiOriginalHeadline: day.aiOriginalHeadline,
+    aiOriginalNarrative: day.aiOriginalNarrative,
+    heroPhotoId: day.heroPhotoId,
+    audioObjectPath: day.audioObjectPath,
+  };
+}
+
+// Owners see pending + confirmed tags (so they know who hasn't responded
+// yet); everyone else only sees confirmed ones, since a pending tag hasn't
+// been agreed to by the tagged user yet.
+async function getCompanionList(tripId: number, isOwner: boolean) {
+  const rows = await db
+    .select({ companion: tripCompanionsTable, user: usersTable })
+    .from(tripCompanionsTable)
+    .innerJoin(usersTable, eq(tripCompanionsTable.userId, usersTable.id))
+    .where(eq(tripCompanionsTable.tripId, tripId));
+
+  return rows
+    .filter((r) => isOwner || r.companion.status === 'confirmed')
+    .map((r) => ({
+      user: { id: r.user.id, displayName: r.user.displayName, avatarUrl: r.user.avatarUrl },
+      status: r.companion.status,
+    }));
 }
 
 router.get('/trips', requireAuth, async (req: Request, res: Response) => {
@@ -105,6 +155,7 @@ router.post('/trips', requireAuth, async (req: Request, res: Response) => {
     isOwner: true,
     days: [],
     photos: [],
+    companions: [],
   });
 });
 
@@ -133,30 +184,15 @@ router.get('/trips/:tripId', optionalAuth, async (req: Request, res: Response) =
   const dates = days.map((d) => d.date).sort();
   const totalDistanceKm =
     days.length > 0 ? days.reduce((sum, d) => sum + (d.distanceKm ?? 0), 0) : null;
+  const isOwner = !!req.userId && req.userId === trip.userId;
 
   res.json({
     ...toTripSummary(trip),
-    isOwner: !!req.userId && req.userId === trip.userId,
+    isOwner,
     startDate: dates[0] ?? null,
     endDate: dates[dates.length - 1] ?? null,
     totalDistanceKm,
-    days: days.map((d) => ({
-      id: d.id,
-      tripId: d.tripId,
-      dayIndex: d.dayIndex,
-      date: d.date,
-      locationName: d.locationName,
-      lat: d.lat,
-      lon: d.lon,
-      elevationMeters: d.elevationMeters,
-      distanceKm: d.distanceKm,
-      weather: d.weather,
-      landmarks: d.landmarks,
-      headline: d.headline,
-      narrative: d.narrative,
-      heroPhotoId: d.heroPhotoId,
-      audioObjectPath: d.audioObjectPath,
-    })),
+    days: days.map(toTripDayDetail),
     photos: photos.map((p) => ({
       id: p.id,
       tripId: p.tripId,
@@ -167,6 +203,7 @@ router.get('/trips/:tripId', optionalAuth, async (req: Request, res: Response) =
       takenAt: p.takenAt ? p.takenAt.toISOString() : null,
       tripDayId: p.tripDayId,
     })),
+    companions: await getCompanionList(tripId, isOwner),
   });
 });
 
@@ -365,6 +402,7 @@ router.post('/trips/:tripId/process', requireAuth, async (req: Request, res: Res
     totalDistanceKm: null,
     days: [],
     photos: [],
+    companions: [],
   });
 });
 
@@ -396,23 +434,7 @@ router.post(
     }
 
     if (day.audioObjectPath) {
-      res.json({
-        id: day.id,
-        tripId: day.tripId,
-        dayIndex: day.dayIndex,
-        date: day.date,
-        locationName: day.locationName,
-        lat: day.lat,
-        lon: day.lon,
-        elevationMeters: day.elevationMeters,
-        distanceKm: day.distanceKm,
-        weather: day.weather,
-        landmarks: day.landmarks,
-        headline: day.headline,
-        narrative: day.narrative,
-        heroPhotoId: day.heroPhotoId,
-        audioObjectPath: day.audioObjectPath,
-      });
+      res.json(toTripDayDetail(day));
       return;
     }
 
@@ -433,27 +455,343 @@ router.post(
         .where(eq(tripDaysTable.id, dayId))
         .returning();
 
-      res.json({
-        id: updated.id,
-        tripId: updated.tripId,
-        dayIndex: updated.dayIndex,
-        date: updated.date,
-        locationName: updated.locationName,
-        lat: updated.lat,
-        lon: updated.lon,
-        elevationMeters: updated.elevationMeters,
-        distanceKm: updated.distanceKm,
-        weather: updated.weather,
-        landmarks: updated.landmarks,
-        headline: updated.headline,
-        narrative: updated.narrative,
-        heroPhotoId: updated.heroPhotoId,
-        audioObjectPath: updated.audioObjectPath,
-      });
+      res.json(toTripDayDetail(updated));
     } catch (error) {
       req.log.error({ err: error, tripId, dayId }, 'Error synthesizing narration');
       res.status(500).json({ error: 'Failed to synthesize narration' });
     }
+  },
+);
+
+router.patch(
+  '/trips/:tripId/days/:dayId/hero-photo',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const dayId = Number(req.params.dayId);
+    if (!Number.isInteger(tripId) || !Number.isInteger(dayId)) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const parsed = UpdateDayHeroPhotoBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Missing or invalid required fields' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip || trip.userId !== req.userId) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const [day] = await db.select().from(tripDaysTable).where(eq(tripDaysTable.id, dayId));
+    if (!day || day.tripId !== tripId) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    if (parsed.data.heroPhotoId !== null) {
+      const [photo] = await db
+        .select()
+        .from(photosTable)
+        .where(eq(photosTable.id, parsed.data.heroPhotoId));
+      if (!photo || photo.tripId !== tripId || photo.tripDayId !== dayId) {
+        res.status(400).json({ error: 'Photo does not belong to this day' });
+        return;
+      }
+    }
+
+    const [updated] = await db
+      .update(tripDaysTable)
+      .set({ heroPhotoId: parsed.data.heroPhotoId })
+      .where(eq(tripDaysTable.id, dayId))
+      .returning();
+
+    res.json(toTripDayDetail(updated));
+  },
+);
+
+router.patch(
+  '/trips/:tripId/days/:dayId/narrative',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const dayId = Number(req.params.dayId);
+    if (!Number.isInteger(tripId) || !Number.isInteger(dayId)) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const parsed = UpdateTripDayNarrativeBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Missing or invalid required fields' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip || trip.userId !== req.userId) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const [day] = await db.select().from(tripDaysTable).where(eq(tripDaysTable.id, dayId));
+    if (!day || day.tripId !== tripId) {
+      res.status(404).json({ error: 'Trip or day not found' });
+      return;
+    }
+
+    const [updated] = await db
+      .update(tripDaysTable)
+      .set({ headline: parsed.data.headline, narrative: parsed.data.narrative })
+      .where(eq(tripDaysTable.id, dayId))
+      .returning();
+
+    res.json(toTripDayDetail(updated));
+  },
+);
+
+router.get('/trips/:tripId/comments', optionalAuth, async (req: Request, res: Response) => {
+  const tripId = Number(req.params.tripId);
+  if (!Number.isInteger(tripId)) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+  if (!trip || !(await canViewTrip(trip, req.userId))) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const rows = await db
+    .select({ comment: tripCommentsTable, author: usersTable })
+    .from(tripCommentsTable)
+    .innerJoin(usersTable, eq(tripCommentsTable.userId, usersTable.id))
+    .where(eq(tripCommentsTable.tripId, tripId))
+    .orderBy(asc(tripCommentsTable.createdAt));
+
+  res.json(
+    rows.map(({ comment, author }) => ({
+      id: comment.id,
+      tripId: comment.tripId,
+      userId: comment.userId,
+      body: comment.body,
+      createdAt: comment.createdAt.toISOString(),
+      author: { id: author.id, displayName: author.displayName, avatarUrl: author.avatarUrl },
+    })),
+  );
+});
+
+router.post('/trips/:tripId/comments', requireAuth, async (req: Request, res: Response) => {
+  const tripId = Number(req.params.tripId);
+  if (!Number.isInteger(tripId)) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const parsed = CreateTripCommentBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Missing or invalid required fields' });
+    return;
+  }
+
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+  if (!trip || !(await canViewTrip(trip, req.userId))) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const [comment] = await db
+    .insert(tripCommentsTable)
+    .values({ tripId, userId: req.userId!, body: parsed.data.body })
+    .returning();
+
+  const [author] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!));
+
+  res.status(201).json({
+    id: comment.id,
+    tripId: comment.tripId,
+    userId: comment.userId,
+    body: comment.body,
+    createdAt: comment.createdAt.toISOString(),
+    author: { id: author.id, displayName: author.displayName, avatarUrl: author.avatarUrl },
+  });
+});
+
+router.delete(
+  '/trips/:tripId/comments/:commentId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const commentId = Number(req.params.commentId);
+    if (!Number.isInteger(tripId) || !Number.isInteger(commentId)) {
+      res.status(404).json({ error: 'Trip or comment not found' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip) {
+      res.status(404).json({ error: 'Trip or comment not found' });
+      return;
+    }
+
+    const [comment] = await db
+      .select()
+      .from(tripCommentsTable)
+      .where(eq(tripCommentsTable.id, commentId));
+    if (!comment || comment.tripId !== tripId) {
+      res.status(404).json({ error: 'Trip or comment not found' });
+      return;
+    }
+
+    // Author or trip owner can delete — lets the owner moderate their own
+    // trip's thread without needing every commenter's cooperation.
+    if (comment.userId !== req.userId && trip.userId !== req.userId) {
+      res.status(404).json({ error: 'Trip or comment not found' });
+      return;
+    }
+
+    await db.delete(tripCommentsTable).where(eq(tripCommentsTable.id, commentId));
+
+    res.status(204).end();
+  },
+);
+
+router.post('/trips/:tripId/companions', requireAuth, async (req: Request, res: Response) => {
+  const tripId = Number(req.params.tripId);
+  if (!Number.isInteger(tripId)) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  const parsed = TagTripCompanionBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Missing or invalid required fields' });
+    return;
+  }
+
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+  if (!trip || trip.userId !== req.userId) {
+    res.status(404).json({ error: 'Trip not found' });
+    return;
+  }
+
+  if (parsed.data.userId === trip.userId) {
+    res.status(400).json({ error: 'Cannot tag the trip owner as a companion' });
+    return;
+  }
+
+  const [target] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.id, parsed.data.userId));
+  if (!target) {
+    res.status(400).json({ error: 'User not found' });
+    return;
+  }
+
+  // The picker only offers people the owner already follows, so a
+  // companion tag can't be used to notify/link a stranger.
+  const [follow] = await db
+    .select({ followerId: followsTable.followerId })
+    .from(followsTable)
+    .where(and(eq(followsTable.followerId, req.userId!), eq(followsTable.followedId, parsed.data.userId)));
+  if (!follow) {
+    res.status(400).json({ error: 'You can only tag people you follow' });
+    return;
+  }
+
+  await db
+    .insert(tripCompanionsTable)
+    .values({ tripId, userId: parsed.data.userId, status: 'pending' })
+    .onConflictDoNothing();
+
+  res.status(201).json(await getCompanionList(tripId, true));
+});
+
+router.patch(
+  '/trips/:tripId/companions/:userId/respond',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const userId = String(req.params.userId);
+    if (!Number.isInteger(tripId)) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    if (userId !== req.userId) {
+      res.status(404).json({ error: 'Companion tag not found' });
+      return;
+    }
+
+    const parsed = RespondToCompanionTagBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Missing or invalid required fields' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    const [companion] = await db
+      .select()
+      .from(tripCompanionsTable)
+      .where(and(eq(tripCompanionsTable.tripId, tripId), eq(tripCompanionsTable.userId, userId)));
+    if (!companion) {
+      res.status(404).json({ error: 'Companion tag not found' });
+      return;
+    }
+
+    if (parsed.data.accept) {
+      await db
+        .update(tripCompanionsTable)
+        .set({ status: 'confirmed' })
+        .where(and(eq(tripCompanionsTable.tripId, tripId), eq(tripCompanionsTable.userId, userId)));
+    } else {
+      await db
+        .delete(tripCompanionsTable)
+        .where(and(eq(tripCompanionsTable.tripId, tripId), eq(tripCompanionsTable.userId, userId)));
+    }
+
+    res.json(await getCompanionList(tripId, trip.userId === req.userId));
+  },
+);
+
+router.delete(
+  '/trips/:tripId/companions/:userId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const tripId = Number(req.params.tripId);
+    const userId = String(req.params.userId);
+    if (!Number.isInteger(tripId)) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, tripId));
+    if (!trip) {
+      res.status(404).json({ error: 'Trip not found' });
+      return;
+    }
+
+    // Trip owner un-tags anyone, or a companion removes their own tag —
+    // mirroring "leaving a photo tag" rather than needing the owner's help.
+    if (trip.userId !== req.userId && userId !== req.userId) {
+      res.status(404).json({ error: 'Companion tag not found' });
+      return;
+    }
+
+    await db
+      .delete(tripCompanionsTable)
+      .where(and(eq(tripCompanionsTable.tripId, tripId), eq(tripCompanionsTable.userId, userId)));
+
+    res.json(await getCompanionList(tripId, trip.userId === req.userId));
   },
 );
 

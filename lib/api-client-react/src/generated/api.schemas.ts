@@ -69,6 +69,58 @@ export interface UpdateTripPrivacyInput {
   privacy: TripPrivacy;
 }
 
+export interface UpdateDayHeroPhotoInput {
+  /**
+     * Must belong to this trip day, or null to clear it.
+     * @nullable
+     */
+  heroPhotoId: number | null;
+}
+
+export interface UpdateTripDayNarrativeInput {
+  /** @minLength 1 */
+  headline: string;
+  /** @minLength 1 */
+  narrative: string;
+}
+
+export interface TagCompanionInput {
+  /** Must be someone the trip owner already follows. */
+  userId: string;
+}
+
+export interface RespondCompanionInput {
+  accept: boolean;
+}
+
+export interface CreateTripCommentInput {
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  body: string;
+}
+
+export interface TripDayLocation {
+  tripId: number;
+  tripTitle: string;
+  dayIndex: number;
+  date: string;
+  lat: number;
+  lon: number;
+  /** @nullable */
+  locationName: string | null;
+}
+
+export interface TripComment {
+  id: number;
+  tripId: number;
+  userId: string;
+  body: string;
+  createdAt: string;
+  author: UserSummary;
+}
+
 export interface TripSummary {
   id: number;
   title: string;
@@ -130,6 +182,11 @@ export interface GenerateDigestInput {
   style?: DigestStyle;
 }
 
+export type UserProfilePendingCompanionInvitesItem = {
+  trip: TripSummary;
+  taggedBy: UserSummary;
+};
+
 export type UserProfile = UserSummary & {
   /** Whether this profile belongs to the requesting viewer. */
   isSelf: boolean;
@@ -138,6 +195,10 @@ export type UserProfile = UserSummary & {
   followerCount: number;
   followingCount: number;
   trips: TripSummary[];
+  /** Trips belonging to other people where this profile's user is a confirmed tagged companion, filtered by the trip's own privacy. */
+  companionTrips: TripSummary[];
+  /** Companion tags awaiting this profile's response. Only populated when viewing your own profile. */
+  pendingCompanionInvites: UserProfilePendingCompanionInvitesItem[];
   digestCadenceMonths: DigestCadenceMonths;
   preferredDigestStyle: DigestStyle;
 };
@@ -218,6 +279,16 @@ export interface TripDay {
   headline: string | null;
   /** @nullable */
   narrative: string | null;
+  /**
+     * The AI's original headline, captured once and never overwritten by manual edits — lets an edit be reverted.
+     * @nullable
+     */
+  aiOriginalHeadline: string | null;
+  /**
+     * The AI's original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.
+     * @nullable
+     */
+  aiOriginalNarrative: string | null;
   /** @nullable */
   heroPhotoId: number | null;
   /**
@@ -242,9 +313,24 @@ export interface Photo {
   tripDayId: number | null;
 }
 
+export type TripCompanionStatus = typeof TripCompanionStatus[keyof typeof TripCompanionStatus];
+
+
+export const TripCompanionStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+} as const;
+
+export interface TripCompanion {
+  user: UserSummary;
+  status: TripCompanionStatus;
+}
+
 export type Trip = TripSummary & {
   days: TripDay[];
   photos: Photo[];
+  /** Confirmed companions, plus pending ones if the viewer owns this trip. */
+  companions: TripCompanion[];
 };
 
 export interface PhotoInput {

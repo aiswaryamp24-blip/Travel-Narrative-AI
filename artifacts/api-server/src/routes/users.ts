@@ -5,6 +5,8 @@ import {
   digestStyleValues,
   followsTable,
   tripsTable,
+  tripDaysTable,
+  tripCompanionsTable,
   usersTable,
   type Trip,
   type User,
@@ -12,6 +14,7 @@ import {
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { Router, type IRouter, type Request, type Response } from 'express';
 import { requireAuth, optionalAuth } from '../middlewares/auth';
+import { canViewTrip } from '../lib/tripAccess';
 
 const router: IRouter = Router();
 
@@ -86,6 +89,42 @@ router.get('/users/:userId', optionalAuth, async (req: Request, res: Response) =
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .map((trip) => toTripSummary(trip, isSelf));
 
+  // Trips where this profile's user is a tagged (confirmed) companion —
+  // these belong to someone else, so visibility follows the trip's own
+  // privacy rules (canViewTrip), not the profile owner's.
+  const companionRows = await db
+    .select({ trip: tripsTable, status: tripCompanionsTable.status })
+    .from(tripCompanionsTable)
+    .innerJoin(tripsTable, eq(tripCompanionsTable.tripId, tripsTable.id))
+    .where(eq(tripCompanionsTable.userId, userId));
+
+  const companionTrips = (
+    await Promise.all(
+      companionRows
+        .filter((r) => r.status === 'confirmed')
+        .map(async (r) => ((await canViewTrip(r.trip, req.userId)) ? toTripSummary(r.trip, false) : null)),
+    )
+  ).filter((t): t is NonNullable<typeof t> => t !== null);
+
+  // Only the profile owner needs to see their own pending invites — nobody
+  // else has any business knowing what someone hasn't responded to yet.
+  let pendingCompanionInvites: Array<{
+    trip: ReturnType<typeof toTripSummary>;
+    taggedBy: ReturnType<typeof toUserSummary>;
+  }> = [];
+  if (isSelf) {
+    const pendingRows = companionRows.filter((r) => r.status === 'pending');
+    const ownerIds = [...new Set(pendingRows.map((r) => r.trip.userId).filter((id): id is string => !!id))];
+    const owners = ownerIds.length
+      ? await db.select().from(usersTable).where(inArray(usersTable.id, ownerIds))
+      : [];
+    const ownerById = new Map(owners.map((o) => [o.id, o]));
+    pendingCompanionInvites = pendingRows.map((r) => ({
+      trip: toTripSummary(r.trip, false),
+      taggedBy: toUserSummary(ownerById.get(r.trip.userId!)!),
+    }));
+  }
+
   res.json({
     ...toUserSummary(profileUser),
     isSelf,
@@ -93,9 +132,94 @@ router.get('/users/:userId', optionalAuth, async (req: Request, res: Response) =
     followerCount,
     followingCount,
     trips: visibleTrips,
+    companionTrips,
+    pendingCompanionInvites,
     digestCadenceMonths: profileUser.digestCadenceMonths,
     preferredDigestStyle: profileUser.preferredDigestStyle,
   });
+});
+
+router.get('/users/:userId/trip-days', optionalAuth, async (req: Request, res: Response) => {
+  const userId = String(req.params.userId);
+
+  const [profileUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!profileUser) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const isSelf = !!req.userId && req.userId === userId;
+  const viewerFollows = !isSelf && req.userId ? await isFollowing(req.userId, userId) : false;
+
+  const allTrips = await db.select().from(tripsTable).where(eq(tripsTable.userId, userId));
+  const visibleTrips = allTrips.filter((trip) => {
+    if (isSelf) return true;
+    if (trip.privacy === 'public') return true;
+    if (trip.privacy === 'friends') return viewerFollows;
+    return false;
+  });
+
+  if (visibleTrips.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const tripsById = new Map(visibleTrips.map((t) => [t.id, t]));
+  const days = await db
+    .select({
+      tripId: tripDaysTable.tripId,
+      dayIndex: tripDaysTable.dayIndex,
+      date: tripDaysTable.date,
+      lat: tripDaysTable.lat,
+      lon: tripDaysTable.lon,
+      locationName: tripDaysTable.locationName,
+    })
+    .from(tripDaysTable)
+    .where(inArray(tripDaysTable.tripId, [...tripsById.keys()]));
+
+  res.json(
+    days
+      // (0,0) is the GPS-placeholder sentinel for days with no real
+      // coordinates — same filter TripRouteMap uses per-trip.
+      .filter((d) => !(d.lat === 0 && d.lon === 0))
+      .map((d) => ({
+        tripId: d.tripId,
+        tripTitle: tripsById.get(d.tripId)!.title,
+        dayIndex: d.dayIndex,
+        date: d.date,
+        lat: d.lat,
+        lon: d.lon,
+        locationName: d.locationName,
+      })),
+  );
+});
+
+// Self-only: powers the companion-tag picker (which is scoped to people you
+// already follow), not a general "view anyone's public following list"
+// feature — that's a bigger scope this doesn't need to cover.
+router.get('/users/:userId/following', requireAuth, async (req: Request, res: Response) => {
+  const userId = String(req.params.userId);
+  if (userId !== req.userId) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const followedRows = await db
+    .select({ followedId: followsTable.followedId })
+    .from(followsTable)
+    .where(eq(followsTable.followerId, userId));
+
+  if (followedRows.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const followed = await db
+    .select()
+    .from(usersTable)
+    .where(inArray(usersTable.id, followedRows.map((r) => r.followedId)));
+
+  res.json(followed.map(toUserSummary));
 });
 
 router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: Response) => {
@@ -153,6 +277,8 @@ router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: R
     followerCount,
     followingCount,
     trips,
+    companionTrips: [],
+    pendingCompanionInvites: [],
     digestCadenceMonths: updated.digestCadenceMonths,
     preferredDigestStyle: updated.preferredDigestStyle,
   });
