@@ -108,11 +108,11 @@ export function FormatShowcase() {
           <div key={id} className="p-8 flex flex-col items-center text-center gap-4">
             <Mockup />
             <div className="space-y-2">
-              <span className="inline-block font-mono text-[8px] uppercase tracking-[0.3em] text-white/40 border border-white/20 px-2 py-1">
+              <span className="inline-block font-mono text-[8px] uppercase tracking-[0.3em] text-white/40 border border-white/20 px-2 py-1" style={{ WebkitTextStroke: '0.5px black', paintOrder: 'stroke fill' }}>
                 {tag}
               </span>
-              <h3 className="text-lg font-serif font-black text-white">{title}</h3>
-              <p className="text-white/60 text-sm leading-relaxed max-w-[220px]">{copy}</p>
+              <h3 className="text-lg font-serif font-black text-white" style={{ WebkitTextStroke: '1px black', paintOrder: 'stroke fill' }}>{title}</h3>
+              <p className="text-white/60 text-sm leading-relaxed max-w-[220px]" style={{ WebkitTextStroke: '0.5px black', paintOrder: 'stroke fill' }}>{copy}</p>
             </div>
           </div>
         ))}
