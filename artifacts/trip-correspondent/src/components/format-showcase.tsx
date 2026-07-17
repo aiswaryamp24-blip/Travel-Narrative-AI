@@ -97,7 +97,7 @@ export function FormatShowcase() {
         </div>
         <h2
           className="font-serif font-black uppercase tracking-tight text-white"
-          style={{ fontSize: 'clamp(1.75rem,5vw,3rem)' }}
+          style={{ fontSize: 'clamp(1.75rem,5vw,3rem)', WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}
         >
           However You Want It
         </h2>
