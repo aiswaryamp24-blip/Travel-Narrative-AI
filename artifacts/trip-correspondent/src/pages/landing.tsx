@@ -39,7 +39,7 @@ export default function Landing() {
           the plane exterior fills the screen; scrolling zooms toward one of
           the porthole windows; an expanding clip-path reveals the cobalt grid
           scene through the window, releasing seamlessly into normal page flow. */}
-      <header className="relative border-b-4 border-foreground overflow-hidden">
+      <header className="relative border-b-4 border-foreground">
         <DayNightHero daySrc="/plane-exterior.jpg" nightSrc="/plane-exterior.jpg">
           <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
             Fall 2025 · Vol. I · Issue 1
