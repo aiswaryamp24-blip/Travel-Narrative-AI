@@ -35,10 +35,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero — scroll-driven plane-window portal zoom:
-          the plane exterior fills the screen; scrolling zooms toward one of
-          the porthole windows; an expanding clip-path reveals the cobalt grid
-          scene through the window, releasing seamlessly into normal page flow. */}
+      {/* Hero — scroll-driven portal zoom into the image */}
       <header className="relative border-b-4 border-foreground">
         <DayNightHero daySrc="/plane-exterior.jpg" nightSrc="/plane-exterior.jpg">
           <div className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/60 mb-6">
@@ -55,17 +52,13 @@ export default function Landing() {
           </SparkleGlow>
 
           {/* Holographic rule */}
-          <div className="holo-stripe h-[3px] w-full max-w-xl mt-5 mb-3 opacity-90" />
+          <div className="holo-stripe h-[3px] w-full max-w-xl mt-5 mb-5 opacity-90" />
+
           <p
-            className="font-serif italic text-white/80 mt-2 mb-1"
+            className="font-serif italic text-white/85 mb-8"
             style={{ fontSize: 'clamp(0.9rem,2.5vw,1.4rem)' }}
           >
-            Y2K and the art of the travel story
-          </p>
-          <div className="holo-stripe h-[2px] w-full max-w-xl mt-3 mb-8 opacity-60" />
-
-          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/65 mb-8">
-            Your camera roll · Turned into a story you remember
+            Turned into a story you remember
           </p>
 
           <Link href="/sign-up">
@@ -77,59 +70,37 @@ export default function Landing() {
             </Button>
           </Link>
         </DayNightHero>
-
-        {/* Info ticker — sits below the pinned zoom, above the rest of the page */}
-        <div className="relative px-6 py-2 flex items-center justify-between overflow-hidden"
-             style={{ background: 'hsl(213 100% 44%)' }}>
-          <SparkleGlow color="text-white/80">
-            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/85">
-              Turasum · Field Correspondent Network
-            </span>
-          </SparkleGlow>
-        </div>
       </header>
 
-      {/* Everything past the hero — same electric-cobalt Y2K retro treatment
-          (deep blue, grid overlay, floating CD discs, holo-stripe accents)
-          used on the Feed page, so the site reads as one consistent system
-          rather than the hero being a one-off style. */}
-      <div className="relative" style={{ background: 'hsl(213 70% 8%)' }}>
-        {/* Y2K grid overlay */}
+      {/* Below-hero — light indigo background */}
+      <div className="relative" style={{ background: 'hsl(243 40% 97%)' }}>
+
+        {/* Subtle indigo grid overlay */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage: [
-              'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
-              'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
+              'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
+              'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
             ].join(', '),
           }}
         />
-        {/* Floating CD discs */}
-        <div className="cd-disc absolute -top-16 -right-16 w-64 h-64 opacity-25 pointer-events-none"
-             style={{ animation: 'holo-spin 26s linear infinite' }} />
-        <div className="cd-disc absolute top-1/2 -left-20 w-48 h-48 opacity-20 pointer-events-none"
-             style={{ animation: 'holo-spin 32s linear infinite reverse' }} />
-        <div className="cd-disc absolute bottom-0 right-1/4 w-28 h-28 opacity-18 pointer-events-none"
-             style={{ animation: 'holo-spin 16s linear infinite' }} />
-
-        {/* Holographic top accent line */}
-        <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
 
         {/* Photo strip */}
         {stripItems.length > 0 && (
-          <section className="relative py-10 border-b border-white/10">
+          <section className="relative py-10 border-b border-indigo-200/60">
             <ScrollVelocityStrip items={stripItems} />
           </section>
         )}
 
         {/* Features */}
-        <main className="relative border-b border-white/10">
+        <main className="relative border-b border-indigo-200/60">
           <div className="max-w-5xl mx-auto">
-            <div className="px-6 py-4 border-b border-white/10 flex items-baseline justify-between">
-              <h2 className="font-serif font-black text-sm uppercase tracking-tight text-white">How It Works</h2>
-              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/50">4 Steps</span>
+            <div className="px-6 py-4 border-b border-indigo-200/60 flex items-baseline justify-between">
+              <h2 className="font-serif font-black text-sm uppercase tracking-tight text-foreground">How It Works</h2>
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">4 Steps</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-indigo-200/60">
               <Feature icon={<Camera className="h-5 w-5" />} step="01" title="Upload & Cluster" description="Drop in your travel photos — they're automatically grouped into days by location and time." />
               <Feature icon={<Newspaper className="h-5 w-5" />} step="02" title="AI-Researched Narrative" description="Our correspondent researches the weather, landmarks, and history of each stop to write a magazine-style feature." />
               <Feature icon={<img src="/icon-plane.png" alt="" className="h-5 w-5 object-contain" />} step="03" title="Route Map & Stats" description="See your journey traced on a map, with distance, countries, and conditions summarised at a glance." />
@@ -139,14 +110,14 @@ export default function Landing() {
         </main>
 
         <footer className="relative py-12 px-6 text-center">
-          <div className="flex items-center justify-center gap-6 text-[10px] font-mono uppercase tracking-[0.25em] text-white/50">
-            <Link href="/sign-up" className="hover:text-white transition-colors">Sign Up</Link>
-            <span className="h-3 w-px bg-white/20" />
-            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <span className="h-3 w-px bg-white/20" />
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+          <div className="flex items-center justify-center gap-6 text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+            <Link href="/sign-up" className="hover:text-foreground transition-colors">Sign Up</Link>
+            <span className="h-3 w-px bg-border" />
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <span className="h-3 w-px bg-border" />
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
           </div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-white/30 mt-4">
+          <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground/50 mt-4">
             © {new Date().getFullYear()} Turasum. All rights reserved.
           </p>
         </footer>
@@ -157,13 +128,13 @@ export default function Landing() {
 
 function Feature({ icon, step, title, description }: { icon: React.ReactNode; step: string; title: string; description: string }) {
   return (
-    <div className="p-8 md:p-10 space-y-4 border-b border-white/10 md:border-b-0">
+    <div className="p-8 md:p-10 space-y-4 border-b border-indigo-200/60 md:border-b-0">
       <div className="flex items-center gap-3">
-        <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/50 border border-white/20 px-2 py-1">{step}</span>
+        <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground border border-border px-2 py-1">{step}</span>
         <div className="text-primary">{icon}</div>
       </div>
-      <h3 className="text-xl font-serif font-black text-white">{title}</h3>
-      <p className="text-white/60 leading-relaxed text-sm">{description}</p>
+      <h3 className="text-xl font-serif font-black text-foreground">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed text-sm">{description}</p>
     </div>
   );
 }

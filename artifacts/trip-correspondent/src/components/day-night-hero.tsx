@@ -21,8 +21,8 @@ import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion
  */
 
 const GRID_BG = [
-  'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
-  'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
+  'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
+  'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
 ].join(', ');
 
 // Viewport-% position of the target window in the plane image.
@@ -101,10 +101,10 @@ export function DayNightHero({
     <div ref={containerRef} className="relative" style={{ height: scrollHeight }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden">
 
-        {/* ── Layer 1: cobalt grid (always visible beneath) ────────── */}
+        {/* ── Layer 1: indigo background (always visible beneath) ─── */}
         <div
           className="absolute inset-0"
-          style={{ background: 'hsl(213 70% 8%)' }}
+          style={{ background: 'hsl(243 40% 97%)' }}
         >
           <div
             className="absolute inset-0"
@@ -137,7 +137,7 @@ export function DayNightHero({
           className="absolute inset-0"
           style={{
             clipPath: revealClip,
-            background: 'hsl(213 70% 8%)',
+            background: 'hsl(243 40% 97%)',
             willChange: 'clip-path',
           }}
         >
