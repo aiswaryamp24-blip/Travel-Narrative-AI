@@ -9,6 +9,7 @@ import { useUser, useClerk } from '@clerk/react';
 import { Logo } from '@/components/logo';
 import { MosaicTripCard, mosaicSpanClass } from '@/components/mosaic-trip-card';
 import { SparkleGlow } from '@/components/sparkle-glow';
+import { FormatShowcase } from '@/components/format-showcase';
 
 const GRID_BACKGROUND_IMAGE = [
   'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,120,255,0.10) 39px, rgba(0,120,255,0.10) 40px)',
@@ -196,7 +197,8 @@ export default function Home() {
         <div className="holo-stripe absolute top-0 left-0 right-0 h-[2px] opacity-60" />
 
         <main className="relative max-w-5xl mx-auto px-6 py-16 space-y-24">
-          {/* Upload */}
+          {/* Upload — moved to the top of the page content so the primary
+              action is immediately visible below the hero. */}
           <section><UploadFlow /></section>
 
           {/* Special Edition Covers */}
@@ -213,6 +215,12 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* Format showcase — sits between "style your story" (Special
+              Edition Covers) and "here are your finished stories" (the
+              Archive), since it's about what you can do once a story
+              exists rather than the upload step itself. */}
+          <FormatShowcase />
 
           {/* Archive */}
           <section>
