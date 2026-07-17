@@ -29,9 +29,20 @@ function GlassBar({ durationMs = 1500 }: { durationMs?: number }) {
     <div className="flex flex-col items-center gap-6 w-72 md:w-96">
       {/* Wordmark over video */}
       <div className="text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/60">turasum</p>
-        <p className="font-mono text-3xl font-black tabular-nums text-white/90 mt-1">
-          {progress}<span className="text-lg text-white/50">%</span>
+        <p
+          className="font-mono text-[10px] uppercase tracking-[0.5em] text-white pb-1 inline-block"
+          style={{
+            borderBottom: '1px solid rgba(147,112,219,0.8)',
+            textShadow: '0 0 18px rgba(147,112,219,0.9), 0 1px 4px rgba(0,0,0,0.9)',
+          }}
+        >
+          turasum
+        </p>
+        <p
+          className="font-mono text-3xl font-black tabular-nums text-white mt-2"
+          style={{ textShadow: '0 0 20px rgba(147,112,219,0.7), 0 2px 6px rgba(0,0,0,0.95)' }}
+        >
+          {progress}<span className="text-lg" style={{ color: 'rgba(180,160,255,0.9)' }}>%</span>
         </p>
       </div>
       {/* Glass hairline progress track */}
@@ -85,10 +96,10 @@ export function LoadingScreen() {
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: 'center center' }}
       />
-      {/* Subtle bottom vignette so the progress bar reads cleanly */}
+      {/* Vignette — deeper at the bottom so the text reads cleanly */}
       <div
-        className="absolute inset-x-0 bottom-0 h-48 pointer-events-none"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)' }}
+        className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' }}
       />
       {/* Progress bar overlay */}
       <div className="relative z-10">
