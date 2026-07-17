@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -31,6 +31,7 @@ export const usersTable = pgTable("users", {
   preferredDigestStyle: text("preferred_digest_style")
     .notNull()
     .default("canon-camera"),
+  digestEmailEnabled: boolean("digest_email_enabled").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -1199,7 +1199,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/UserSummary"
         - type: object
-          required: [isSelf, isFollowing, followerCount, followingCount, trips, companionTrips, pendingCompanionInvites, digestCadenceMonths, preferredDigestStyle]
+          required: [isSelf, isFollowing, followerCount, followingCount, trips, companionTrips, pendingCompanionInvites, digestCadenceMonths, preferredDigestStyle, digestEmailEnabled]
           properties:
             isSelf:
               type: boolean
@@ -1235,6 +1235,9 @@ components:
               $ref: "#/components/schemas/DigestCadenceMonths"
             preferredDigestStyle:
               $ref: "#/components/schemas/DigestStyle"
+            digestEmailEnabled:
+              type: boolean
+              description: Whether the user wants to receive an email when a new wrapped digest is ready.
     UpdateUserSettingsInput:
       type: object
       required: [digestCadenceMonths]
@@ -1243,6 +1246,9 @@ components:
           $ref: "#/components/schemas/DigestCadenceMonths"
         preferredDigestStyle:
           $ref: "#/components/schemas/DigestStyle"
+        digestEmailEnabled:
+          type: boolean
+          description: Whether the user wants to receive an email when a new wrapped digest is ready.
     FollowState:
       type: object
       required: [isFollowing]

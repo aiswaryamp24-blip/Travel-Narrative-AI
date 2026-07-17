@@ -133,14 +133,20 @@ export async function getOrCreateDigestForUser(
 
 /** Evaluates every user and generates a digest for anyone who is due. Never throws. */
 export async function checkAndGenerateDueDigests(): Promise<void> {
-  const users = await db.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable);
+  const users = await db
+    .select({ id: usersTable.id, displayName: usersTable.displayName, digestEmailEnabled: usersTable.digestEmailEnabled })
+    .from(usersTable);
 
-  for (const { id: userId, displayName } of users) {
+  for (const { id: userId, displayName, digestEmailEnabled } of users) {
     try {
       const result = await getOrCreateDigestForUser(userId, { force: false });
       if (result.status === 'created') {
         logger.info({ userId, digestId: result.digest.id }, 'Generated periodic trip digest');
-        await notifyDigestReady(userId, displayName, result.digest);
+        if (digestEmailEnabled) {
+          await notifyDigestReady(userId, displayName, result.digest);
+        } else {
+          logger.info({ userId, digestId: result.digest.id }, 'Skipping digest-ready email — user opted out');
+        }
       }
     } catch (error) {
       logger.error({ err: error, userId }, 'Failed to evaluate/generate digest for user');

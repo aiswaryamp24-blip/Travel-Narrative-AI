@@ -253,6 +253,7 @@ function ProfileContent({
             userId={profile.id}
             digestCadenceMonths={profile.digestCadenceMonths}
             preferredDigestStyle={profile.preferredDigestStyle}
+            digestEmailEnabled={profile.digestEmailEnabled}
           />
         )}
 

@@ -11,4 +11,6 @@ import type { DigestStyle } from './digestStyle';
 export interface UpdateUserSettingsInput {
   digestCadenceMonths: DigestCadenceMonths;
   preferredDigestStyle?: DigestStyle;
+  /** Whether the user wants to receive an email when a new wrapped digest is ready. */
+  digestEmailEnabled?: boolean;
 }

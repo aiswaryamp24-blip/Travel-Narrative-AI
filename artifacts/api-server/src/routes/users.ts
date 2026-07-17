@@ -136,6 +136,7 @@ router.get('/users/:userId', optionalAuth, async (req: Request, res: Response) =
     pendingCompanionInvites,
     digestCadenceMonths: profileUser.digestCadenceMonths,
     preferredDigestStyle: profileUser.preferredDigestStyle,
+    digestEmailEnabled: profileUser.digestEmailEnabled,
   });
 });
 
@@ -248,6 +249,9 @@ router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: R
     .set({
       digestCadenceMonths: parsed.data.digestCadenceMonths,
       ...(preferredDigestStyle !== undefined ? { preferredDigestStyle } : {}),
+      ...(typeof parsed.data.digestEmailEnabled === 'boolean'
+        ? { digestEmailEnabled: parsed.data.digestEmailEnabled }
+        : {}),
     })
     .where(eq(usersTable.id, userId))
     .returning();
@@ -281,6 +285,7 @@ router.patch('/users/:userId/settings', requireAuth, async (req: Request, res: R
     pendingCompanionInvites: [],
     digestCadenceMonths: updated.digestCadenceMonths,
     preferredDigestStyle: updated.preferredDigestStyle,
+    digestEmailEnabled: updated.digestEmailEnabled,
   });
 });
 

@@ -58,6 +58,21 @@ export const TripPrivacy = {
   public: 'public',
 } as const;
 
+/**
+ * Visual style preset for a wrapped digest PDF.
+ */
+export type DigestStyle = typeof DigestStyle[keyof typeof DigestStyle];
+
+
+export const DigestStyle = {
+  'pop-art': 'pop-art',
+  supermarket: 'supermarket',
+  'camera-interface': 'camera-interface',
+  'canon-camera': 'canon-camera',
+  'ios-core': 'ios-core',
+  'android-core': 'android-core',
+} as const;
+
 export interface TripInput {
   /** @minLength 1 */
   title: string;
@@ -95,30 +110,10 @@ export interface RespondCompanionInput {
 
 export interface CreateTripCommentInput {
   /**
-   * @minLength 1
-   * @maxLength 2000
-   */
+     * @minLength 1
+     * @maxLength 2000
+     */
   body: string;
-}
-
-export interface TripDayLocation {
-  tripId: number;
-  tripTitle: string;
-  dayIndex: number;
-  date: string;
-  lat: number;
-  lon: number;
-  /** @nullable */
-  locationName: string | null;
-}
-
-export interface TripComment {
-  id: number;
-  tripId: number;
-  userId: string;
-  body: string;
-  createdAt: string;
-  author: UserSummary;
 }
 
 export interface TripSummary {
@@ -151,6 +146,26 @@ export interface UserSummary {
   avatarUrl: string | null;
 }
 
+export interface TripDayLocation {
+  tripId: number;
+  tripTitle: string;
+  dayIndex: number;
+  date: string;
+  lat: number;
+  lon: number;
+  /** @nullable */
+  locationName: string | null;
+}
+
+export interface TripComment {
+  id: number;
+  tripId: number;
+  userId: string;
+  body: string;
+  createdAt: string;
+  author: UserSummary;
+}
+
 /**
  * How often (in months) this user's wrapped digest is automatically generated.
  */
@@ -161,21 +176,6 @@ export const DigestCadenceMonths = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_6: 6,
-} as const;
-
-/**
- * Visual style preset for a wrapped digest PDF.
- */
-export type DigestStyle = typeof DigestStyle[keyof typeof DigestStyle];
-
-
-export const DigestStyle = {
-  'pop-art': 'pop-art',
-  supermarket: 'supermarket',
-  'camera-interface': 'camera-interface',
-  'canon-camera': 'canon-camera',
-  'ios-core': 'ios-core',
-  'android-core': 'android-core',
 } as const;
 
 export interface GenerateDigestInput {
@@ -201,11 +201,15 @@ export type UserProfile = UserSummary & {
   pendingCompanionInvites: UserProfilePendingCompanionInvitesItem[];
   digestCadenceMonths: DigestCadenceMonths;
   preferredDigestStyle: DigestStyle;
+  /** Whether the user wants to receive an email when a new wrapped digest is ready. */
+  digestEmailEnabled: boolean;
 };
 
 export interface UpdateUserSettingsInput {
   digestCadenceMonths: DigestCadenceMonths;
   preferredDigestStyle?: DigestStyle;
+  /** Whether the user wants to receive an email when a new wrapped digest is ready. */
+  digestEmailEnabled?: boolean;
 }
 
 export interface FollowState {
@@ -223,6 +227,19 @@ export interface Digest {
   /** Number of completed trips covered by this digest. */
   tripCount: number;
   createdAt: string;
+}
+
+export type TripCompanionStatus = typeof TripCompanionStatus[keyof typeof TripCompanionStatus];
+
+
+export const TripCompanionStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+} as const;
+
+export interface TripCompanion {
+  user: UserSummary;
+  status: TripCompanionStatus;
 }
 
 export interface WeatherSummary {
@@ -311,19 +328,6 @@ export interface Photo {
   takenAt: string | null;
   /** @nullable */
   tripDayId: number | null;
-}
-
-export type TripCompanionStatus = typeof TripCompanionStatus[keyof typeof TripCompanionStatus];
-
-
-export const TripCompanionStatus = {
-  pending: 'pending',
-  confirmed: 'confirmed',
-} as const;
-
-export interface TripCompanion {
-  user: UserSummary;
-  status: TripCompanionStatus;
 }
 
 export type Trip = TripSummary & {

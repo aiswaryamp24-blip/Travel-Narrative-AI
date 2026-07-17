@@ -8,6 +8,8 @@ import {
   downloadDigest,
 } from '@workspace/api-client-react';
 import type { DigestCadenceMonths, DigestStyle } from '@workspace/api-client-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Sparkles, Download, Trash2, X, Check } from 'lucide-react';
@@ -259,10 +261,12 @@ export function DigestsSection({
   userId,
   digestCadenceMonths,
   preferredDigestStyle,
+  digestEmailEnabled,
 }: {
   userId: string;
   digestCadenceMonths: number;
   preferredDigestStyle: DigestStyle;
+  digestEmailEnabled: boolean;
 }) {
   const queryClient = useQueryClient();
   const { data: digests, isLoading } = useListDigests();
@@ -282,6 +286,19 @@ export function DigestsSection({
       toast.success('Digest cadence updated.');
     } catch {
       toast.error('Failed to update digest cadence.');
+    }
+  };
+
+  const handleEmailToggle = async (enabled: boolean) => {
+    try {
+      await updateSettings.mutateAsync({
+        userId,
+        data: { digestCadenceMonths: digestCadenceMonths as DigestCadenceMonths, digestEmailEnabled: enabled },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(userId) });
+      toast.success(enabled ? 'Email notifications turned on.' : 'Email notifications turned off.');
+    } catch {
+      toast.error('Failed to update email preference.');
     }
   };
 
@@ -345,7 +362,7 @@ export function DigestsSection({
           <h2 className="text-3xl font-serif flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" /> Your Wrapped
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Recap Frequency
@@ -366,6 +383,20 @@ export function DigestsSection({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="digest-email-toggle"
+                checked={digestEmailEnabled}
+                onCheckedChange={handleEmailToggle}
+                disabled={updateSettings.isPending}
+              />
+              <Label
+                htmlFor="digest-email-toggle"
+                className="font-mono text-xs uppercase tracking-widest text-muted-foreground cursor-pointer"
+              >
+                Email me
+              </Label>
             </div>
             <Button
               size="sm"

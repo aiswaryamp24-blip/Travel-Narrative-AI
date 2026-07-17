@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createTripCommentInput';
 export * from './digest';
 export * from './digestCadenceMonths';
 export * from './digestStyle';
@@ -18,17 +19,26 @@ export * from './landmark';
 export * from './photo';
 export * from './photoBatchInput';
 export * from './photoInput';
+export * from './respondCompanionInput';
+export * from './tagCompanionInput';
 export * from './trip';
+export * from './tripComment';
+export * from './tripCompanion';
+export * from './tripCompanionStatus';
 export * from './tripDay';
+export * from './tripDayLocation';
 export * from './tripDayRoutePointsItem';
 export * from './tripInput';
 export * from './tripPrivacy';
 export * from './tripStatus';
 export * from './tripSummary';
+export * from './updateDayHeroPhotoInput';
+export * from './updateTripDayNarrativeInput';
 export * from './updateTripPrivacyInput';
 export * from './updateUserSettingsInput';
 export * from './uploadUrlRequest';
 export * from './uploadUrlResponse';
 export * from './userProfile';
+export * from './userProfilePendingCompanionInvitesItem';
 export * from './userSummary';
 export * from './weatherSummary';

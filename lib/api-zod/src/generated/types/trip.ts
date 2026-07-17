@@ -6,10 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Photo } from './photo';
+import type { TripCompanion } from './tripCompanion';
 import type { TripDay } from './tripDay';
 import type { TripSummary } from './tripSummary';
 
 export type Trip = TripSummary & {
   days: TripDay[];
   photos: Photo[];
+  /** Confirmed companions, plus pending ones if the viewer owns this trip. */
+  companions: TripCompanion[];
 };

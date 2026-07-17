@@ -8,6 +8,7 @@
 import type { DigestCadenceMonths } from './digestCadenceMonths';
 import type { DigestStyle } from './digestStyle';
 import type { TripSummary } from './tripSummary';
+import type { UserProfilePendingCompanionInvitesItem } from './userProfilePendingCompanionInvitesItem';
 import type { UserSummary } from './userSummary';
 
 export type UserProfile = UserSummary & {
@@ -18,6 +19,12 @@ export type UserProfile = UserSummary & {
   followerCount: number;
   followingCount: number;
   trips: TripSummary[];
+  /** Trips belonging to other people where this profile's user is a confirmed tagged companion, filtered by the trip's own privacy. */
+  companionTrips: TripSummary[];
+  /** Companion tags awaiting this profile's response. Only populated when viewing your own profile. */
+  pendingCompanionInvites: UserProfilePendingCompanionInvitesItem[];
   digestCadenceMonths: DigestCadenceMonths;
   preferredDigestStyle: DigestStyle;
+  /** Whether the user wants to receive an email when a new wrapped digest is ready. */
+  digestEmailEnabled: boolean;
 };

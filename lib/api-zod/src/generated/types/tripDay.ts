@@ -34,6 +34,16 @@ export interface TripDay {
   headline: string | null;
   /** @nullable */
   narrative: string | null;
+  /**
+     * The AI's original headline, captured once and never overwritten by manual edits — lets an edit be reverted.
+     * @nullable
+     */
+  aiOriginalHeadline: string | null;
+  /**
+     * The AI's original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.
+     * @nullable
+     */
+  aiOriginalNarrative: string | null;
   /** @nullable */
   heroPhotoId: number | null;
   /**

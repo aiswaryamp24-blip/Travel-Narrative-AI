@@ -83,7 +83,7 @@ export const ListTripsResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -101,7 +101,7 @@ export const ListTripsResponse = zod.array(ListTripsResponseItem)
 
 export const CreateTripBody = zod.object({
   "title": zod.string().min(1),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for this trip\'s story page. Defaults to canon-camera if omitted.')
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.').optional().describe('Visual style preset for this trip\'s story page. Defaults to canon-camera if omitted.')
 })
 
 export const CreateTripResponse = zod.object({
@@ -112,7 +112,7 @@ export const CreateTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -150,6 +150,8 @@ export const CreateTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
   "heroPhotoId": zod.number().nullable(),
   "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
@@ -162,7 +164,15 @@ export const CreateTripResponse = zod.object({
   "lon": zod.number().nullable(),
   "takenAt": zod.coerce.date().nullable(),
   "tripDayId": zod.number().nullable()
-}))
+})),
+  "companions": zod.array(zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})).describe('Confirmed companions, plus pending ones if the viewer owns this trip.')
 }))
 
 
@@ -181,7 +191,7 @@ export const GetTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -219,6 +229,8 @@ export const GetTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
   "heroPhotoId": zod.number().nullable(),
   "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
@@ -231,7 +243,15 @@ export const GetTripResponse = zod.object({
   "lon": zod.number().nullable(),
   "takenAt": zod.coerce.date().nullable(),
   "tripDayId": zod.number().nullable()
-}))
+})),
+  "companions": zod.array(zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})).describe('Confirmed companions, plus pending ones if the viewer owns this trip.')
 }))
 
 
@@ -278,13 +298,244 @@ export const UpdateTripPrivacyResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Set which photo represents a trip day (owner only)
+ */
+export const UpdateDayHeroPhotoParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "dayId": zod.coerce.number()
+})
+
+export const UpdateDayHeroPhotoBody = zod.object({
+  "heroPhotoId": zod.number().nullable().describe('Must belong to this trip day, or null to clear it.')
+})
+
+export const UpdateDayHeroPhotoResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "dayIndex": zod.number(),
+  "date": zod.string().describe('Calendar date (YYYY-MM-DD) for this cluster.'),
+  "locationName": zod.string().nullable(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "elevationMeters": zod.number().nullish(),
+  "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
+  "weather": zod.union([zod.object({
+  "tempMaxC": zod.number().nullish(),
+  "tempMinC": zod.number().nullish(),
+  "precipitationMm": zod.number().nullish(),
+  "windSpeedMaxKmh": zod.number().nullish(),
+  "weatherCode": zod.number().nullish(),
+  "conditions": zod.string().nullish()
+}),zod.null()]),
+  "landmarks": zod.array(zod.object({
+  "name": zod.string(),
+  "kind": zod.string(),
+  "distanceMeters": zod.number().nullish(),
+  "lat": zod.number().optional(),
+  "lon": zod.number().optional()
+})),
+  "headline": zod.string().nullable(),
+  "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
+})
+
+
+/**
+ * @summary Edit a trip day's headline/narrative text directly (owner only)
+ */
+export const UpdateTripDayNarrativeParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "dayId": zod.coerce.number()
+})
+
+
+
+
+
+export const UpdateTripDayNarrativeBody = zod.object({
+  "headline": zod.string().min(1),
+  "narrative": zod.string().min(1)
+})
+
+export const UpdateTripDayNarrativeResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "dayIndex": zod.number(),
+  "date": zod.string().describe('Calendar date (YYYY-MM-DD) for this cluster.'),
+  "locationName": zod.string().nullable(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "elevationMeters": zod.number().nullish(),
+  "distanceKm": zod.number().nullable().describe('Distance travelled from the previous day\'s location.'),
+  "routePoints": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number()
+})).optional().describe('Chronologically-ordered GPS points from this day\'s own geotagged photos, for drawing an accurate route through the day.'),
+  "weather": zod.union([zod.object({
+  "tempMaxC": zod.number().nullish(),
+  "tempMinC": zod.number().nullish(),
+  "precipitationMm": zod.number().nullish(),
+  "windSpeedMaxKmh": zod.number().nullish(),
+  "weatherCode": zod.number().nullish(),
+  "conditions": zod.string().nullish()
+}),zod.null()]),
+  "landmarks": zod.array(zod.object({
+  "name": zod.string(),
+  "kind": zod.string(),
+  "distanceMeters": zod.number().nullish(),
+  "lat": zod.number().optional(),
+  "lon": zod.number().optional()
+})),
+  "headline": zod.string().nullable(),
+  "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "heroPhotoId": zod.number().nullable(),
+  "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
+})
+
+
+/**
+ * @summary List a trip's comments
+ */
+export const ListTripCommentsParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const ListTripCommentsResponseItem = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "userId": zod.string(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "author": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+})
+export const ListTripCommentsResponse = zod.array(ListTripCommentsResponseItem)
+
+
+/**
+ * @summary Post a comment on a trip
+ */
+export const CreateTripCommentParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const createTripCommentBodyBodyMax = 2000;
+
+
+
+export const CreateTripCommentBody = zod.object({
+  "body": zod.string().min(1).max(createTripCommentBodyBodyMax)
+})
+
+export const CreateTripCommentResponse = zod.object({
+  "id": zod.number(),
+  "tripId": zod.number(),
+  "userId": zod.string(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "author": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+})
+
+
+/**
+ * @summary Delete a comment (author or trip owner only)
+ */
+export const DeleteTripCommentParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "commentId": zod.coerce.number()
+})
+
+export const DeleteTripCommentResponse = zod.void()
+
+
+/**
+ * @summary Tag a followed user as a companion on a trip (owner only)
+ */
+export const TagTripCompanionParams = zod.object({
+  "tripId": zod.coerce.number()
+})
+
+export const TagTripCompanionBody = zod.object({
+  "userId": zod.string().describe('Must be someone the trip owner already follows.')
+})
+
+export const TagTripCompanionResponseItem = zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})
+export const TagTripCompanionResponse = zod.array(TagTripCompanionResponseItem)
+
+
+/**
+ * @summary Accept or decline a companion tag (tagged user only)
+ */
+export const RespondToCompanionTagParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "userId": zod.coerce.string()
+})
+
+export const RespondToCompanionTagBody = zod.object({
+  "accept": zod.boolean()
+})
+
+export const RespondToCompanionTagResponseItem = zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})
+export const RespondToCompanionTagResponse = zod.array(RespondToCompanionTagResponseItem)
+
+
+/**
+ * @summary Remove a companion tag (trip owner or the tagged user themself)
+ */
+export const UntagTripCompanionParams = zod.object({
+  "tripId": zod.coerce.number(),
+  "userId": zod.coerce.string()
+})
+
+export const UntagTripCompanionResponseItem = zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})
+export const UntagTripCompanionResponse = zod.array(UntagTripCompanionResponseItem)
 
 
 /**
@@ -339,7 +590,7 @@ export const ProcessTripResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -377,6 +628,8 @@ export const ProcessTripResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
   "heroPhotoId": zod.number().nullable(),
   "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })),
@@ -389,7 +642,15 @@ export const ProcessTripResponse = zod.object({
   "lon": zod.number().nullable(),
   "takenAt": zod.coerce.date().nullable(),
   "tripDayId": zod.number().nullable()
-}))
+})),
+  "companions": zod.array(zod.object({
+  "user": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),
+  "status": zod.enum(['pending', 'confirmed'])
+})).describe('Confirmed companions, plus pending ones if the viewer owns this trip.')
 }))
 
 
@@ -435,6 +696,8 @@ export const GenerateDayNarrationResponse = zod.object({
 })),
   "headline": zod.string().nullable(),
   "narrative": zod.string().nullable(),
+  "aiOriginalHeadline": zod.string().nullable().describe('The AI\'s original headline, captured once and never overwritten by manual edits — lets an edit be reverted.'),
+  "aiOriginalNarrative": zod.string().nullable().describe('The AI\'s original narrative text, captured once and never overwritten by manual edits — lets an edit be reverted.'),
   "heroPhotoId": zod.number().nullable(),
   "audioObjectPath": zod.string().nullable().describe('Object path of the synthesized narration audio for this day, if generated.')
 })
@@ -467,16 +730,91 @@ export const GetUserProfileResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })),
+  "companionTrips": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})).describe('Trips belonging to other people where this profile\'s user is a confirmed tagged companion, filtered by the trip\'s own privacy.'),
+  "pendingCompanionInvites": zod.array(zod.object({
+  "trip": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}),
+  "taggedBy": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+})).describe('Companion tags awaiting this profile\'s response. Only populated when viewing your own profile.'),
   "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
-  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.')
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "digestEmailEnabled": zod.boolean().describe('Whether the user wants to receive an email when a new wrapped digest is ready.')
 }))
+
+
+/**
+ * Same visibility rule as GET /users/{userId}'s trip list — flattened
+ * to one entry per trip day, excluding days with no real GPS
+ * coordinates.
+ * @summary Get every day-location across a user's visible trips, for a world map
+ */
+export const GetUserTripDayLocationsParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const GetUserTripDayLocationsResponseItem = zod.object({
+  "tripId": zod.number(),
+  "tripTitle": zod.string(),
+  "dayIndex": zod.number(),
+  "date": zod.string(),
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "locationName": zod.string().nullable()
+})
+export const GetUserTripDayLocationsResponse = zod.array(GetUserTripDayLocationsResponseItem)
+
+
+/**
+ * @summary List who you follow (self only — powers the companion-tag picker)
+ */
+export const ListFollowingParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ListFollowingResponseItem = zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+export const ListFollowingResponse = zod.array(ListFollowingResponseItem)
 
 
 /**
@@ -488,7 +826,8 @@ export const UpdateUserSettingsParams = zod.object({
 
 export const UpdateUserSettingsBody = zod.object({
   "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
-  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for a wrapped digest PDF.')
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).optional().describe('Visual style preset for a wrapped digest PDF.'),
+  "digestEmailEnabled": zod.boolean().optional().describe('Whether the user wants to receive an email when a new wrapped digest is ready.')
 })
 
 export const UpdateUserSettingsResponse = zod.object({
@@ -508,15 +847,53 @@ export const UpdateUserSettingsResponse = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
   "totalDistanceKm": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })),
+  "companionTrips": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})).describe('Trips belonging to other people where this profile\'s user is a confirmed tagged companion, filtered by the trip\'s own privacy.'),
+  "pendingCompanionInvites": zod.array(zod.object({
+  "trip": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.enum(['pending', 'processing', 'ready', 'error']),
+  "coverObjectPath": zod.string().nullable(),
+  "summary": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "privacy": zod.enum(['private', 'friends', 'public']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalDistanceKm": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}),
+  "taggedBy": zod.object({
+  "id": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+})).describe('Companion tags awaiting this profile\'s response. Only populated when viewing your own profile.'),
   "digestCadenceMonths": zod.union([zod.literal(3),zod.literal(4),zod.literal(6)]).describe('How often (in months) this user\'s wrapped digest is automatically generated.'),
-  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.')
+  "preferredDigestStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
+  "digestEmailEnabled": zod.boolean().describe('Whether the user wants to receive an email when a new wrapped digest is ready.')
 }))
 
 
@@ -557,7 +934,7 @@ export const GetFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -584,7 +961,7 @@ export const GetDiscoverFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -611,7 +988,7 @@ export const GetFollowersFeedResponseItem = zod.object({
   "summary": zod.string().nullish(),
   "errorMessage": zod.string().nullish(),
   "privacy": zod.enum(['private', 'friends', 'public']),
-  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']),
+  "visualStyle": zod.enum(['pop-art', 'supermarket', 'camera-interface', 'canon-camera', 'ios-core', 'android-core']).describe('Visual style preset for a wrapped digest PDF.'),
   "isOwner": zod.boolean().describe('Whether the requesting viewer owns this trip.'),
   "startDate": zod.string().nullable(),
   "endDate": zod.string().nullable(),
@@ -677,192 +1054,5 @@ export const DeleteDigestParams = zod.object({
 })
 
 export const DeleteDigestResponse = zod.void()
-
-
-/**
- * @summary Set which photo represents a trip day (owner only)
- */
-export const UpdateDayHeroPhotoParams = zod.object({
-  "tripId": zod.coerce.number(),
-  "dayId": zod.coerce.number()
-})
-
-export const UpdateDayHeroPhotoBody = zod.object({
-  "heroPhotoId": zod.number().nullable()
-})
-
-export const UpdateDayHeroPhotoResponse = zod.object({
-  "id": zod.number(),
-  "tripId": zod.number(),
-  "dayIndex": zod.number(),
-  "date": zod.string(),
-  "locationName": zod.string().nullable(),
-  "lat": zod.number(),
-  "lon": zod.number(),
-  "elevationMeters": zod.number().nullish(),
-  "distanceKm": zod.number().nullable(),
-  "weather": zod.union([zod.object({
-  "tempMaxC": zod.number().nullish(),
-  "tempMinC": zod.number().nullish(),
-  "precipitationMm": zod.number().nullish(),
-  "windSpeedMaxKmh": zod.number().nullish(),
-  "weatherCode": zod.number().nullish(),
-  "conditions": zod.string().nullish()
-}),zod.null()]),
-  "landmarks": zod.array(zod.object({
-  "name": zod.string(),
-  "kind": zod.string(),
-  "distanceMeters": zod.number().nullish(),
-  "lat": zod.number().optional(),
-  "lon": zod.number().optional()
-})),
-  "headline": zod.string().nullable(),
-  "narrative": zod.string().nullable(),
-  "aiOriginalHeadline": zod.string().nullable(),
-  "aiOriginalNarrative": zod.string().nullable(),
-  "heroPhotoId": zod.number().nullable(),
-  "audioObjectPath": zod.string().nullable()
-})
-
-
-/**
- * @summary Edit a trip day's headline/narrative text directly (owner only)
- */
-export const UpdateTripDayNarrativeParams = zod.object({
-  "tripId": zod.coerce.number(),
-  "dayId": zod.coerce.number()
-})
-
-export const UpdateTripDayNarrativeBody = zod.object({
-  "headline": zod.string().min(1),
-  "narrative": zod.string().min(1)
-})
-
-export const UpdateTripDayNarrativeResponse = UpdateDayHeroPhotoResponse
-
-
-const TripCommentResponse = zod.object({
-  "id": zod.number(),
-  "tripId": zod.number(),
-  "userId": zod.string(),
-  "body": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "author": zod.object({
-  "id": zod.string(),
-  "displayName": zod.string(),
-  "avatarUrl": zod.string().nullable()
-})
-})
-
-/**
- * @summary List a trip's comments
- */
-export const ListTripCommentsParams = zod.object({
-  "tripId": zod.coerce.number()
-})
-
-export const ListTripCommentsResponse = zod.array(TripCommentResponse)
-
-/**
- * @summary Post a comment on a trip
- */
-export const CreateTripCommentParams = zod.object({
-  "tripId": zod.coerce.number()
-})
-
-export const CreateTripCommentBody = zod.object({
-  "body": zod.string().min(1).max(2000)
-})
-
-export const CreateTripCommentResponse = TripCommentResponse
-
-/**
- * @summary Delete a comment (author or trip owner only)
- */
-export const DeleteTripCommentParams = zod.object({
-  "tripId": zod.coerce.number(),
-  "commentId": zod.coerce.number()
-})
-
-export const DeleteTripCommentResponse = zod.void()
-
-
-/**
- * @summary Get every day-location across a user's visible trips, for a world map
- */
-export const GetUserTripDayLocationsParams = zod.object({
-  "userId": zod.string()
-})
-
-export const GetUserTripDayLocationsResponse = zod.array(zod.object({
-  "tripId": zod.number(),
-  "tripTitle": zod.string(),
-  "dayIndex": zod.number(),
-  "date": zod.string(),
-  "lat": zod.number(),
-  "lon": zod.number(),
-  "locationName": zod.string().nullable()
-}))
-
-
-const TripCompanionResponse = zod.object({
-  "user": zod.object({
-  "id": zod.string(),
-  "displayName": zod.string(),
-  "avatarUrl": zod.string().nullable()
-}),
-  "status": zod.enum(['pending', 'confirmed'])
-})
-
-/**
- * @summary Tag a followed user as a companion on a trip (owner only)
- */
-export const TagTripCompanionParams = zod.object({
-  "tripId": zod.coerce.number()
-})
-
-export const TagTripCompanionBody = zod.object({
-  "userId": zod.string()
-})
-
-export const TagTripCompanionResponse = zod.array(TripCompanionResponse)
-
-/**
- * @summary Accept or decline a companion tag (tagged user only)
- */
-export const RespondToCompanionTagParams = zod.object({
-  "tripId": zod.coerce.number(),
-  "userId": zod.coerce.string()
-})
-
-export const RespondToCompanionTagBody = zod.object({
-  "accept": zod.boolean()
-})
-
-export const RespondToCompanionTagResponse = zod.array(TripCompanionResponse)
-
-/**
- * @summary Remove a companion tag (trip owner or the tagged user themself)
- */
-export const UntagTripCompanionParams = zod.object({
-  "tripId": zod.coerce.number(),
-  "userId": zod.coerce.string()
-})
-
-export const UntagTripCompanionResponse = zod.array(TripCompanionResponse)
-
-
-/**
- * @summary List who you follow (self only — powers the companion-tag picker)
- */
-export const ListFollowingParams = zod.object({
-  "userId": zod.string()
-})
-
-export const ListFollowingResponse = zod.array(zod.object({
-  "id": zod.string(),
-  "displayName": zod.string(),
-  "avatarUrl": zod.string().nullable()
-}))
 
 
