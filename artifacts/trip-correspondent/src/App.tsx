@@ -17,6 +17,7 @@ import Terms from '@/pages/terms';
 import Privacy from '@/pages/privacy';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppBackground } from '@/components/app-background';
+import { PageWipe } from '@/components/page-wipe';
 
 const queryClient = new QueryClient();
 
@@ -224,6 +225,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <Router />
+        <PageWipe />
         <Toaster position="bottom-right" className="font-sans" />
       </QueryClientProvider>
     </ClerkProvider>

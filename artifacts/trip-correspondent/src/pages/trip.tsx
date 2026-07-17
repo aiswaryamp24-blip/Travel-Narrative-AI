@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { motion, useScroll, useVelocity, useTransform, useMotionTemplate } from 'framer-motion';
+import { SplitText } from '@/components/split-text';
+import { FilmReel } from '@/components/film-reel';
 import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
 import { TripReviews } from '@/components/trip-reviews';
 import { useLocation, useParams, Link } from 'wouter';
@@ -40,6 +43,24 @@ export default function Trip() {
   const processTrip = useProcessTrip();
   const updatePrivacy = useUpdateTripPrivacy();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  // — Scroll velocity → title blur (feature 3) —
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  const titleBlur = useTransform(scrollVelocity, [-4000, 0, 4000], [12, 0, 12]);
+  const titleFilter = useMotionTemplate`blur(${titleBlur}px)`;
+
+  // — Scroll-driven warm→cool background shift across day sections (feature 7) —
+  const daysContainerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: daysProgress } = useScroll({
+    target: daysContainerRef,
+    offset: ['start 80%', 'end 20%'],
+  });
+  const daysBgColor = useTransform(
+    daysProgress,
+    [0, 0.33, 0.66, 1],
+    ['hsl(40 40% 99%)', 'hsl(200 25% 98%)', 'hsl(243 25% 97%)', 'hsl(270 20% 96%)'],
+  );
 
   const { data: trip, isLoading, isError } = useGetTrip(tripId, {
     query: {
@@ -275,9 +296,12 @@ export default function Trip() {
               <span>{trip.days.length} Days</span>
             </div>
             
-            <h1 className="text-6xl md:text-8xl font-serif font-black tracking-tight uppercase leading-[0.9]">
-              {trip.title}
-            </h1>
+            <motion.h1
+              className="text-6xl md:text-8xl font-serif font-black tracking-tight uppercase leading-[0.9]"
+              style={{ filter: titleFilter }}
+            >
+              <SplitText text={trip.title} delayPerChar={0.03} />
+            </motion.h1>
             
             {trip.summary && (
               <div className="max-w-2xl mx-auto">
@@ -297,6 +321,46 @@ export default function Trip() {
           </div>
         </header>
 
+        {/* Route draw — decorative SVG path connecting day locations (feature 2) */}
+        {trip.days.length >= 2 && (() => {
+          const stops = trip.days
+            .sort((a, b) => a.dayIndex - b.dayIndex)
+            .map(d => d.locationName?.split(',')[0]?.trim() || `Day ${d.dayIndex + 1}`)
+            .slice(0, 7);
+          const n = stops.length;
+          const W = 600; const H = 70; const pad = 40;
+          const stepX = (W - 2 * pad) / (n - 1);
+          const pts = stops.map((_, i) => ({ x: pad + i * stepX, y: H / 2 + (i % 2 === 0 ? -16 : 16) }));
+          let d = `M ${pts[0].x} ${pts[0].y}`;
+          for (let i = 1; i < pts.length; i++) {
+            const c1x = pts[i-1].x + stepX/2; const c1y = pts[i-1].y;
+            const c2x = pts[i].x - stepX/2;   const c2y = pts[i].y;
+            d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${pts[i].x} ${pts[i].y}`;
+          }
+          return (
+            <div className="bg-card border-b border-border">
+              <div className="max-w-6xl mx-auto px-6 py-6">
+                <div className="text-[9px] font-mono uppercase tracking-[0.4em] text-muted-foreground mb-3">Route</div>
+                <svg viewBox={`0 0 ${W} ${H + 28}`} className="w-full" fill="none" overflow="visible">
+                  <motion.path d={d} stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+                    viewport={{ once: true, amount: 0.5 }} transition={{ duration: 2.2, ease: 'easeInOut', delay: 0.2 }} />
+                  {pts.map((pt, i) => (
+                    <motion.g key={i} initial={{ opacity: 0, scale: 0 }} whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }} transition={{ delay: 0.4 + i * (1.6 / n), type: 'spring', stiffness: 280 }}>
+                      <circle cx={pt.x} cy={pt.y} r="4" fill="hsl(var(--primary))" />
+                      <text x={pt.x} y={pt.y + (i % 2 === 0 ? -10 : 18)} textAnchor="middle"
+                        fontSize="7.5" fontFamily="monospace" fill="currentColor" className="uppercase">
+                        {stops[i].slice(0, 12)}
+                      </text>
+                    </motion.g>
+                  ))}
+                </svg>
+              </div>
+            </div>
+          );
+        })()}
+
         {(trip.companions.length > 0 || trip.isOwner) && (
           <div className="py-8 px-6 max-w-6xl mx-auto border-b border-border">
             <TripCompanions tripId={tripId} isOwner={trip.isOwner} companions={trip.companions} />
@@ -306,21 +370,40 @@ export default function Trip() {
         <TripStats trip={trip} />
         <TripRouteMap trip={trip} />
 
-        {/* Day by Day Sections */}
-        <div className="divide-y divide-border border-b border-border">
+        {/* Day by Day Sections — background shifts warm→cool as you read through (feature 7) */}
+        <motion.div ref={daysContainerRef} className="divide-y divide-border border-b border-border" style={{ backgroundColor: daysBgColor }}>
           {trip.days.sort((a,b) => a.dayIndex - b.dayIndex).map((day, idx) => (
             <section key={day.id} className="py-24 md:py-32 px-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-24">
               
-              {/* Day Meta sidebar */}
-              <aside className="lg:col-span-3 space-y-10 lg:sticky lg:top-32 h-fit">
-                <div>
-                  <h2 className="text-5xl font-serif text-primary/20 select-none">
-                    {String(day.dayIndex + 1).padStart(2, '0')}
-                  </h2>
-                  <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mt-2">
-                    {format(new Date(day.date), 'EEEE, MMM do')}
+              {/* Day Meta sidebar — sticky chapter marker (feature 1) */}
+              <aside className="lg:col-span-3 space-y-10 lg:sticky lg:top-24 h-fit">
+                <motion.div
+                  initial={{ opacity: 0, x: -24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="relative mb-2">
+                    {/* Ghost big number behind the label */}
+                    <div className="text-[6rem] font-serif leading-none text-primary/8 select-none -ml-1 -mt-2 pointer-events-none">
+                      {String(day.dayIndex + 1).padStart(2, '0')}
+                    </div>
+                    <div className="absolute bottom-1 left-0 space-y-1">
+                      <div className="w-7 h-[2px] bg-primary" />
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-primary">
+                        Day {day.dayIndex + 1}
+                      </div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        {format(new Date(day.date), 'EEEE, MMM do')}
+                      </div>
+                      {day.locationName && (
+                        <div className="font-serif text-base leading-tight pt-1">
+                          {day.locationName.split(',')[0]}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </motion.div>
 
                 <div className="space-y-6 font-mono text-sm">
                   {day.locationName && (
@@ -365,6 +448,7 @@ export default function Trip() {
                 <DayAudioPlayer tripId={tripId} day={day} />
 
                 {day.landmarks && day.landmarks.length > 0 && (
+
                   <div>
                     <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-4 border-b border-border pb-2">Waypoints</div>
                     <ul className="space-y-3 font-serif text-sm">
@@ -435,44 +519,19 @@ export default function Trip() {
 
                 <EditableDayNarrative tripId={tripId} day={day} isOwner={trip.isOwner} />
 
-                {/* Day Photo Grid — a curated handful, not every leftover
-                    shot, so the story stays magazine-paced rather than
-                    turning into a photo dump. */}
+                {/* Film reel — scroll-driven horizontal photo strip (feature 4) */}
                 {(() => {
-                  const MAX_SELECTED_FRAMES = 4;
                   const dayPhotos = trip.photos
                     .filter(p => p.tripDayId === day.id && p.id !== day.heroPhotoId)
-                    .slice(0, MAX_SELECTED_FRAMES);
+                    .slice(0, 6);
                   if (dayPhotos.length === 0) return null;
-
-                  return (
-                    <RevealOnScroll delayMs={150} className="mt-16 pt-16 border-t border-border">
-                      <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-8 text-center">
-                        Selected Frames
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {dayPhotos.map((photo, i) => (
-                          <div
-                            key={photo.id}
-                            className={`bg-muted overflow-hidden ${i % 3 === 0 ? 'sm:col-span-2 aspect-[2/1]' : 'aspect-square'}`}
-                          >
-                            <img
-                              src={`/api/storage${photo.objectPath}`}
-                              alt="Trip photograph"
-                              loading="lazy"
-                              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </RevealOnScroll>
-                  );
+                  return <FilmReel photos={dayPhotos} />;
                 })()}
 
               </div>
             </section>
           ))}
-        </div>
+        </motion.div>
 
         {/* Unassigned Photos (if any exist but tripDayId is null after processing) */}
         {(() => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CursorSpotlight } from '@/components/cursor-spotlight';
 import { useListTrips } from '@workspace/api-client-react';
 import { UploadFlow } from '@/components/upload-flow';
 import { Link } from 'wouter';
@@ -152,6 +153,7 @@ export default function Home() {
           landing impression does. A slow idle Ken Burns drift keeps it
           from feeling static. */}
       <header className="relative overflow-hidden border-b-4 border-foreground">
+        <CursorSpotlight color="147,112,219" opacity={0.13} radius={420} />
         <div className="relative overflow-hidden" style={{ minHeight: '26vh' }}>
           <motion.img
             src="/window-night.jpg"

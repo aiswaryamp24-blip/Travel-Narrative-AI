@@ -5,6 +5,7 @@ import { Logo } from '@/components/logo';
 import { TripCard, TripGridSkeleton } from '@/components/trip-card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
+import { CursorSpotlight } from '@/components/cursor-spotlight';
 
 function FeedTabContent({
   trips,
@@ -51,6 +52,7 @@ export default function Feed() {
 
       {/* Hero — plane-exterior photo with deep indigo overlay */}
       <header className="relative border-b-4 border-foreground overflow-hidden" style={{ minHeight: '32vh' }}>
+        <CursorSpotlight color="180,160,255" opacity={0.18} radius={500} />
         <motion.img
           src="/plane-exterior.jpg"
           alt=""

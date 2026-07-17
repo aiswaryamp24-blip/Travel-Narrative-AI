@@ -1,14 +1,31 @@
 import type { Trip } from '@workspace/api-client-react';
 import { Compass, Globe2, MapPin, Thermometer, CalendarDays } from 'lucide-react';
+import { AnimatedNumber } from '@/components/animated-number';
 
-/**
- * Parses a "City, Country" style locationName into its parts. Only trusts
- * strings that actually contain a comma — when there's no confirmed real
- * location for a day (see narrative.ts's noGpsInTrip handling), the
- * narrative uses a generic, comma-less description like "a forest trail"
- * instead of guessing a place, and that must NOT be counted as if it were
- * its own distinct city/country.
- */
+function parseStatValue(value: string): { num: number; suffix: string } | null {
+  const m = value.match(/^([\d,]+)\s*(.*?)$/);
+  if (!m) return null;
+  const num = parseInt(m[1].replace(/,/g, ''), 10);
+  if (isNaN(num)) return null;
+  // Skip ranges like "3° – 8°" — they can't be represented as a single number
+  if (m[2].includes('–') || m[2].includes('-')) return null;
+  return { num, suffix: m[2] ? ` ${m[2]}` : '' };
+}
+
+function StatValue({ value }: { value: string }) {
+  const parsed = parseStatValue(value);
+  if (parsed) {
+    return (
+      <AnimatedNumber
+        value={parsed.num}
+        suffix={parsed.suffix}
+        className="text-3xl md:text-4xl font-serif"
+      />
+    );
+  }
+  return <div className="text-3xl md:text-4xl font-serif">{value}</div>;
+}
+
 function parseLocation(locationName: string | null): { city: string; country: string } | null {
   if (!locationName) return null;
   const parts = locationName.split(',').map((p) => p.trim()).filter(Boolean);
@@ -39,33 +56,17 @@ export function TripStats({ trip }: { trip: Trip }) {
     { icon: CalendarDays, label: 'Days Documented', value: String(days.length) },
   ];
 
-  // Distance is only meaningful when at least one day had real GPS data to
-  // measure movement from — showing a "—" for every trip without GPS reads
-  // as broken rather than "no data available", so hide it entirely instead.
   if (trip.totalDistanceKm) {
-    stats.push({
-      icon: Compass,
-      label: 'Distance Covered',
-      value: `${Math.round(trip.totalDistanceKm)} km`,
-    });
+    stats.push({ icon: Compass, label: 'Distance Covered', value: `${Math.round(trip.totalDistanceKm)} km` });
   }
-
-  // Cities and Countries are shown as separate stats (rather than one
-  // toggling into the other) so a single-country, multi-city trip — like a
-  // Poland trip covering Krakow and Warsaw — still surfaces city-level detail.
   if (cities.size > 0) {
     stats.push({ icon: MapPin, label: cities.size === 1 ? 'City Visited' : 'Cities Visited', value: String(cities.size) });
   }
   if (countries.size > 1) {
     stats.push({ icon: Globe2, label: 'Countries', value: String(countries.size) });
   }
-
   if (tempMin !== null && tempMax !== null) {
-    stats.push({
-      icon: Thermometer,
-      label: 'Temperature Range',
-      value: `${Math.round(tempMin)}° – ${Math.round(tempMax)}°`,
-    });
+    stats.push({ icon: Thermometer, label: 'Temperature Range', value: `${Math.round(tempMin)}° – ${Math.round(tempMax)}°` });
   }
 
   return (
@@ -74,7 +75,7 @@ export function TripStats({ trip }: { trip: Trip }) {
         {stats.map((stat) => (
           <div key={stat.label} className="text-center space-y-2">
             <stat.icon className="h-5 w-5 mx-auto text-primary" />
-            <div className="text-3xl md:text-4xl font-serif">{stat.value}</div>
+            <StatValue value={stat.value} />
             <div className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-muted-foreground">
               {stat.label}
             </div>

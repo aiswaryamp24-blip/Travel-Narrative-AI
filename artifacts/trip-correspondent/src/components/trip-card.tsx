@@ -1,20 +1,60 @@
+import { useRef, type MouseEvent } from 'react';
 import type { FeedTripSummary } from '@workspace/api-client-react';
 import { Link } from 'wouter';
 import { format } from 'date-fns';
 import { Map } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SocialShareModal } from '@/components/social-share-modal';
 
+/** Magnetic 3-D tilt: card leans toward wherever the cursor is */
+function useCardTilt() {
+  const ref = useRef<HTMLElement>(null);
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const springCfg = { stiffness: 200, damping: 20, mass: 0.5 };
+  const rotateX = useSpring(useTransform(rawY, [-0.5, 0.5], [8, -8]), springCfg);
+  const rotateY = useSpring(useTransform(rawX, [-0.5, 0.5], [-8, 8]), springCfg);
+  const scale = useSpring(1, springCfg);
+  const shadow = useSpring(0, springCfg);
+
+  const onMouseMove = (e: MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    rawX.set((e.clientX - r.left) / r.width - 0.5);
+    rawY.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const onMouseEnter = () => { scale.set(1.03); shadow.set(1); };
+  const onMouseLeave = () => { rawX.set(0); rawY.set(0); scale.set(1); shadow.set(0); };
+
+  const boxShadow = useTransform(shadow, [0, 1], [
+    '0 2px 8px -4px rgb(0 0 0 / 0.1)',
+    '0 24px 48px -12px rgb(0 0 0 / 0.28)',
+  ]);
+
+  return { ref, rotateX, rotateY, scale, boxShadow, onMouseMove, onMouseEnter, onMouseLeave };
+}
+
 export function TripCard({ trip }: { trip: FeedTripSummary }) {
+  const tilt = useCardTilt();
+
   return (
     <motion.article
+      ref={tilt.ref as React.RefObject<HTMLElement>}
       className="relative bg-card border border-border h-full flex flex-col"
-      style={{ transformPerspective: 800 }}
-      whileHover={{ y: -6, rotateX: 2, boxShadow: '0 20px 40px -15px rgb(0 0 0 / 0.25)' }}
+      style={{
+        transformPerspective: 900,
+        rotateX: tilt.rotateX,
+        rotateY: tilt.rotateY,
+        scale: tilt.scale,
+        boxShadow: tilt.boxShadow,
+      }}
+      onMouseMove={tilt.onMouseMove}
+      onMouseEnter={tilt.onMouseEnter}
+      onMouseLeave={tilt.onMouseLeave}
       whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
     >
       <Link href={`/trips/${trip.id}`} className="group block">
         <div className="relative aspect-[4/5] overflow-hidden bg-muted border-b border-border p-6 flex flex-col justify-end">
@@ -32,7 +72,7 @@ export function TripCard({ trip }: { trip: FeedTripSummary }) {
               <Map className="h-16 w-16 text-muted-foreground opacity-20" />
             </div>
           )}
-          <div className="relative z-10 space-y-2 text-white">
+          <div className="relative z-10 space-y-2 text-white" style={{ transform: 'translateZ(20px)' }}>
             <div className="flex items-center gap-2 text-xs font-mono tracking-widest uppercase mb-4 opacity-80">
               <span>{format(new Date(trip.createdAt), 'MMM yyyy')}</span>
             </div>
@@ -56,7 +96,6 @@ export function TripCard({ trip }: { trip: FeedTripSummary }) {
               {trip.owner.displayName}
             </span>
           </Link>
-          {/* Social share */}
           <SocialShareModal trip={trip} />
         </div>
       </div>
