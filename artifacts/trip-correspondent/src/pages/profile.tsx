@@ -10,7 +10,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, AlertTriangle, Map, FileText, AlertCircle, Check, X } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, Map, FileText, AlertCircle, Check, X, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -222,6 +222,14 @@ function ProfileContent({
           </div>
 
           {!profile.isSelf && <FollowButton userId={profile.id} isFollowing={profile.isFollowing} />}
+          {profile.isSelf && (
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-white/60 hover:text-white/90 transition-colors border border-white/20 px-3 py-1.5 hover:border-white/40"
+            >
+              <Settings className="h-3 w-3" /> Settings
+            </Link>
+          )}
         </div>
       </header>
 

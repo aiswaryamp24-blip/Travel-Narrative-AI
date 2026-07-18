@@ -15,6 +15,7 @@ import Profile from '@/pages/profile';
 import Explore from '@/pages/explore';
 import Terms from '@/pages/terms';
 import Privacy from '@/pages/privacy';
+import Settings from '@/pages/settings';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppBackground } from '@/components/app-background';
 import { PageWipe } from '@/components/page-wipe';
@@ -181,6 +182,7 @@ function Router() {
       <Route path="/feed" component={FeedPage} />
       <Route path="/explore" component={Explore} />
       <Route path="/users/:id" component={Profile} />
+      <Route path="/settings" component={Settings} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route>
