@@ -57,7 +57,7 @@ export const TRIP_STYLES: TripStyleDef[] = [
       accentForeground: '0 0% 7%',
       border: '0 0% 7%',
     },
-    fonts: { display: "'Bricolage Grotesque', sans-serif", body: "'Noto Sans JP', sans-serif" },
+    fonts: { display: "'Bangers', 'Bricolage Grotesque', sans-serif", body: "'Noto Sans JP', sans-serif" },
     pattern: 'halftone',
   },
   {
