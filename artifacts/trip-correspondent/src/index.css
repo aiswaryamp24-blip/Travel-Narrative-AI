@@ -150,8 +150,97 @@
   --border: 0 0% 7%;
   --input: 0 0% 7%;
   --ring: 355 100% 45%;
-  --app-font-serif: 'Bricolage Grotesque', sans-serif;
+  --app-font-serif: 'Bangers', 'Bricolage Grotesque', sans-serif;
   --app-font-sans: 'Noto Sans JP', sans-serif;
+}
+
+/* ── POP-ART TRIP PAGE STRUCTURAL TREATMENT ─────────────────────────────── */
+
+/* Cover: acid-yellow field with ink border */
+[data-trip-style="pop-art"] .trip-cover-header {
+  background-color: hsl(50 100% 50%) !important;
+  color: hsl(0 0% 7%) !important;
+  border-bottom-color: hsl(0 0% 7%) !important;
+}
+[data-trip-style="pop-art"] .trip-cover-header .text-secondary-foreground\/80 {
+  color: hsl(0 0% 20%) !important;
+}
+
+/* Hero title: ink text-stroke + red offset shadow */
+[data-trip-style="pop-art"] .trip-hero-title,
+[data-trip-style="pop-art"] .trip-hero-title span {
+  -webkit-text-stroke: 2px hsl(0 0% 7%);
+  paint-order: stroke fill;
+  color: hsl(0 0% 7%) !important;
+  text-shadow: 6px 6px 0 hsl(355 100% 45%);
+  letter-spacing: 0.02em;
+}
+
+/* Stats bar: cobalt-blue panel with light label text */
+[data-trip-style="pop-art"] .trip-stats-bar {
+  background-color: hsl(220 100% 50%) !important;
+  border-top: 4px solid hsl(0 0% 7%);
+  border-bottom: 4px solid hsl(0 0% 7%);
+  color: hsl(0 0% 100%) !important;
+}
+[data-trip-style="pop-art"] .trip-stats-bar .text-muted-foreground {
+  color: hsl(220 60% 80%) !important;
+}
+[data-trip-style="pop-art"] .trip-stats-bar .text-primary {
+  color: hsl(50 100% 60%) !important;
+}
+
+/* Ghost day number: bolder red */
+[data-trip-style="pop-art"] .trip-day-ghost {
+  font-size: 9rem !important;
+  color: hsl(355 100% 45%) !important;
+  opacity: 0.18 !important;
+}
+
+/* Day sections: left accent strip */
+[data-trip-style="pop-art"] .trip-day-section {
+  border-left: 6px solid hsl(355 100% 45%);
+}
+
+/* Accent bar: thicker */
+[data-trip-style="pop-art"] .trip-day-accent-bar {
+  height: 4px !important;
+  width: 2.5rem !important;
+}
+
+/* Day prose headings: blue + ink stroke */
+[data-trip-style="pop-art"] .prose h3 {
+  color: hsl(220 100% 50%) !important;
+  text-transform: uppercase;
+  -webkit-text-stroke: 1px hsl(0 0% 7%);
+  paint-order: stroke fill;
+  line-height: 1.05 !important;
+}
+/* Drop cap: massive red */
+[data-trip-style="pop-art"] .drop-cap {
+  font-size: 5.5em !important;
+  line-height: 0.72 !important;
+  color: hsl(355 100% 45%) !important;
+  -webkit-text-stroke: 1.5px hsl(0 0% 7%);
+  paint-order: stroke fill;
+}
+
+/* Hero photo: ink border + red offset shadow */
+[data-trip-style="pop-art"] figure.trip-day-figure {
+  padding-right: 8px;
+  padding-bottom: 8px;
+}
+[data-trip-style="pop-art"] .trip-day-photo {
+  border: 5px solid hsl(0 0% 7%);
+  box-shadow: 8px 8px 0 hsl(355 100% 45%);
+  display: block;
+  width: 100%;
+}
+
+/* Secondary photo grid: ink border on each cell */
+[data-trip-style="pop-art"] .trip-secondary-photos .trip-photo-cell {
+  border: 3px solid hsl(0 0% 7%);
+  box-shadow: 4px 4px 0 hsl(355 100% 45%);
 }
 
 [data-trip-style="supermarket"] {

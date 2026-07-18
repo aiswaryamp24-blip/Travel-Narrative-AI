@@ -291,7 +291,7 @@ export default function Trip() {
 
       <main>
         {/* Cover Feature */}
-        <header className="relative min-h-[80vh] flex flex-col items-center justify-center p-6 bg-secondary text-secondary-foreground border-b-8 border-primary">
+        <header className="trip-cover-header relative min-h-[80vh] flex flex-col items-center justify-center p-6 bg-secondary text-secondary-foreground border-b-8 border-primary">
           {effectiveCoverPath && (
             <div className="absolute inset-0 z-0">
               <img 
@@ -315,7 +315,7 @@ export default function Trip() {
             </div>
             
             <motion.h1
-              className="text-6xl md:text-8xl font-serif font-black tracking-tight uppercase leading-[0.9]"
+              className="trip-hero-title text-6xl md:text-8xl font-serif font-black tracking-tight uppercase leading-[0.9]"
               style={{ filter: titleFilter }}
             >
               <SplitText text={trip.title} delayPerChar={0.03} />
@@ -352,7 +352,7 @@ export default function Trip() {
         {/* Day by Day Sections — background shifts warm→cool as you read through (feature 7) */}
         <motion.div ref={daysContainerRef} className="divide-y divide-border border-b border-border" style={{ backgroundColor: daysBgColor }}>
           {trip.days.sort((a,b) => a.dayIndex - b.dayIndex).map((day, idx) => (
-            <section key={day.id} className="py-24 md:py-32 px-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-24">
+            <section key={day.id} className="trip-day-section py-24 md:py-32 px-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-24">
               
               {/* Day Meta sidebar — sticky chapter marker (feature 1) */}
               <aside className="lg:col-span-3 space-y-10 lg:sticky lg:top-24 h-fit">
@@ -364,12 +364,12 @@ export default function Trip() {
                 >
                   <div className="relative mb-2">
                     {/* Ghost big number behind the label */}
-                    <div className="text-[6rem] font-serif leading-none text-primary/8 select-none -ml-1 -mt-2 pointer-events-none">
+                    <div className="trip-day-ghost text-[6rem] font-serif leading-none text-primary/8 select-none -ml-1 -mt-2 pointer-events-none">
                       {String(day.dayIndex + 1).padStart(2, '0')}
                     </div>
                     <div className="absolute bottom-1 left-0 space-y-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-[2px] bg-primary" />
+                        <div className="trip-day-accent-bar w-7 h-[2px] bg-primary" />
                         <StyleIcon style={getTripStyle(tripStyleId).pattern} className="h-4 w-4 text-primary/50" />
                       </div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-primary">
@@ -473,12 +473,12 @@ export default function Trip() {
 
                   return (
                     <RevealOnScroll className="mb-12">
-                      <figure className="space-y-4">
+                      <figure className="trip-day-figure space-y-4">
                         <div className="relative aspect-[3/2] overflow-hidden bg-muted">
                           <img
                             src={`/api/storage${heroPhoto.objectPath}`}
                             alt="Hero photo of the day"
-                            className="w-full h-full object-cover"
+                            className="trip-day-photo w-full h-full object-cover"
                           />
                           {trip.isOwner && (
                             <HeroPhotoPicker
@@ -512,9 +512,9 @@ export default function Trip() {
                       <div className="text-[9px] font-mono uppercase tracking-[0.4em] text-foreground/50 mb-4">
                         More from this day
                       </div>
-                      <div className={`grid gap-2 ${dayPhotos.length === 1 ? 'grid-cols-1' : dayPhotos.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                      <div className={`trip-secondary-photos grid gap-2 ${dayPhotos.length === 1 ? 'grid-cols-1' : dayPhotos.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
                         {dayPhotos.map(photo => (
-                          <div key={photo.id} className="aspect-[4/3] overflow-hidden bg-muted">
+                          <div key={photo.id} className="trip-photo-cell aspect-[4/3] overflow-hidden bg-muted">
                             <img
                               src={`/api/storage${photo.objectPath}`}
                               alt="Trip photograph"

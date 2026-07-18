@@ -70,7 +70,7 @@ export function TripStats({ trip }: { trip: Trip }) {
   }
 
   return (
-    <section className="border-b border-border bg-card">
+    <section className="trip-stats-bar border-b border-border bg-card">
       <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center space-y-2">

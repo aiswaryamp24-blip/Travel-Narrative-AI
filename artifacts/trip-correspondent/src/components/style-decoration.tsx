@@ -15,15 +15,32 @@ export function StyleDecoration({ pattern }: { pattern: TripStyleDef['pattern'] 
   switch (pattern) {
     case 'halftone':
       return (
-        <div
-          className={common}
-          style={{
-            backgroundImage: 'radial-gradient(currentColor 1.5px, transparent 1.5px)',
-            backgroundSize: '14px 14px',
-            color: 'hsl(var(--primary))',
-            opacity: 0.15,
-          }}
-        />
+        <>
+          {/* Acid-yellow wash behind the dots */}
+          <div
+            className={common}
+            style={{ backgroundColor: 'hsl(50 100% 50%)', opacity: 0.08 }}
+          />
+          {/* Large Ben-Day dots in primary (red) */}
+          <div
+            className={common}
+            style={{
+              backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 3.5px, transparent 3.5px)',
+              backgroundSize: '22px 22px',
+              opacity: 0.30,
+            }}
+          />
+          {/* Smaller offset layer in secondary (blue) for depth */}
+          <div
+            className={common}
+            style={{
+              backgroundImage: 'radial-gradient(circle, hsl(var(--secondary)) 2px, transparent 2px)',
+              backgroundSize: '22px 22px',
+              backgroundPosition: '11px 11px',
+              opacity: 0.18,
+            }}
+          />
+        </>
       );
     case 'stripes':
       return (
