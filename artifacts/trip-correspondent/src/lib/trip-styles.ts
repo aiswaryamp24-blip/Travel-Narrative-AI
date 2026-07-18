@@ -34,7 +34,7 @@ export interface TripStyleDef {
     /** Body/data typeface (maps to --app-font-sans). */
     body: string;
   };
-  pattern: 'halftone' | 'stripes' | 'hud' | 'plaid' | 'squircle' | 'elevation';
+  pattern: 'halftone' | 'stripes' | 'hud' | 'viewfinder' | 'squircle' | 'elevation';
 }
 
 export const TRIP_STYLES: TripStyleDef[] = [
@@ -124,7 +124,7 @@ export const TRIP_STYLES: TripStyleDef[] = [
       border: '214 3% 30%',
     },
     fonts: { display: "'Playfair Display', serif", body: "'JetBrains Mono', monospace" },
-    pattern: 'plaid',
+    pattern: 'viewfinder',
   },
   {
     id: 'ios-core',

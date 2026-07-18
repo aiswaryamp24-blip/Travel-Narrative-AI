@@ -4,10 +4,10 @@ import type { TripStyleDef } from '@/lib/trip-styles';
  * CSS-approximated decorative flourish for a trip's chosen visual style,
  * layered behind the hero content (see pages/trip.tsx). These are gradient/
  * pattern approximations of each reference board's graphic language
- * (halftone dots, hazard stripes, HUD corner brackets, tartan crosshatch,
- * frosted squircle glow, material elevation) rather than pixel-accurate
- * recreations of the original artwork — kept intentionally lightweight
- * since this renders on every trip page view.
+ * (halftone dots, hazard stripes, HUD corner brackets, viewfinder
+ * rule-of-thirds grid, frosted squircle glow, material elevation) rather
+ * than pixel-accurate recreations of the original artwork — kept
+ * intentionally lightweight since this renders on every trip page view.
  */
 export function StyleDecoration({ pattern }: { pattern: TripStyleDef['pattern'] }) {
   const common = 'absolute inset-0 pointer-events-none';
@@ -56,17 +56,26 @@ export function StyleDecoration({ pattern }: { pattern: TripStyleDef['pattern'] 
         </div>
       );
     }
-    case 'plaid':
+    case 'viewfinder':
+      // Rule-of-thirds grid + corner brackets, like a camera's viewfinder
+      // overlay — the literal product-photography reference for this style.
       return (
-        <div
-          className={common}
-          style={{
-            backgroundImage: [
-              'repeating-linear-gradient(0deg, hsl(var(--primary) / 0.12) 0, hsl(var(--primary) / 0.12) 2px, transparent 2px, transparent 40px)',
-              'repeating-linear-gradient(90deg, hsl(var(--secondary) / 0.12) 0, hsl(var(--secondary) / 0.12) 2px, transparent 2px, transparent 40px)',
-            ].join(', '),
-          }}
-        />
+        <div className={common}>
+          <div
+            className="absolute inset-8"
+            style={{
+              backgroundImage: [
+                'linear-gradient(hsl(var(--primary) / 0.35) 1px, transparent 1px)',
+                'linear-gradient(90deg, hsl(var(--primary) / 0.35) 1px, transparent 1px)',
+              ].join(', '),
+              backgroundSize: '33.33% 33.33%',
+            }}
+          />
+          <div className="absolute top-8 left-8 h-6 w-6 border-t-2 border-l-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+          <div className="absolute top-8 right-8 h-6 w-6 border-t-2 border-r-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+          <div className="absolute bottom-8 left-8 h-6 w-6 border-b-2 border-l-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+          <div className="absolute bottom-8 right-8 h-6 w-6 border-b-2 border-r-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+        </div>
       );
     case 'squircle':
       return (

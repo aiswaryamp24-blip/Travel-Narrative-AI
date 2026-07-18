@@ -1,6 +1,6 @@
 import { Link } from 'wouter';
 import { useAuth } from '@clerk/react';
-import { useGetDiscoverFeed } from '@workspace/api-client-react';
+import { useGetDiscoverFeed, getGetDiscoverFeedQueryKey } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
 import { Logo } from '@/components/logo';
@@ -13,7 +13,9 @@ export default function Landing() {
   const { isSignedIn } = useAuth();
   // Only fetch and display community photos when the user is signed in —
   // signed-out visitors see a blank hero window and no "From the field" strip.
-  const { data: discoverTrips } = useGetDiscoverFeed({ query: { enabled: !!isSignedIn } });
+  const { data: discoverTrips } = useGetDiscoverFeed({
+    query: { queryKey: getGetDiscoverFeedQueryKey(), enabled: !!isSignedIn },
+  });
   const stripItems: StripItem[] = isSignedIn
     ? (Array.isArray(discoverTrips) ? discoverTrips : [])
         .filter(trip => trip.coverObjectPath)

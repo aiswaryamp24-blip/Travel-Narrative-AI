@@ -29,6 +29,7 @@ import { ShareCard } from '@/components/share-card';
 import { RevealOnScroll } from '@/components/reveal-on-scroll';
 import { Logo } from '@/components/logo';
 import { StyleDecoration } from '@/components/style-decoration';
+import { StyleIcon } from '@/components/style-icons';
 import { getTripStyle } from '@/lib/trip-styles';
 import { HeroPhotoPicker } from '@/components/hero-photo-picker';
 import { EditableDayNarrative } from '@/components/editable-day-narrative';
@@ -217,8 +218,14 @@ export default function Trip() {
     );
   }
 
+  // Falls back to canon-camera for trips created before the style picker
+  // existed (visualStyle unset) — without this, data-trip-style renders
+  // empty, no [data-trip-style="..."] block matches, and the page silently
+  // reverts to the plain default theme instead of a deliberate baseline.
+  const tripStyleId = trip.visualStyle ?? 'canon-camera';
+
   return (
-    <div className="min-h-screen bg-background/95" data-trip-style={trip.visualStyle}>
+    <div className="min-h-screen bg-background/95" data-trip-style={tripStyleId}>
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border py-4 px-6 flex justify-between items-center">
         <Link href="/" className="inline-flex items-center text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
@@ -297,9 +304,11 @@ export default function Trip() {
             </div>
           )}
 
-          <StyleDecoration pattern={getTripStyle(trip.visualStyle).pattern} />
+          <StyleDecoration pattern={getTripStyle(tripStyleId).pattern} />
 
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 mt-16">
+            <StyleIcon style={getTripStyle(tripStyleId).pattern} className="h-8 w-8 mx-auto text-primary" />
+
             <div className="flex items-center justify-center gap-4 text-xs font-mono uppercase tracking-[0.2em] text-secondary-foreground/80">
               <span>{trip.startDate ? format(new Date(trip.startDate), 'MMMM yyyy') : 'Date Unknown'}</span>
               <span className="h-1 w-1 rounded-full bg-primary" />
@@ -399,7 +408,10 @@ export default function Trip() {
                       {String(day.dayIndex + 1).padStart(2, '0')}
                     </div>
                     <div className="absolute bottom-1 left-0 space-y-1">
-                      <div className="w-7 h-[2px] bg-primary" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-[2px] bg-primary" />
+                        <StyleIcon style={getTripStyle(tripStyleId).pattern} className="h-4 w-4 text-primary/50" />
+                      </div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-primary">
                         Day {day.dayIndex + 1}
                       </div>
