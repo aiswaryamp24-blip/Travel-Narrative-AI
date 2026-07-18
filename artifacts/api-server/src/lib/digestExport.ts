@@ -509,7 +509,12 @@ export async function generateDigestPdf(
   bundles: DigestTripBundle[],
   styleId: DigestStyleId = DEFAULT_DIGEST_STYLE,
 ): Promise<Buffer> {
-  const preset = DIGEST_STYLES[styleId] ?? DIGEST_STYLES[DEFAULT_DIGEST_STYLE];
+  const preset = DIGEST_STYLES[styleId];
+  if (!preset) {
+    throw new Error(
+      `Unknown digest style ID: "${styleId}". Valid IDs are: ${Object.keys(DIGEST_STYLES).join(', ')}.`,
+    );
+  }
   const styles = buildStyles(preset);
 
   const objectStorageService = new ObjectStorageService();
