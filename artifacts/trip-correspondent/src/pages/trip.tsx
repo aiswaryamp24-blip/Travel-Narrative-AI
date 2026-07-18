@@ -23,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { TripStats } from '@/components/trip-stats';
-import { TripRouteMap } from '@/components/trip-route-map';
+import { TripDaySummary } from '@/components/trip-day-summary';
 import { DayAudioPlayer } from '@/components/day-audio-player';
 import { ShareCard } from '@/components/share-card';
 import { RevealOnScroll } from '@/components/reveal-on-scroll';
@@ -368,7 +368,7 @@ export default function Trip() {
         )}
 
         <TripStats trip={trip} />
-        <TripRouteMap trip={trip} />
+        <TripDaySummary trip={trip} />
 
         {/* Day by Day Sections — background shifts warm→cool as you read through (feature 7) */}
         <motion.div ref={daysContainerRef} className="divide-y divide-border border-b border-border" style={{ backgroundColor: daysBgColor }}>

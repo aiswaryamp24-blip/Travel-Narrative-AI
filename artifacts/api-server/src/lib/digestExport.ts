@@ -68,7 +68,7 @@ function buildStyles(p: DigestStylePreset) {
       bottom: 0,
       left: 0,
       width: A4_WIDTH,
-      height: 8,
+      height: 16,
       backgroundColor: p.accent,
     },
     // For pop-art: thick black border rectangle inside the cover
@@ -271,35 +271,212 @@ export type DigestTripBundle = {
   photos: Photo[];
 };
 
-/** Render style-specific cover decorations */
-function renderCoverDecorations(styleId: DigestStyleId, styles: ReturnType<typeof buildStyles>) {
+/** Background decorations: rendered BEFORE the text, fills the canvas behind the copy */
+function renderCoverBackground(styleId: DigestStyleId, A4W: number, A4H: number) {
   switch (styleId) {
     case 'pop-art':
-      return e(View, { style: styles.popArtBorder });
-    case 'supermarket':
-      // Barcode stripes at bottom
       return e(
-        View,
-        { style: { position: 'absolute', bottom: 56, left: 56 } },
-        e(
-          View,
-          { style: styles.supermarketStripes },
-          ...[4, 2, 5, 1, 3, 2, 4, 1, 3, 5, 2, 4, 1, 3, 2, 5, 1, 4, 2, 3].map((w, i) =>
-            e(View, { key: i, style: { ...styles.supermarketStripe, width: w * 3 } }),
-          ),
+        React.Fragment, {},
+        // Solid red header band
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4W, height: 72, backgroundColor: '#E8112D' } }),
+        e(View, { style: { position: 'absolute', top: 18, left: 56 } },
+          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 18, color: '#FFEC00', letterSpacing: 6 } }, 'TURASUM DISPATCH'),
+        ),
+        // Large red circle bleeding off right edge
+        e(View, { style: { position: 'absolute', right: -90, top: 55, width: 290, height: 290, borderRadius: 145, backgroundColor: '#E8112D' } }),
+        // Ben-day halftone dots — right side
+        ...Array.from({ length: 8 }, (_, row) =>
+          Array.from({ length: 5 }, (_, col) =>
+            e(View, { key: `dot-${row}-${col}`, style: { position: 'absolute', right: 36 + col * 26, top: 368 + row * 26, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E8112D', opacity: 0.22 } }),
+          )
+        ).flat(),
+        // Three bold horizontal stripes
+        e(View, { style: { position: 'absolute', left: 0, top: 374, width: A4W, height: 14, backgroundColor: '#E8112D' } }),
+        e(View, { style: { position: 'absolute', left: 0, top: 392, width: A4W, height: 5, backgroundColor: '#0D0D0D' } }),
+        e(View, { style: { position: 'absolute', left: 0, top: 401, width: A4W, height: 14, backgroundColor: '#E8112D' } }),
+        // Solid black rectangle bottom-left
+        e(View, { style: { position: 'absolute', left: -16, bottom: 56, width: 96, height: 96, backgroundColor: '#0D0D0D' } }),
+      );
+
+    case 'supermarket':
+      return e(
+        React.Fragment, {},
+        // Red header bar
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4W, height: 68, backgroundColor: '#CC0000' } }),
+        e(View, { style: { position: 'absolute', top: 14, left: 56 } },
+          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 22, color: '#FFFFFF', letterSpacing: 4 } }, 'TURASUM STORES'),
+        ),
+        e(View, { style: { position: 'absolute', top: 44, left: 58 } },
+          e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: 'rgba(255,255,255,0.75)', letterSpacing: 3 } }, 'FIELD EDITION · SPECIAL RECEIPT'),
+        ),
+        // Dashed separator
+        ...Array.from({ length: 28 }, (_, i) =>
+          e(View, { key: `dash-${i}`, style: { position: 'absolute', left: 40 + i * 18, top: 80, width: 11, height: 3, backgroundColor: '#CC0000' } }),
+        ),
+        // Three-star rating
+        e(View, { style: { position: 'absolute', right: 56, top: 108 } },
+          e(Text, { style: { fontFamily: 'Times-Bold', fontSize: 30, color: '#CC0000' } }, '★★★'),
+        ),
+        // Receipt rule lines
+        ...Array.from({ length: 6 }, (_, i) =>
+          e(View, { key: `rule-${i}`, style: { position: 'absolute', left: 40, right: 40, top: 330 + i * 44, height: 1, backgroundColor: '#CCCCCC' } }),
         ),
       );
+
     case 'camera-interface':
+      return e(
+        React.Fragment, {},
+        // Subtle scan lines
+        ...Array.from({ length: 24 }, (_, i) =>
+          e(View, { key: `scan-${i}`, style: { position: 'absolute', left: 0, top: i * 36, width: A4W, height: 1, backgroundColor: '#00FF41', opacity: 0.06 } }),
+        ),
+        // Center reticle
+        e(View, { style: { position: 'absolute', top: A4H / 2 - 50, left: A4W / 2 - 50, width: 100, height: 100, borderWidth: 1, borderColor: '#00FF41', opacity: 0.18 } }),
+        // Crosshairs
+        e(View, { style: { position: 'absolute', top: A4H / 2 - 36, left: A4W / 2, width: 1, height: 26, backgroundColor: '#00FF41', opacity: 0.35 } }),
+        e(View, { style: { position: 'absolute', top: A4H / 2 + 10, left: A4W / 2, width: 1, height: 26, backgroundColor: '#00FF41', opacity: 0.35 } }),
+        e(View, { style: { position: 'absolute', top: A4H / 2, left: A4W / 2 - 36, width: 26, height: 1, backgroundColor: '#00FF41', opacity: 0.35 } }),
+        e(View, { style: { position: 'absolute', top: A4H / 2, left: A4W / 2 + 10, width: 26, height: 1, backgroundColor: '#00FF41', opacity: 0.35 } }),
+      );
+
     case 'canon-camera':
       return e(
-        React.Fragment,
-        {},
-        e(View, { style: styles.hudCornerTL }),
-        e(View, { style: styles.hudCornerBR }),
+        React.Fragment, {},
+        // Lens ring graphic bleeding off right edge
+        e(View, { style: { position: 'absolute', right: -50, top: 108, width: 250, height: 250, borderRadius: 125, borderWidth: 14, borderColor: '#2A2A2A' } }),
+        e(View, { style: { position: 'absolute', right: -22, top: 136, width: 194, height: 194, borderRadius: 97, borderWidth: 7, borderColor: '#333333' } }),
+        e(View, { style: { position: 'absolute', right: 8, top: 166, width: 134, height: 134, borderRadius: 67, backgroundColor: '#0A0A0A', borderWidth: 3, borderColor: '#E0051E' } }),
+        // Shutter button dot
+        e(View, { style: { position: 'absolute', right: 46, top: 206, width: 50, height: 50, borderRadius: 25, backgroundColor: '#E0051E' } }),
+        // Horizontal red accent stripe
+        e(View, { style: { position: 'absolute', left: 0, top: 370, width: A4W * 0.52, height: 8, backgroundColor: '#E0051E' } }),
       );
+
     case 'ios-core':
+      return e(
+        React.Fragment, {},
+        // App icon grid (2 rows × 3 cols), right side
+        ...Array.from({ length: 2 }, (_, row) =>
+          Array.from({ length: 3 }, (_, col) => {
+            const colors = ['#007AFF', '#34C759', '#FF3B30', '#FF9500', '#AF52DE', '#5AC8FA'];
+            return e(View, { key: `icon-${row}-${col}`, style: { position: 'absolute', right: 52 + col * 72, top: 120 + row * 72, width: 54, height: 54, borderRadius: 12, backgroundColor: colors[row * 3 + col] ?? '#007AFF', opacity: 0.82 } });
+          })
+        ).flat(),
+        // Subtle card outline
+        e(View, { style: { position: 'absolute', left: 40, top: 80, right: 40, bottom: 60, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(0,122,255,0.22)' } }),
+      );
+
     case 'android-core':
+      return e(
+        React.Fragment, {},
+        // Material You surface cards
+        e(View, { style: { position: 'absolute', right: 40, top: 80, width: 190, height: 108, borderRadius: 24, backgroundColor: '#2B2930' } }),
+        e(View, { style: { position: 'absolute', right: 70, top: 206, width: 148, height: 84, borderRadius: 20, backgroundColor: '#2B2930', opacity: 0.65 } }),
+        // Purple glow blob top-left
+        e(View, { style: { position: 'absolute', left: -70, top: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: '#D0BCFF', opacity: 0.10 } }),
+        // Purple accent stripe
+        e(View, { style: { position: 'absolute', left: 0, top: 360, width: A4W, height: 6, backgroundColor: '#D0BCFF', opacity: 0.3 } }),
+      );
+
+    default:
       return null;
+  }
+}
+
+/** Foreground decorations: rendered AFTER the text — borders, HUD chrome, status bars */
+function renderCoverForeground(styleId: DigestStyleId) {
+  switch (styleId) {
+    case 'pop-art':
+      // Thick comic-book inner border frame
+      return e(View, { style: { position: 'absolute', top: 22, left: 22, width: A4_WIDTH - 44, height: A4_HEIGHT - 44, borderWidth: 10, borderColor: '#0D0D0D' } });
+
+    case 'supermarket':
+      // Enhanced barcode at bottom
+      return e(
+        View, { style: { position: 'absolute', bottom: 40, left: 40 } },
+        e(View, { style: { flexDirection: 'row', gap: 2 } },
+          ...[5,2,4,1,3,2,5,1,4,3,2,1,5,2,4,1,3,2,4,5,1,3,2,5,1,4,2,3,1,5].map((w, i) =>
+            e(View, { key: i, style: { height: 56, width: w * 2.8, backgroundColor: '#111111' } })
+          )
+        ),
+        e(View, { style: { marginTop: 4 } },
+          e(Text, { style: { fontFamily: 'Courier', fontSize: 7, color: '#333333', letterSpacing: 3 } }, '4729 0182 3847 0192'),
+        ),
+      );
+
+    case 'camera-interface':
+      return e(
+        React.Fragment, {},
+        // All 4 HUD corners
+        e(View, { style: { position: 'absolute', top: 28, left: 28, width: 64, height: 64, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', top: 28, right: 28, width: 64, height: 64, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', bottom: 28, left: 28, width: 64, height: 64, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', bottom: 28, right: 28, width: 64, height: 64, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#00FF41' } }),
+        // REC badge
+        e(View, { style: { position: 'absolute', top: 44, right: 56, flexDirection: 'row', alignItems: 'center', gap: 8 } },
+          e(View, { style: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#FF0000' } }),
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 14, color: '#00FF41', letterSpacing: 4 } }, 'REC')),
+        ),
+        // Exposure bar
+        e(View, { style: { position: 'absolute', right: 36, top: 140, height: 200, width: 8, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', right: 37, top: 200, height: 140, width: 6, backgroundColor: '#00FF41', opacity: 0.6 } }),
+        // Bottom status line
+        e(View, { style: { position: 'absolute', bottom: 44, left: 44, right: 44, borderTopWidth: 1, borderColor: '#00FF41', paddingTop: 6, flexDirection: 'row', justifyContent: 'space-between' } },
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 8, color: '#00FF41', letterSpacing: 3 } }, 'ISO 400  ·  f/2.8  ·  1/125')),
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: '#00FF41', letterSpacing: 2 } }, '●●●●○')),
+        ),
+      );
+
+    case 'canon-camera':
+      return e(
+        React.Fragment, {},
+        // All 4 HUD corners
+        e(View, { style: { position: 'absolute', top: 28, left: 28, width: 56, height: 56, borderTopWidth: 3, borderLeftWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', top: 28, right: 28, width: 56, height: 56, borderTopWidth: 3, borderRightWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', bottom: 28, left: 28, width: 56, height: 56, borderBottomWidth: 3, borderLeftWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', bottom: 28, right: 28, width: 56, height: 56, borderBottomWidth: 3, borderRightWidth: 3, borderColor: '#E0051E' } }),
+        // Bottom data bar
+        e(View, { style: { position: 'absolute', bottom: 52, left: 44, right: 44, borderTopWidth: 1, borderColor: '#E0051E', paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } },
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 9, color: '#E0051E', letterSpacing: 3 } }, 'EOS TURASUM')),
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier', fontSize: 9, color: '#8A8A8A', letterSpacing: 2 } }, 'RAW  ·  AWB  ·  MF')),
+        ),
+      );
+
+    case 'ios-core':
+      return e(
+        React.Fragment, {},
+        // Status bar
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4_WIDTH, height: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(242,242,247,0.95)' } },
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: '#1C1C1E' } }, '9:41')),
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica', fontSize: 9, color: '#1C1C1E' } }, '■■■ WiFi ████')),
+        ),
+        // Home indicator bar
+        e(View, { style: { position: 'absolute', bottom: 18, left: A4_WIDTH / 2 - 64, width: 128, height: 6, borderRadius: 3, backgroundColor: '#1C1C1E', opacity: 0.2 } }),
+        // Blue app badge
+        e(View, { style: { position: 'absolute', left: 56, top: 48, backgroundColor: '#007AFF', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 5 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#FFFFFF', letterSpacing: 1 } }, 'TURASUM'),
+        ),
+      );
+
+    case 'android-core':
+      return e(
+        React.Fragment, {},
+        // Navigation bar
+        e(View, { style: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 52, backgroundColor: '#2B2930', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 40 } },
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica', fontSize: 20, color: '#D0BCFF' } }, '‹')),
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica', fontSize: 16, color: '#D0BCFF' } }, '○')),
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica', fontSize: 14, color: '#D0BCFF' } }, '□')),
+        ),
+        // FAB
+        e(View, { style: { position: 'absolute', right: 48, bottom: 68, width: 60, height: 60, borderRadius: 18, backgroundColor: '#D0BCFF', alignItems: 'center', justifyContent: 'center' } },
+          e(View, {}, e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 28, color: '#381E72' } }, '+')),
+        ),
+        // Purple badge
+        e(View, { style: { position: 'absolute', left: 56, top: 56, backgroundColor: '#D0BCFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 5 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#381E72', letterSpacing: 1 } }, 'TURASUM'),
+        ),
+      );
+
     default:
       return null;
   }
@@ -370,11 +547,14 @@ export async function generateDigestPdf(
     locations.size > 0 ? `Locations documented: ${[...locations].slice(0, 6).join(' · ')}.` : null,
   ].filter((f): f is string => !!f);
 
-  const coverDecorations = renderCoverDecorations(styleId, styles);
+  const coverBg = renderCoverBackground(styleId, A4_WIDTH, A4_HEIGHT);
+  const coverFg = renderCoverForeground(styleId);
 
   const coverPage = e(
     Page,
     { size: 'A4', style: styles.coverPage },
+    // Background layer — shapes, patterns, bands behind the text
+    coverBg,
     e(
       View,
       { style: styles.coverContainer },
@@ -391,7 +571,8 @@ export async function generateDigestPdf(
         `${bundles.length} trip${bundles.length === 1 ? '' : 's'} filed this season · ${preset.name}`,
       ),
     ),
-    coverDecorations,
+    // Foreground layer — borders, HUD chrome, UI elements over text
+    coverFg,
     // Accent bottom bar on all styles
     e(View, { style: styles.accentBar }),
   );

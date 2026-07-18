@@ -48,16 +48,16 @@ export function FilmReel({
       </div>
 
       {/* Clipped reel window */}
-      <div className="overflow-hidden relative" style={{ height: REEL_HEIGHT }}>
-        {/* Sprocket holes — decorative filmstrip feel */}
-        <div className="absolute top-2 bottom-2 left-0 z-10 flex flex-col justify-around pointer-events-none">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="w-3 h-3 rounded-sm bg-background border border-border/60" />
+      <div className="overflow-hidden relative bg-zinc-900" style={{ height: REEL_HEIGHT }}>
+        {/* Sprocket holes — left and right film perforations */}
+        <div className="absolute top-0 bottom-0 left-0 z-10 flex flex-col justify-around pointer-events-none bg-zinc-950 px-1.5 py-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="w-2.5 h-4 rounded-[2px] bg-zinc-800 border border-zinc-700" />
           ))}
         </div>
-        <div className="absolute top-2 bottom-2 right-0 z-10 flex flex-col justify-around pointer-events-none">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="w-3 h-3 rounded-sm bg-background border border-border/60" />
+        <div className="absolute top-0 bottom-0 right-0 z-10 flex flex-col justify-around pointer-events-none bg-zinc-950 px-1.5 py-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="w-2.5 h-4 rounded-[2px] bg-zinc-800 border border-zinc-700" />
           ))}
         </div>
 
