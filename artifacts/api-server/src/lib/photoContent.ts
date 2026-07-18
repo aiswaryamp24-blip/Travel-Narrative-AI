@@ -18,11 +18,20 @@ export interface PhotoImageBlock {
    * day by time of day (morning arrival, midday exploring, evening meal)
    * instead of treating all photos as interchangeable. */
   takenAt: string | null;
+  /** GPS coordinates from EXIF, when present — passed to Claude so it can
+   * detect when a photo was taken in a different city from the day centroid. */
+  lat: number | null;
+  lon: number | null;
 }
 
 export interface PhotoRef {
   objectPath: string;
   takenAt: string | null;
+  /** GPS from photo EXIF — preserved so narrative.ts can flag per-photo
+   * location discrepancies rather than assuming every photo is from the
+   * same city as the day's centroid. */
+  lat?: number | null;
+  lon?: number | null;
 }
 
 /** Downloads one photo from object storage and downsizes it for vision
@@ -38,7 +47,13 @@ async function loadPhotoImageBlock(photo: PhotoRef): Promise<PhotoImageBlock | n
       .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
       .jpeg({ quality: JPEG_QUALITY })
       .toBuffer();
-    return { mediaType: "image/jpeg", base64: resized.toString("base64"), takenAt: photo.takenAt };
+    return {
+      mediaType: "image/jpeg",
+      base64: resized.toString("base64"),
+      takenAt: photo.takenAt,
+      lat: photo.lat ?? null,
+      lon: photo.lon ?? null,
+    };
   } catch (error) {
     logger.warn({ err: error, objectPath: photo.objectPath }, "Failed to load photo for vision analysis, skipping it");
     return null;

@@ -117,7 +117,12 @@ function buildTools(hasReliableCoordinates: boolean, visualStyle: DigestStyleVal
           visualObservations: {
             type: "string",
             description:
-              "Required scratchpad, written BEFORE the narrative. For EACH photo provided, note literally and specifically: how many people are visible (and any distinguishing appearance/clothing you can actually see), what they are physically doing, the concrete setting/backdrop (street, trail, beach, building, interior, etc.), and any weather/light actually visible in the frame (sunny, overcast, wet ground, etc.). Do not guess or embellish beyond what's visibly there — if a detail isn't visible, don't include it. This is for your own grounding, not shown to the reader.",
+              "Required scratchpad completed BEFORE writing the narrative — mandatory, never skipped. For EACH photo (numbered in order), record with forensic precision: " +
+              "(1) PEOPLE — exact count visible; what they are physically doing (not 'relaxing' but 'sitting at a table with a coffee cup'); visible clothing colour and style; any legible text on clothing or bags; group arrangement. NEVER invent names, ages, or relationships. " +
+              "(2) SETTING — indoors or outdoors? Exact type (restaurant interior, cobbled street, train platform, mountain trail, beach, market stall, etc.); materials and architectural style visible; any signage, vehicle types, or cultural markers that could indicate a country or city; what is in the background. " +
+              "(3) WEATHER & LIGHT — sky colour, cloud cover, shadow direction, wet pavement, umbrellas, coats, snow, dust — only what is literally visible in the frame. Never infer from the season or trip title. " +
+              "(4) GPS CHECK — if this photo has GPS coordinates labeled on it, note them; if they are flagged as far from the day centroid, note the discrepancy and that you will geocode those coordinates. " +
+              "Be blunt and literal — 'cannot determine' is better than a guess. This scratchpad is for your grounding only, not shown to the reader.",
           },
           headline: {
             type: "string",
@@ -126,15 +131,18 @@ function buildTools(hasReliableCoordinates: boolean, visualStyle: DigestStyleVal
           narrative: {
             type: "string",
             description:
-              "A complete short feature (3 tight paragraphs, roughly 180-260 words total) structured like a proper magazine article, not a caption: an opening paragraph that hooks the reader with one specific, concrete scene (never a throat-clearing summary sentence); a middle paragraph carrying the substance of the day" +
+              "A complete short feature (3 tight paragraphs, roughly 180-260 words total) structured like a proper magazine article, not a caption: an opening paragraph that hooks the reader with one specific, concrete scene from visualObservations (never a throat-clearing summary sentence); a middle paragraph carrying the substance of the day" +
               (hasReliableCoordinates
-                ? ", weaving in at least one concrete researched fact (temperature, a named landmark, elevation, precipitation) where the research supports it"
+                ? ", weaving in at least one concrete researched fact (actual temperature with degrees, a named landmark, elevation, precipitation amount) where the research supports it"
                 : "") +
-              "; and a closing paragraph (or final sentence) that actually lands the piece — a specific detail or observation that closes the day, never a trailing-off summary. Every sentence must be traceable to either visualObservations (what's actually in the photos: people, actions, setting)" +
-              (hasReliableCoordinates
-                ? " or the researched facts (weather, location, landmarks)"
-                : " — there are no researched facts available for this day, so do not state a specific place name, temperature, or weather condition unless it is unmistakably visible in a photo") +
-              " — no generic filler like 'wandered the charming streets' unless that's literally what the photos show. Prefer concrete, sensory, specific details over broad summary. Write in third person about 'the travelers'. No markdown headers. " +
+              "; and a closing paragraph (or final sentence) that actually lands the piece — a specific detail or observation that closes the day, never a trailing-off summary. " +
+              "LOCATION ACCURACY IS NON-NEGOTIABLE: if photos were taken in different cities (identified by their GPS coordinates), name each city correctly in the narrative — do not let the trip title, day centroid, or a desire for a tidy story override what the photo GPS actually tells you. A photo labeled as being from a different city MUST be written about as being from that city. " +
+              "WEATHER must come from get_historical_weather data only — never invented. Describe it with the actual recorded temperature (e.g. '29°C') and condition (e.g. 'clear skies', 'light rain — 2.1 mm recorded'). " +
+              "PEOPLE — describe exactly what they are doing (specific action, not 'enjoying themselves'), their visible clothing, their apparent number. No invented names, ages, or identities. " +
+              "SETTING — name specific visible architectural features, street types, vegetation, signage. Never 'charming streets', 'vibrant culture', or any stock phrase that could apply to any city on Earth. " +
+              "Every sentence must be traceable to either visualObservations or researched facts" +
+              (hasReliableCoordinates ? "" : " — no researched facts are available, so do not state a temperature, condition, or place name unless visible in a photo") +
+              ". Write in third person. No markdown. " +
               voice,
           },
         },
@@ -173,6 +181,22 @@ export interface DayStoryResult {
   weather: WeatherResult | null;
   landmarks: LandmarkResult[];
   elevationMeters: number | null;
+}
+
+/** Approximate distance (km) above which a photo's own GPS is considered to
+ * be from a genuinely different city rather than just GPS drift/noise. */
+const LOCATION_DISCREPANCY_KM = 30;
+
+/** Inline haversine — avoids importing from geo.ts to keep narrative.ts
+ * self-contained, and is called at most once per photo per day. */
+function photoDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 /** Formats an ISO capture timestamp as a plain local-looking time (e.g.
@@ -246,24 +270,29 @@ ${
 Accuracy rules — follow these strictly, since real people will read this as a factual account of their own trip:
 ${
   hasPhotos
-    ? `- First, fill in visualObservations by literally describing each provided photo: how many people are visible (described generically — e.g. "a couple", "a group of friends" — never invent names, ages, or identities you can't actually know), what they're doing, the setting, and any weather/light actually visible. This is mandatory grounding work, not optional — do it even if it feels repetitive.`
-    : `- You have no photos to look at for this day. Note that in visualObservations, and keep the narrative grounded strictly in whatever real facts you have (if any) rather than inventing scenes or activity you can't verify.`
+    ? `- First, complete visualObservations for each photo with forensic precision before writing anything else — it is mandatory, not optional. Cover all four categories: people (count, action, clothing details), setting (type, materials, visible cultural markers), weather/light (only what is literally visible in the frame), and GPS check (note the coordinates and any discrepancy flag). "Cannot determine" is always better than a guess.`
+    : `- You have no photos for this day. Note that in visualObservations and keep the narrative grounded strictly in researched facts rather than inventing scenes.`
 }
 ${
   hasReliableCoordinates
-    ? `- Weather in the narrative is ground truth ONLY from get_historical_weather's "conditions" and "precipitationMm" fields — never mention rain, drizzle, showers, snow, or storms unless precipitationMm is greater than 0 or "conditions" explicitly names that precipitation type. If precipitationMm is 0 or null, describe the day as dry. Do not upgrade "partly cloudy" into anything wetter than what the tool returned, and do not invent atmospheric details (fog, humidity, wind chill, etc.) that aren't in the tool's data. You may describe visible light/sky (golden hour, bright midday sun) if it's actually visible in a photo and doesn't contradict the tool's data.`
-    : `- You have no weather data for this day. Do not state a specific temperature, condition (rain, sun, snow, etc.), or forecast-style claim — you may only describe weather/light that is unmistakably visible in a photo (e.g. visibly wet ground, snow on the ground, bright sunlight), and even then, describe just what's visible rather than asserting a broader daily forecast.`
+    ? `- LOCATION ACCURACY — CRITICAL: Photos below are labeled with their individual GPS coordinates. When a photo is flagged "⚠️ DIFFERENT CITY", its GPS places it ${LOCATION_DISCREPANCY_KM}+ km from the day centroid — it was physically taken in a different place. You MUST call reverse_geocode with THAT PHOTO'S coordinates (not the day centroid) to identify the real location. Write about that photo using its actual location. The trip title and day centroid do NOT override individual photo GPS — photo GPS is ground truth. This is the most common cause of factual errors in travel narratives.`
+    : ``
 }
-- The narrative must be built from visualObservations plus whatever real researched facts are available — every sentence should trace back to one of those sources, never invented. No stock travel-writing filler ("wandered the charming streets", "a tapestry of culture", "as the sun dipped below the horizon") unless it's literally what a photo shows.
 ${
   hasReliableCoordinates
-    ? `- The narrative text itself (not just the locationName field) must explicitly name the city/town and country visited that day at least once, in prose — don't leave the reader to infer it only from the headline or metadata.`
-    : `- Do not name a specific city, region, or country unless it is unambiguously identifiable from the photos themselves (e.g. legible signage, an unmistakable famous landmark) — if you can't be sure, describe the setting generically instead of guessing a place name.`
+    ? `- Weather in the narrative comes ONLY from get_historical_weather's actual returned values — include the real temperature in degrees and the exact condition string. Never mention precipitation (rain, drizzle, snow, storms) unless precipitationMm > 0 or the conditions field explicitly names it. Never invent atmospheric details not in the tool data. You may additionally describe sky/light that is literally visible in a photo if it doesn't contradict the tool data.`
+    : `- You have no weather data. Do not state any temperature or weather condition — only describe light or weather that is unmistakably visible in a photo frame (wet pavement, snow on ground, bright sunlight casting shadows).`
 }
-- If people are visible in photos, describe what they're actually doing (the action) rather than just noting their presence — specificity here is what makes the story feel true to the day.
-- Do not describe activities, objects, or people that aren't visible in the provided photos, and don't state a numeric distance traveled in the narrative — the app displays that separately.
-${hasPhotos ? `- Each photo below is labeled with its capture time. Use that to give the day genuine temporal shape — how it began, what happened by midday, how it wound down — rather than describing the photos as an undifferentiated list. Only reference specific times/sequence you can actually see in those labels, don't invent a schedule.\n` : ""}- ${voice}
-- Structure the piece like a proper feature article, not a photo caption: a hook to open, the substance of the day in the middle${hasReliableCoordinates ? " (grounded in at least one concrete researched fact when the research supports it)" : ""}, and a closing line that actually closes — never trail off into a summary sentence. Three tight, information-dense paragraphs beat two thin ones or five padded ones. Cut any sentence that isn't doing real work.`;
+- Every sentence in the narrative must be traceable to either visualObservations (what is literally visible) or researched tool data. Zero invented detail. No stock filler ("charming streets", "tapestry of culture", "as the sun dipped", "vibrant atmosphere") — these phrases are banned. If you catch yourself writing one, replace it with a specific visual or factual detail.
+- Describe people by their exact visible action, not mood or intent: "stood at a counter holding a paper cup" not "enjoyed a morning coffee". Describe weather with the actual recorded temperature and condition from tool data, not impressions.
+${
+  hasReliableCoordinates
+    ? `- The narrative must name the city/country of each location explicitly in prose at least once — especially when photos came from different cities.`
+    : `- Do not name a specific city or country unless it is unambiguously identifiable from photos (legible signage, unmistakable landmark).`
+}
+- Do not invent activities, objects, or people not visible in photos. Do not state numeric distance traveled — the app shows that separately.
+${hasPhotos ? `- Each photo is labeled with its capture time and GPS (where available). Use the time sequence to give the day genuine temporal shape. Only reference times you can see in the labels.\n` : ""}- ${voice}
+- Structure like a proper magazine feature: a hook that opens on one specific concrete scene; substance in the middle grounded in real facts; a closing line that actually ends the day — never a trailing summary. Three dense paragraphs. Cut every sentence that isn't doing real work.`;
 
   const userText = `Day ${ctx.dayIndex + 1} — date: ${ctx.date}
 ${hasReliableCoordinates ? `Coordinates: ${ctx.lat.toFixed(4)}, ${ctx.lon.toFixed(4)}\n` : ""}Photos taken that day: ${ctx.photoCount}${hasPhotos ? ` (${ctx.photoImages.length} attached below for you to look at, each labeled with its capture time)` : ""}
@@ -274,8 +303,26 @@ Research this day and write the story.`;
     { type: "text", text: userText },
     ...ctx.photoImages.flatMap((img) => {
       const time = formatPhotoTime(img.takenAt);
+      const parts: string[] = [];
+      if (time) parts.push(`taken at ${time}`);
+
+      // Attach per-photo GPS so Claude can detect location discrepancies.
+      // When the photo's own GPS differs significantly from the day centroid,
+      // flag it explicitly — this is the primary mechanism for catching "Polish
+      // photo on a Prague day" style errors.
+      if (img.lat != null && img.lon != null && hasReliableCoordinates) {
+        const distKm = photoDistanceKm(ctx.lat, ctx.lon, img.lat, img.lon);
+        parts.push(`GPS: ${img.lat.toFixed(4)}, ${img.lon.toFixed(4)}`);
+        if (distKm > LOCATION_DISCREPANCY_KM) {
+          parts.push(
+            `⚠️ DIFFERENT CITY — ${Math.round(distKm)} km from day centroid. Geocode these coordinates separately and write about this photo using its real location, not the day centroid.`,
+          );
+        }
+      }
+
+      const label = parts.length > 0 ? `Photo ${parts.join(" | ")}:` : "Photo:";
       return [
-        ...(time ? [{ type: "text" as const, text: `Photo taken at ${time}:` }] : []),
+        { type: "text" as const, text: label },
         {
           type: "image" as const,
           source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },

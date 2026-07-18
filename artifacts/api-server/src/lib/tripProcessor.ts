@@ -127,6 +127,11 @@ export async function processTrip(tripId: number): Promise<void> {
           sampleForVision(dayPhotoRecords).map((p) => ({
             objectPath: p.objectPath,
             takenAt: p.takenAt ? p.takenAt.toISOString() : null,
+            // Pass individual photo GPS so narrative.ts can detect when a
+            // photo was taken far from the day centroid (e.g. a Polish photo
+            // on a Prague day) and instruct Claude to geocode it separately.
+            lat: p.lat ?? null,
+            lon: p.lon ?? null,
           })),
         );
 
