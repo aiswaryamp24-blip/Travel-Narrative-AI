@@ -109,10 +109,25 @@ function buildStyles(p: DigestStylePreset) {
     },
     statBox: {
       width: '47%',
-      borderWidth: 1,
-      borderColor: p.surface,
-      backgroundColor: p.surface,
       padding: 18,
+      ...(((): object => {
+        switch (p.id) {
+          case 'pop-art':
+            return { borderWidth: 4, borderColor: '#0D0D0D', backgroundColor: '#FFFFFF' };
+          case 'supermarket':
+            return { borderWidth: 0, borderTopWidth: 2, borderTopColor: '#CC0000', borderBottomWidth: 1, borderBottomColor: '#CCCCCC', backgroundColor: 'transparent' };
+          case 'camera-interface':
+            return { borderWidth: 1, borderColor: '#00FF41', backgroundColor: '#1A1A1A' };
+          case 'canon-camera':
+            return { borderWidth: 0, borderLeftWidth: 4, borderLeftColor: '#E0051E', backgroundColor: '#2A2A2A' };
+          case 'ios-core':
+            return { borderWidth: 0, borderLeftWidth: 3, borderLeftColor: '#007AFF', backgroundColor: '#FFFFFF' };
+          case 'android-core':
+            return { borderWidth: 1, borderColor: '#D0BCFF', backgroundColor: '#2B2930' };
+          default:
+            return { borderWidth: 1, borderColor: p.surface, backgroundColor: p.surface };
+        }
+      })()),
     },
     statLabel: {
       fontFamily: p.monoFont,
@@ -566,6 +581,137 @@ function renderCoverForeground(styleId: DigestStyleId) {
   }
 }
 
+/** Style-specific header chrome for the stats page — rendered as first child (flow, not absolute) */
+function renderStatsChrome(styleId: DigestStyleId) {
+  switch (styleId) {
+    case 'pop-art':
+      return e(
+        View,
+        { style: { backgroundColor: '#E8112D', marginLeft: -56, marginRight: -56, marginTop: -56, paddingHorizontal: 56, paddingTop: 28, paddingBottom: 22, marginBottom: 32 } },
+        e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 9, color: '#FFEC00', letterSpacing: 6 } }, 'DISPATCH · FIELD REPORT'),
+        e(Text, { style: { fontFamily: 'Times-Bold', fontSize: 40, color: '#FFFFFF', lineHeight: 1.05, marginTop: 6 } }, 'THE\nNUMBERS'),
+        e(View, { style: { height: 4, backgroundColor: '#FFEC00', marginTop: 16 } }),
+      );
+    case 'supermarket':
+      return e(
+        View,
+        { style: { marginBottom: 20 } },
+        e(View, { style: { height: 4, backgroundColor: '#CC0000' } }),
+        e(View, { style: { height: 1, backgroundColor: '#CC0000', marginTop: 4 } }),
+        e(View, { style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 } },
+          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 8, color: '#CC0000', letterSpacing: 3 } }, 'ITEM SUMMARY'),
+          e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: '#555555', letterSpacing: 2 } }, 'REF: TCW-001'),
+        ),
+      );
+    case 'camera-interface':
+      return e(
+        View,
+        { style: { marginBottom: 24 } },
+        e(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 } },
+          e(View, { style: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#00FF41' } }),
+          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 9, color: '#00FF41', letterSpacing: 5 } }, 'STATS READOUT'),
+          e(View, { style: { flex: 1, height: 1, backgroundColor: '#00FF41', opacity: 0.4 } }),
+        ),
+        ...Array.from({ length: 4 }, (_, i) =>
+          e(View, { key: i, style: { height: 1, backgroundColor: '#00FF41', opacity: 0.08, marginBottom: 10 } }),
+        ),
+      );
+    case 'canon-camera':
+      return e(
+        View,
+        { style: { marginBottom: 20 } },
+        e(View, { style: { height: 6, backgroundColor: '#E0051E', marginLeft: -56, marginRight: -56, marginTop: -56, marginBottom: 24 } }),
+        e(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 10 } },
+          e(View, { style: { width: 4, height: 28, backgroundColor: '#E0051E' } }),
+          e(Text, { style: { fontFamily: 'Courier', fontSize: 9, color: '#E0051E', letterSpacing: 3 } }, 'EOS TURASUM · DATA'),
+        ),
+      );
+    case 'ios-core':
+      return e(
+        View,
+        { style: { backgroundColor: '#007AFF', marginLeft: -56, marginRight: -56, marginTop: -56, paddingHorizontal: 56, paddingTop: 24, paddingBottom: 20, marginBottom: 32 } },
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: 'rgba(255,255,255,0.72)', letterSpacing: 3 } }, 'TRIP CORRESPONDENT'),
+        e(Text, { style: { fontFamily: 'Times-Bold', fontSize: 32, color: '#FFFFFF', marginTop: 4 } }, 'Stats'),
+        e(View, { style: { height: 2, backgroundColor: 'rgba(255,255,255,0.3)', marginTop: 14 } }),
+      );
+    case 'android-core':
+      return e(
+        View,
+        { style: { backgroundColor: '#D0BCFF', marginLeft: -56, marginRight: -56, marginTop: -56, paddingHorizontal: 56, paddingTop: 24, paddingBottom: 20, marginBottom: 32 } },
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 8, color: '#381E72', letterSpacing: 3 } }, 'CORRESPONDENT · WRAPPED'),
+        e(Text, { style: { fontFamily: 'Times-BoldItalic', fontSize: 32, color: '#1C1B1F', marginTop: 4 } }, 'The Numbers'),
+      );
+    default:
+      return null;
+  }
+}
+
+/** Style-specific chrome overlaid on each highlight (photo spread) page */
+function renderHighlightChrome(styleId: DigestStyleId) {
+  switch (styleId) {
+    case 'pop-art':
+      return e(
+        React.Fragment, {},
+        // Thick black border over the whole page
+        e(View, { style: { position: 'absolute', top: 14, left: 14, width: A4_WIDTH - 28, height: A4_HEIGHT - 28, borderWidth: 7, borderColor: '#0D0D0D' } }),
+        // Yellow stripe at the very top
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4_WIDTH, height: 28, backgroundColor: '#FFEC00', borderBottomWidth: 5, borderBottomColor: '#0D0D0D' } }),
+        e(View, { style: { position: 'absolute', top: 7, left: 24 } },
+          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 9, color: '#0D0D0D', letterSpacing: 5 } }, 'TURASUM DISPATCH'),
+        ),
+      );
+    case 'supermarket':
+      return e(
+        View,
+        { style: { position: 'absolute', bottom: 0, left: 0, width: A4_WIDTH, height: 36, backgroundColor: 'rgba(255,255,255,0.95)', borderTopWidth: 3, borderTopColor: '#CC0000', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 32 } },
+        e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 7, color: '#CC0000', letterSpacing: 3 } }, 'TURASUM STORES'),
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 7, color: '#555555', letterSpacing: 2 } }, 'FIELD PHOTO RECORD'),
+      );
+    case 'camera-interface':
+      return e(
+        React.Fragment, {},
+        // 4 HUD corners on the full page
+        e(View, { style: { position: 'absolute', top: 22, left: 22, width: 56, height: 56, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', top: 22, right: 22, width: 56, height: 56, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', bottom: 22, left: 22, width: 56, height: 56, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#00FF41' } }),
+        e(View, { style: { position: 'absolute', bottom: 22, right: 22, width: 56, height: 56, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#00FF41' } }),
+        // REC indicator
+        e(View, { style: { position: 'absolute', top: 36, right: 40, flexDirection: 'row', alignItems: 'center', gap: 6 } },
+          e(View, { style: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF0000' } }),
+          e(View, {}, e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 11, color: '#00FF41', letterSpacing: 3 } }, 'REC')),
+        ),
+      );
+    case 'canon-camera':
+      return e(
+        React.Fragment, {},
+        // 4 HUD corners
+        e(View, { style: { position: 'absolute', top: 22, left: 22, width: 48, height: 48, borderTopWidth: 3, borderLeftWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', top: 22, right: 22, width: 48, height: 48, borderTopWidth: 3, borderRightWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', bottom: 22, left: 22, width: 48, height: 48, borderBottomWidth: 3, borderLeftWidth: 3, borderColor: '#E0051E' } }),
+        e(View, { style: { position: 'absolute', bottom: 22, right: 22, width: 48, height: 48, borderBottomWidth: 3, borderRightWidth: 3, borderColor: '#E0051E' } }),
+        // Red stripe above overlay
+        e(View, { style: { position: 'absolute', bottom: 160, left: 0, width: A4_WIDTH * 0.5, height: 5, backgroundColor: '#E0051E' } }),
+      );
+    case 'ios-core':
+      return e(
+        View,
+        { style: { position: 'absolute', top: 0, left: 0, width: A4_WIDTH, height: 36, backgroundColor: 'rgba(242,242,247,0.96)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24 } },
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 11, color: '#1C1C1E' } }, '9:41'),
+        e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#1C1C1E' } }, 'TURASUM'),
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 9, color: '#1C1C1E' } }, '■ WiFi ████'),
+      );
+    case 'android-core':
+      return e(
+        View,
+        { style: { position: 'absolute', top: 0, left: 0, width: A4_WIDTH, height: 28, backgroundColor: 'rgba(28,27,31,0.85)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 } },
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 9, color: '#D0BCFF' } }, '9:41'),
+        e(Text, { style: { fontFamily: 'Courier', fontSize: 9, color: '#D0BCFF' } }, '●●●● WiFi'),
+      );
+    default:
+      return null;
+  }
+}
+
 /** Render the style-specific kicker on highlight pages */
 function renderHighlightKicker(styleId: DigestStyleId, styles: ReturnType<typeof buildStyles>) {
   switch (styleId) {
@@ -677,7 +823,10 @@ export async function generateDigestPdf(
   const statsPage = e(
     Page,
     { size: 'A4', style: styles.statsPage },
-    e(Text, { style: styles.sectionTitle }, 'The Numbers'),
+    renderStatsChrome(styleId),
+    // Title suppressed for styles that render it inside their chrome header
+    !['pop-art', 'ios-core', 'android-core'].includes(styleId) &&
+      e(Text, { style: styles.sectionTitle }, 'The Numbers'),
     e(
       View,
       { style: styles.statsGrid },
@@ -792,6 +941,7 @@ export async function generateDigestPdf(
           e(Text, { style: styles.highlightTitle }, trip.title),
           headline && e(Text, { style: styles.highlightHeadline }, headline),
         ),
+        renderHighlightChrome(styleId),
       ),
     ),
   );

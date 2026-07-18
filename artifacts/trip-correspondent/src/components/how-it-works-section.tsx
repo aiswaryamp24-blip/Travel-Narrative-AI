@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { animate, svg, stagger, spring } from 'animejs';
-import { Camera, Newspaper, Volume2 } from 'lucide-react';
+import { Camera, Newspaper, Bus, PlaneTakeoff } from 'lucide-react';
 
 const STEPS = [
   {
@@ -17,13 +17,13 @@ const STEPS = [
   },
   {
     step: '03',
-    icon: <img src="/icon-plane.png" alt="" className="h-5 w-5 object-contain" />,
+    icon: <Bus className="h-5 w-5" />,
     title: 'Route Map & Stats',
     description: 'See your journey traced on a map with distance, countries, and conditions summarised at a glance.',
   },
   {
     step: '04',
-    icon: <Volume2 className="h-5 w-5" />,
+    icon: <PlaneTakeoff className="h-5 w-5" />,
     title: 'Listen & Export',
     description: 'Hear each day narrated aloud, share a story card, or export the whole trip as a keepsake edition.',
   },
