@@ -40,7 +40,7 @@ export default function Landing() {
           No bottom border: the indigo reveal bleeds seamlessly into
           the How It Works section that sits immediately below. */}
       <header className="relative">
-        <DayNightHero daySrc="/window-interior.jpg" nightSrc="/window-interior.jpg">
+        <DayNightHero daySrc="/window-interior.jpg" nightSrc="/window-interior.jpg" portalItems={stripItems}>
           <div
             className="font-mono text-[9px] uppercase tracking-[0.5em] text-white mb-6 inline-block"
             style={{

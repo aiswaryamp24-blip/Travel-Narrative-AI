@@ -1,5 +1,6 @@
-import { useRef, type ReactNode } from 'react';
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import { useRef, useState, useEffect, type ReactNode } from 'react';
+import { motion, useScroll, useTransform, useReducedMotion, useAnimationFrame, useMotionValue } from 'framer-motion';
+import type { StripItem } from './scroll-velocity-strip';
 
 /**
  * Plane-window portal scroll hero.
@@ -11,10 +12,11 @@ import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion
  * section immediately below — reading as flying through the window rather
  * than hitting a hard cut when the pin releases.
  *
- * Three-layer stack (bottom → top):
+ * Four-layer stack (bottom → top):
  *   1. Cobalt grid scene  — always present, revealed through the portal
  *   2. Plane image        — scales toward the window (transform-origin pinned there)
- *   3. Cobalt reveal      — clip-path:circle() grows from window position
+ *   3. Cobalt reveal      — clip-path:circle() grows from window position,
+ *                           contains a live trip-preview strip + destination names
  *   4. Content            — headline / CTA, fades out early in the scroll
  *
  * prefers-reduced-motion → static hero; no scroll effects.
@@ -30,19 +32,146 @@ const GRID_BG = [
 const WIN_X = 50; // % from left
 const WIN_Y = 40; // % from top
 
+// Curated sample shown when no real trips are available.
+// Solid-color thumbnails paired with evocative destination names.
+const SAMPLE_PORTAL_ITEMS: StripItem[] = [
+  { id: 'sample-1', src: '', label: 'Kyoto, Japan' },
+  { id: 'sample-2', src: '', label: 'Patagonia, Argentina' },
+  { id: 'sample-3', src: '', label: 'Santorini, Greece' },
+  { id: 'sample-4', src: '', label: 'Marrakech, Morocco' },
+  { id: 'sample-5', src: '', label: 'Reykjavik, Iceland' },
+];
+
+// Hues for sample cards when no photo is available
+const SAMPLE_HUES = [230, 180, 20, 10, 200];
+
+/** Auto-drifting strip used inside the portal reveal. No velocity coupling needed — it
+ *  animates at a constant pace independently of scroll. */
+function PortalStrip({ items }: { items: StripItem[] }) {
+  const baseX = useMotionValue(0);
+  const SPEED = -28; // px/s
+
+  useAnimationFrame((_, delta) => {
+    baseX.set(baseX.get() + SPEED * (delta / 1000));
+  });
+
+  // Wrap: seamlessly loop between -50% and 0%
+  const x = useTransform(baseX, (v) => {
+    const range = 50;
+    const mod = ((((-v) % range) + range) % range);
+    return `-${mod}%`;
+  });
+
+  const doubled = [...items, ...items];
+
+  return (
+    <div className="overflow-hidden w-full">
+      <motion.div className="flex gap-3 w-fit" style={{ x }}>
+        {doubled.map((item, i) => {
+          const sampleHue = SAMPLE_HUES[i % SAMPLE_HUES.length];
+          return (
+            <div
+              key={`${item.id}-${i}`}
+              className="relative shrink-0 overflow-hidden"
+              style={{ width: 160, height: 200, borderRadius: 4 }}
+            >
+              {item.src ? (
+                <img
+                  src={item.src}
+                  alt={item.label}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <div
+                  className="w-full h-full"
+                  style={{
+                    background: `linear-gradient(135deg, hsl(${sampleHue} 45% 30%), hsl(${sampleHue + 30} 55% 20%))`,
+                  }}
+                />
+              )}
+              {/* gradient overlay + label */}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 40%, transparent 80%)' }}
+              />
+              <span
+                className="absolute bottom-0 left-0 right-0 px-3 py-2 font-serif italic text-white leading-tight"
+                style={{ fontSize: 12 }}
+              >
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+}
+
+/** Cycles through destination names with a crossfade every 2.2 s. */
+function DestinationCycler({ labels }: { labels: string[] }) {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (labels.length <= 1) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % labels.length), 2200);
+    return () => clearInterval(id);
+  }, [labels.length]);
+
+  return (
+    <div className="relative h-8 overflow-hidden flex items-center justify-center">
+      {labels.map((label, i) => (
+        <motion.span
+          key={label}
+          className="absolute font-mono text-[10px] uppercase tracking-[0.35em] text-indigo-300/80 whitespace-nowrap"
+          initial={{ opacity: 0, y: 6 }}
+          animate={i === idx ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
+          transition={{ duration: 0.55, ease: 'easeInOut' }}
+        >
+          {label}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
+/** Content shown inside the expanding portal circle once it's large enough. */
+function PortalContent({ items }: { items: StripItem[] }) {
+  const labels = items.map((it) => it.label);
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 w-full">
+      <DestinationCycler labels={labels} />
+      <PortalStrip items={items} />
+      <div
+        className="font-serif italic text-indigo-300/60 text-[11px] tracking-wide"
+        style={{ marginTop: 2 }}
+      >
+        stories from every corner
+      </div>
+    </div>
+  );
+}
+
 export function DayNightHero({
   daySrc,
   nightSrc: _nightSrc, // kept for API compat; no longer used for crossfade
   children,
+  portalItems,
   scrollHeight = '280vh',
 }: {
   daySrc: string;
   nightSrc: string;
   children: ReactNode;
+  /** Real trip strip items from discoverFeed; falls back to curated samples. */
+  portalItems?: StripItem[];
   scrollHeight?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
+
+  const effectiveItems =
+    portalItems && portalItems.length >= 2 ? portalItems : SAMPLE_PORTAL_ITEMS;
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -69,7 +198,17 @@ export function DayNightHero({
     (r) => `circle(${r}% at ${WIN_X}% ${WIN_Y}%)`,
   );
 
-  /* ── 3. Headline content ───────────────────────────────────────────
+  /* ── 3. Portal content fade-in ─────────────────────────────────────
+     Content appears only after the portal radius reaches ~30% (readable).
+     radius=30% corresponds to scrollYProgress ≈ 0.21 (linear interp of
+     the [0.08,0.78]→[0,160] segment). Add a small lag for comfort. */
+  const portalContentOpacity = useTransform(
+    scrollYProgress,
+    [0.22, 0.38],
+    [0, 1],
+  );
+
+  /* ── 4. Headline content ───────────────────────────────────────────
      Fades out and scales slightly as the viewer starts moving. */
   const contentOpacity = useTransform(
     scrollYProgress,
@@ -132,7 +271,9 @@ export function DayNightHero({
         {/* Same cobalt grid as Layer 1; clip-path grows from the window
             position, reading as "flying through" the window into the
             next section. Once radius reaches 200% this layer floods the
-            entire viewport and the pin releases seamlessly. */}
+            entire viewport and the pin releases seamlessly.
+            The portal content (photo strip + destination names) layers
+            over the grid inside this circle. */}
         <motion.div
           className="absolute inset-0"
           style={{
@@ -141,10 +282,20 @@ export function DayNightHero({
             willChange: 'clip-path',
           }}
         >
+          {/* Grid base */}
           <div
             className="absolute inset-0"
             style={{ backgroundImage: GRID_BG }}
           />
+
+          {/* Portal content — fades in when circle is large enough to read */}
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden"
+            style={{ opacity: portalContentOpacity }}
+            aria-hidden="true"
+          >
+            <PortalContent items={effectiveItems} />
+          </motion.div>
         </motion.div>
 
         {/* ── Layer 4: headline / CTA — fades early ────────────────── */}
