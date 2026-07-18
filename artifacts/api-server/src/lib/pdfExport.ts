@@ -231,9 +231,18 @@ export async function generateTripPdf(
   const objectStorageService = new ObjectStorageService();
   const sortedDays = [...days].sort((a, b) => a.dayIndex - b.dayIndex);
 
+  // Prefer the trip's explicit cover photo; fall back to the hero photo of the
+  // first day so that older trips (processed before coverObjectPath was set)
+  // still get a real photo on their PDF cover instead of a solid colour block.
+  const firstDay = sortedDays[0];
+  const firstDayHeroPhoto = firstDay
+    ? (photos.find((p) => p.id === firstDay.heroPhotoId) ?? null)
+    : null;
+  const coverPath = trip.coverObjectPath ?? firstDayHeroPhoto?.objectPath ?? null;
+
   const coverImage = await fetchEmbeddableImage(
     objectStorageService,
-    trip.coverObjectPath,
+    coverPath,
     1600,
   );
 

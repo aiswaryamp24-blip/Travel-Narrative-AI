@@ -70,6 +70,16 @@ export default function Trip() {
     }
   });
 
+  // Derive an effective cover path: prefer the trip's explicit cover, then fall
+  // back to the hero photo of the first day so older trips don't show a blank header.
+  const effectiveCoverPath = (() => {
+    if (!trip) return null;
+    if (trip.coverObjectPath) return trip.coverObjectPath;
+    const firstDay = [...(trip.days ?? [])].sort((a, b) => a.dayIndex - b.dayIndex)[0];
+    if (!firstDay?.heroPhotoId) return null;
+    return trip.photos?.find((p) => p.id === firstDay.heroPhotoId)?.objectPath ?? null;
+  })();
+
   if (isLoading) {
     return <TripSkeleton />;
   }
@@ -276,10 +286,10 @@ export default function Trip() {
       <main>
         {/* Cover Feature */}
         <header className="relative min-h-[80vh] flex flex-col items-center justify-center p-6 bg-secondary text-secondary-foreground border-b-8 border-primary">
-          {trip.coverObjectPath && (
+          {effectiveCoverPath && (
             <div className="absolute inset-0 z-0">
               <img 
-                src={`/api/storage${trip.coverObjectPath}`} 
+                src={`/api/storage${effectiveCoverPath}`} 
                 alt="Cover" 
                 className="w-full h-full object-cover opacity-50"
               />

@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { Bike, Train, Car, Bus, PlaneTakeoff } from 'lucide-react';
 
 const ICONS = [
-  { src: '/icon-bike.png',  label: 'Needs the SOS button',  alt: 'bike' },
-  { src: '/icon-train.png', label: 'Bumpy road ahead',       alt: 'train' },
-  { src: '/icon-car.png',   label: 'Smooth sailing',         alt: 'car' },
-  { src: '/icon-plane.png', label: 'First class all the way', alt: 'plane' },
-  { src: '/icon-plane.png', label: 'Cleared for takeoff 🌟', alt: 'plane-gold', gold: true },
+  { icon: Bike,         label: 'Needs the SOS button',   alt: 'bike' },
+  { icon: Train,        label: 'Bumpy road ahead',        alt: 'train' },
+  { icon: Car,          label: 'Smooth sailing',          alt: 'car' },
+  { icon: Bus,          label: 'First class all the way', alt: 'bus' },
+  { icon: PlaneTakeoff, label: 'Cleared for takeoff 🌟',  alt: 'plane', gold: true },
 ] as const;
 
 function useStoredRating(tripId: number) {
@@ -93,16 +94,20 @@ export function TripReviews({ tripId }: { tripId: number }) {
                 onMouseLeave={() => setHovered(null)}
                 onClick={() => setRating(val)}
               >
-                <img
-                  src={icon.src}
-                  alt={icon.alt}
-                  className="w-10 h-10 object-contain"
+                <icon.icon
+                  className="w-10 h-10"
                   style={{
-                    filter: ('gold' in icon && icon.gold) && isActive
-                      ? 'drop-shadow(0 0 8px rgba(251,191,36,0.8)) saturate(2) sepia(0.5)'
+                    color: ('gold' in icon && icon.gold) && isActive
+                      ? 'rgb(251,191,36)'
                       : isActive
-                      ? 'drop-shadow(0 0 6px rgba(99,102,241,0.7))'
-                      : 'grayscale(0.5)',
+                      ? 'hsl(var(--primary))'
+                      : 'hsl(var(--muted-foreground))',
+                    filter: ('gold' in icon && icon.gold) && isActive
+                      ? 'drop-shadow(0 0 8px rgba(251,191,36,0.6))'
+                      : isActive
+                      ? 'drop-shadow(0 0 6px rgba(99,102,241,0.5))'
+                      : undefined,
+                    strokeWidth: 1.5,
                   }}
                 />
                 <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
