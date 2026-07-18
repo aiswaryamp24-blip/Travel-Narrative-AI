@@ -76,3 +76,36 @@ describe('generateDigestPdf', () => {
     ).rejects.toThrow(/Unknown digest style ID: "does-not-exist"/);
   });
 });
+
+describe('assertValidPdfBuffer', () => {
+  let assertValidPdfBuffer: (buffer: Buffer) => void;
+
+  beforeAll(async () => {
+    ({ assertValidPdfBuffer } = await import('./digestExport'));
+  });
+
+  it('accepts a buffer that starts with %PDF and meets the minimum size', () => {
+    // Build a synthetic buffer: valid header + enough filler to exceed 1 KB.
+    const header = Buffer.from('%PDF-1.4\n');
+    const filler = Buffer.alloc(1024 - header.length + 1, 0x20); // spaces
+    const valid = Buffer.concat([header, filler]);
+    expect(() => assertValidPdfBuffer(valid)).not.toThrow();
+  });
+
+  it('throws when the buffer is missing the %PDF magic bytes', () => {
+    const malformed = Buffer.alloc(2048, 0x00);
+    expect(() => assertValidPdfBuffer(malformed)).toThrow(/PDF integrity check failed/);
+    expect(() => assertValidPdfBuffer(malformed)).toThrow(/header=/);
+  });
+
+  it('throws when the buffer has the correct header but is too small', () => {
+    // Only 10 bytes — clearly truncated.
+    const truncated = Buffer.from('%PDF-1.4\n');
+    expect(() => assertValidPdfBuffer(truncated)).toThrow(/PDF integrity check failed/);
+    expect(() => assertValidPdfBuffer(truncated)).toThrow(/size=9/);
+  });
+
+  it('throws when the buffer is completely empty', () => {
+    expect(() => assertValidPdfBuffer(Buffer.alloc(0))).toThrow(/PDF integrity check failed/);
+  });
+});

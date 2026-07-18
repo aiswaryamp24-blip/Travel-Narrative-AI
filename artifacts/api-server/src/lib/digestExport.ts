@@ -280,6 +280,24 @@ function formatPeriod(start: Date, end: Date): string {
   return `${fmt(start)} — ${fmt(end)}`;
 }
 
+/**
+ * Checks that a buffer is a plausible PDF: starts with the `%PDF` magic bytes
+ * and exceeds a minimum size threshold. Throws if either condition fails.
+ *
+ * Exported so it can be tested independently of the full render pipeline.
+ */
+export function assertValidPdfBuffer(buffer: Buffer): void {
+  const MIN_PDF_BYTES = 1024; // a real multi-page PDF is always well above 1 KB
+  const header = buffer.slice(0, 4).toString('ascii');
+  if (header !== '%PDF' || buffer.length < MIN_PDF_BYTES) {
+    throw new Error(
+      `PDF integrity check failed: ` +
+        `size=${buffer.length}, header="${header}". ` +
+        `Expected a buffer starting with "%PDF" and at least ${MIN_PDF_BYTES} bytes.`,
+    );
+  }
+}
+
 export type DigestTripBundle = {
   trip: Trip;
   days: TripDay[];
@@ -955,5 +973,7 @@ export async function generateDigestPdf(
     ...highlightPages,
   );
 
-  return renderToBuffer(doc as Parameters<typeof renderToBuffer>[0]);
+  const buffer = await renderToBuffer(doc as Parameters<typeof renderToBuffer>[0]);
+  assertValidPdfBuffer(buffer);
+  return buffer;
 }
