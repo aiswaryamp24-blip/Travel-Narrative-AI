@@ -274,29 +274,100 @@ export type DigestTripBundle = {
 /** Background decorations: rendered BEFORE the text, fills the canvas behind the copy */
 function renderCoverBackground(styleId: DigestStyleId, A4W: number, A4H: number) {
   switch (styleId) {
-    case 'pop-art':
+    case 'pop-art': {
+      // Panel split points
+      const splitX = Math.round(A4W * 0.44);   // vertical divider x
+      const splitY = Math.round(A4H * 0.50);   // horizontal divider y
+
+      // Ben-Day dot grids — full opacity, tight pitch
+      const dotsCyanOnYellow = Array.from({ length: 32 }, (_, row) =>
+        Array.from({ length: 14 }, (_, col) =>
+          e(View, {
+            key: `cy-${row}-${col}`,
+            style: { position: 'absolute', left: splitX + 6 + col * 20, top: row * 20, width: 11, height: 11, borderRadius: 6, backgroundColor: '#00CFFF' },
+          }),
+        )
+      ).flat();
+
+      const dotsWhiteOnRed = Array.from({ length: 18 }, (_, row) =>
+        Array.from({ length: 14 }, (_, col) =>
+          e(View, {
+            key: `wr-${row}-${col}`,
+            style: { position: 'absolute', left: col * 22, top: row * 22, width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFFFFF', opacity: 0.28 },
+          }),
+        )
+      ).flat();
+
+      const dotsMagOnCyan = Array.from({ length: 16 }, (_, row) =>
+        Array.from({ length: 10 }, (_, col) =>
+          e(View, {
+            key: `mc-${row}-${col}`,
+            style: { position: 'absolute', right: col * 22, bottom: row * 22, width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF1493' },
+          }),
+        )
+      ).flat();
+
+      // Comic burst rays (8 rotated bars radiating from focal point ~(420, 260))
+      const burstAngles = [0, 22, 45, 67, 90, 112, 135, 157];
+      const burstRays = burstAngles.map((angle, i) =>
+        e(View, {
+          key: `ray-${i}`,
+          style: {
+            position: 'absolute', top: 200, left: 320,
+            width: 260, height: 5,
+            backgroundColor: '#FFEC00',
+            transform: `rotate(${angle}deg)`,
+          },
+        })
+      );
+
       return e(
         React.Fragment, {},
-        // Solid red header band
-        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4W, height: 72, backgroundColor: '#E8112D' } }),
-        e(View, { style: { position: 'absolute', top: 18, left: 56 } },
-          e(Text, { style: { fontFamily: 'Courier-Bold', fontSize: 18, color: '#FFEC00', letterSpacing: 6 } }, 'TURASUM DISPATCH'),
+
+        // ── PANEL FILLS ──
+        // Full yellow background
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: A4W, height: A4H, backgroundColor: '#FFEC00' } }),
+        // Top-left red panel
+        e(View, { style: { position: 'absolute', top: 0, left: 0, width: splitX, height: splitY, backgroundColor: '#E8112D' } }),
+        // Bottom-right cyan panel
+        e(View, { style: { position: 'absolute', bottom: 0, right: 0, width: A4W - splitX, height: A4H - splitY, backgroundColor: '#00CFFF' } }),
+
+        // ── BEN-DAY DOTS ──
+        ...dotsWhiteOnRed,     // white on red
+        ...dotsCyanOnYellow,   // cyan on yellow (top-right quadrant)
+        ...dotsMagOnCyan,      // magenta on cyan (bottom-right)
+
+        // ── BURST RAYS behind the burst circle ──
+        ...burstRays,
+
+        // ── BURST CIRCLE (action focal point, top-right area) ──
+        e(View, { style: { position: 'absolute', top: 148, left: 300, width: 232, height: 232, borderRadius: 116, backgroundColor: '#FFEC00', borderWidth: 8, borderColor: '#0D0D0D' } }),
+        e(View, { style: { position: 'absolute', top: 184, left: 336, width: 160, height: 160, borderRadius: 80, backgroundColor: '#E8112D', borderWidth: 5, borderColor: '#0D0D0D' } }),
+        e(View, { style: { position: 'absolute', top: 220, left: 372, width: 88, height: 88, borderRadius: 44, backgroundColor: '#FFEC00', borderWidth: 4, borderColor: '#0D0D0D' } }),
+
+        // ── "POW!" onomatopoeia ──
+        e(View, { style: { position: 'absolute', left: 24, bottom: 200 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 92, color: '#FFEC00', letterSpacing: -3 } }, 'POW!'),
         ),
-        // Large red circle bleeding off right edge
-        e(View, { style: { position: 'absolute', right: -90, top: 55, width: 290, height: 290, borderRadius: 145, backgroundColor: '#E8112D' } }),
-        // Ben-day halftone dots — right side
-        ...Array.from({ length: 8 }, (_, row) =>
-          Array.from({ length: 5 }, (_, col) =>
-            e(View, { key: `dot-${row}-${col}`, style: { position: 'absolute', right: 36 + col * 26, top: 368 + row * 26, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E8112D', opacity: 0.22 } }),
-          )
-        ).flat(),
-        // Three bold horizontal stripes
-        e(View, { style: { position: 'absolute', left: 0, top: 374, width: A4W, height: 14, backgroundColor: '#E8112D' } }),
-        e(View, { style: { position: 'absolute', left: 0, top: 392, width: A4W, height: 5, backgroundColor: '#0D0D0D' } }),
-        e(View, { style: { position: 'absolute', left: 0, top: 401, width: A4W, height: 14, backgroundColor: '#E8112D' } }),
-        // Solid black rectangle bottom-left
-        e(View, { style: { position: 'absolute', left: -16, bottom: 56, width: 96, height: 96, backgroundColor: '#0D0D0D' } }),
+        // "POW!" black shadow (offset 4px)
+        e(View, { style: { position: 'absolute', left: 28, bottom: 196 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 92, color: '#0D0D0D', letterSpacing: -3, opacity: 0.65 } }, 'POW!'),
+        ),
+        // Front text (on top)
+        e(View, { style: { position: 'absolute', left: 24, bottom: 200 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 92, color: '#FFEC00', letterSpacing: -3 } }, 'POW!'),
+        ),
+
+        // ── PANEL DIVIDERS (thick black lines) ──
+        e(View, { style: { position: 'absolute', left: splitX - 3, top: 0, width: 6, height: splitY, backgroundColor: '#0D0D0D' } }),
+        e(View, { style: { position: 'absolute', left: 0, top: splitY - 3, width: A4W, height: 6, backgroundColor: '#0D0D0D' } }),
+
+        // ── DISPATCH BADGE (top-left corner) ──
+        e(View, { style: { position: 'absolute', top: 20, left: 20, backgroundColor: '#FFEC00', borderWidth: 3, borderColor: '#0D0D0D', paddingHorizontal: 12, paddingVertical: 5 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 13, color: '#0D0D0D', letterSpacing: 3 } }, 'DISPATCH'),
+        ),
       );
+    }
 
     case 'supermarket':
       return e(
@@ -387,8 +458,21 @@ function renderCoverBackground(styleId: DigestStyleId, A4W: number, A4H: number)
 function renderCoverForeground(styleId: DigestStyleId) {
   switch (styleId) {
     case 'pop-art':
-      // Thick comic-book inner border frame
-      return e(View, { style: { position: 'absolute', top: 22, left: 22, width: A4_WIDTH - 44, height: A4_HEIGHT - 44, borderWidth: 10, borderColor: '#0D0D0D' } });
+      return e(
+        React.Fragment, {},
+        // Thick comic-book outer border frame
+        e(View, { style: { position: 'absolute', top: 14, left: 14, width: A4_WIDTH - 28, height: A4_HEIGHT - 28, borderWidth: 8, borderColor: '#0D0D0D' } }),
+        // Speech bubble — bottom-right corner
+        e(View, { style: { position: 'absolute', right: 30, bottom: 108, backgroundColor: '#FFFFFF', borderWidth: 5, borderColor: '#0D0D0D', borderRadius: 18, paddingHorizontal: 16, paddingVertical: 10, width: 196 } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 13, color: '#0D0D0D', textAlign: 'center', lineHeight: 1.35 } }, 'OH! WHAT A\nJOURNEY!'),
+        ),
+        // Speech bubble tail (triangle approximation — two overlapping squares)
+        e(View, { style: { position: 'absolute', right: 178, bottom: 100, width: 18, height: 18, backgroundColor: '#FFFFFF', borderLeftWidth: 5, borderBottomWidth: 5, borderColor: '#0D0D0D', transform: 'rotate(-25deg)' } }),
+        // "No. 1" badge circle top-right
+        e(View, { style: { position: 'absolute', top: 38, right: 38, width: 62, height: 62, borderRadius: 31, backgroundColor: '#FFEC00', borderWidth: 5, borderColor: '#0D0D0D', alignItems: 'center', justifyContent: 'center' } },
+          e(Text, { style: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#0D0D0D', textAlign: 'center', lineHeight: 1.2 } }, 'No.\n1'),
+        ),
+      );
 
     case 'supermarket':
       // Enhanced barcode at bottom
