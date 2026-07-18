@@ -27,10 +27,10 @@ const GRID_BG = [
   'repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(99,102,241,0.06) 39px, rgba(99,102,241,0.06) 40px)',
 ].join(', ');
 
-// Viewport-% position of the oval window in the interior cabin image.
+// Default viewport-% position of the oval window in the interior cabin image.
 // Window is centred in the frame and sits in the upper half.
-const WIN_X = 50; // % from left
-const WIN_Y = 40; // % from top
+const DEFAULT_WIN_X = 50; // % from left
+const DEFAULT_WIN_Y = 40; // % from top
 
 // Curated sample shown when no real trips are available.
 // Solid-color thumbnails paired with evocative destination names.
@@ -159,6 +159,8 @@ export function DayNightHero({
   children,
   portalItems,
   scrollHeight = '280vh',
+  windowX = DEFAULT_WIN_X,
+  windowY = DEFAULT_WIN_Y,
 }: {
   daySrc: string;
   nightSrc: string;
@@ -166,6 +168,20 @@ export function DayNightHero({
   /** Real trip strip items from discoverFeed; falls back to curated samples. */
   portalItems?: StripItem[];
   scrollHeight?: string;
+  /**
+   * Horizontal anchor of the plane window, as a percentage (0–100) from the
+   * left edge of the image. Used to aim the zoom and the clip-path reveal.
+   * When the hero image is swapped, pass the correct value here so the portal
+   * zooms into the right spot without touching the animation logic.
+   * Defaults to the position in the stock `window-interior.jpg` composition.
+   */
+  windowX?: number;
+  /**
+   * Vertical anchor of the plane window, as a percentage (0–100) from the
+   * top edge of the image. See `windowX` for full explanation.
+   * Defaults to the position in the stock `window-interior.jpg` composition.
+   */
+  windowY?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -195,7 +211,7 @@ export function DayNightHero({
   );
   const revealClip = useTransform(
     revealRadius,
-    (r) => `circle(${r}% at ${WIN_X}% ${WIN_Y}%)`,
+    (r) => `circle(${r}% at ${windowX}% ${windowY}%)`,
   );
 
   /* ── 3. Portal content fade-in ─────────────────────────────────────
@@ -256,7 +272,7 @@ export function DayNightHero({
           className="absolute inset-0"
           style={{
             scale: planeScale,
-            transformOrigin: `${WIN_X}% ${WIN_Y}%`,
+            transformOrigin: `${windowX}% ${windowY}%`,
           }}
         >
           <img
