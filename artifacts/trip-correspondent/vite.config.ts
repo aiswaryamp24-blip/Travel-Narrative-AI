@@ -64,6 +64,19 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Split heavyweight vendor libs into their own chunks so browsers
+        // can cache them independently from app code — React, Clerk, and
+        // Framer Motion together account for most of the bundle weight.
+        manualChunks: {
+          'vendor-react':  ['react', 'react-dom'],
+          'vendor-clerk':  ['@clerk/react'],
+          'vendor-query':  ['@tanstack/react-query'],
+          'vendor-motion': ['framer-motion'],
+        },
+      },
+    },
   },
   server: {
     port,

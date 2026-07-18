@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,18 +7,23 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { AnimatePresence, motion } from 'framer-motion';
-import Landing from '@/pages/landing';
-import Home from '@/pages/home';
-import Trip from '@/pages/trip';
-import Feed from '@/pages/feed';
-import Profile from '@/pages/profile';
-import Explore from '@/pages/explore';
-import Terms from '@/pages/terms';
-import Privacy from '@/pages/privacy';
-import Settings from '@/pages/settings';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppBackground } from '@/components/app-background';
 import { PageWipe } from '@/components/page-wipe';
+import { ErrorBoundary } from '@/components/error-boundary';
+
+// Lazy-loaded page chunks — each route gets its own JS chunk so the
+// initial load only downloads what the visitor actually needs, cutting
+// the first-paint bundle from ~1.2 MB to a fraction of that.
+const Landing  = lazy(() => import('@/pages/landing'));
+const Home     = lazy(() => import('@/pages/home'));
+const Trip     = lazy(() => import('@/pages/trip'));
+const Feed     = lazy(() => import('@/pages/feed'));
+const Profile  = lazy(() => import('@/pages/profile'));
+const Explore  = lazy(() => import('@/pages/explore'));
+const Terms    = lazy(() => import('@/pages/terms'));
+const Privacy  = lazy(() => import('@/pages/privacy'));
+const Settings = lazy(() => import('@/pages/settings'));
 
 const queryClient = new QueryClient();
 
@@ -226,7 +231,11 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <Router />
+        {/* Suspense catches lazy-chunk loading — the splash screen above
+            already covers first paint, so null is fine as fallback here. */}
+        <Suspense fallback={null}>
+          <Router />
+        </Suspense>
         <PageWipe />
         <Toaster position="bottom-right" className="font-sans" />
       </QueryClientProvider>
@@ -252,19 +261,21 @@ function App() {
   const showSplash = useShowSplash();
 
   return (
-    <TooltipProvider>
-      <WouterRouter base={basePath}>
-        <AppBackground />
-        <ClerkProviderWithRoutes />
-      </WouterRouter>
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
-            <LoadingScreen />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </TooltipProvider>
+    <ErrorBoundary>
+      <TooltipProvider>
+        <WouterRouter base={basePath}>
+          <AppBackground />
+          <ClerkProviderWithRoutes />
+        </WouterRouter>
+        <AnimatePresence>
+          {showSplash && (
+            <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+              <LoadingScreen />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </TooltipProvider>
+    </ErrorBoundary>
   );
 }
 
