@@ -14,10 +14,10 @@ export function TripDaySummary({ trip }: { trip: Trip }) {
     <section className="border-b border-border">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="mb-6 flex items-baseline justify-between">
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-muted-foreground">
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-foreground/60">
             Day by Day
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-muted-foreground">
+          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-foreground/50">
             {days.length} {days.length === 1 ? 'day' : 'days'} documented
           </span>
         </div>

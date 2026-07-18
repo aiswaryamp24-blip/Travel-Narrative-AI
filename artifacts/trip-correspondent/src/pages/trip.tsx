@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react';
 import { motion, useScroll, useVelocity, useTransform, useMotionTemplate } from 'framer-motion';
 import { SplitText } from '@/components/split-text';
-import { FilmReel } from '@/components/film-reel';
 import { useGetTrip, useDeleteTrip, useProcessTrip, useUpdateTripPrivacy, getGetTripQueryKey, exportTripPdf } from '@workspace/api-client-react';
 import { TripReviews } from '@/components/trip-reviews';
 import { useLocation, useParams, Link } from 'wouter';
 import { format } from 'date-fns';
-import { ChevronLeft, CloudRain, Wind, Mountain, Navigation, AlertTriangle, Loader2, MapPin, Map, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
+import { ChevronLeft, Navigation, AlertTriangle, Loader2, MapPin, Trash2, RefreshCw, Lock, Users, Globe, FileDown, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -340,45 +339,6 @@ export default function Trip() {
           </div>
         </header>
 
-        {/* Route draw — decorative SVG path connecting day locations (feature 2) */}
-        {trip.days.length >= 2 && (() => {
-          const stops = trip.days
-            .sort((a, b) => a.dayIndex - b.dayIndex)
-            .map(d => d.locationName?.split(',')[0]?.trim() || `Day ${d.dayIndex + 1}`)
-            .slice(0, 7);
-          const n = stops.length;
-          const W = 600; const H = 70; const pad = 40;
-          const stepX = (W - 2 * pad) / (n - 1);
-          const pts = stops.map((_, i) => ({ x: pad + i * stepX, y: H / 2 + (i % 2 === 0 ? -16 : 16) }));
-          let d = `M ${pts[0].x} ${pts[0].y}`;
-          for (let i = 1; i < pts.length; i++) {
-            const c1x = pts[i-1].x + stepX/2; const c1y = pts[i-1].y;
-            const c2x = pts[i].x - stepX/2;   const c2y = pts[i].y;
-            d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${pts[i].x} ${pts[i].y}`;
-          }
-          return (
-            <div className="bg-card border-b border-border">
-              <div className="max-w-6xl mx-auto px-6 py-6">
-                <div className="text-[9px] font-mono uppercase tracking-[0.4em] text-muted-foreground mb-3">Route</div>
-                <svg viewBox={`0 0 ${W} ${H + 28}`} className="w-full" fill="none" overflow="visible">
-                  <motion.path d={d} stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-                    viewport={{ once: true, amount: 0.5 }} transition={{ duration: 2.2, ease: 'easeInOut', delay: 0.2 }} />
-                  {pts.map((pt, i) => (
-                    <motion.g key={i} initial={{ opacity: 0, scale: 0 }} whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }} transition={{ delay: 0.4 + i * (1.6 / n), type: 'spring', stiffness: 280 }}>
-                      <circle cx={pt.x} cy={pt.y} r="4" fill="hsl(var(--primary))" />
-                      <text x={pt.x} y={pt.y + (i % 2 === 0 ? -10 : 18)} textAnchor="middle"
-                        fontSize="7.5" fontFamily="monospace" fill="currentColor" className="uppercase">
-                        {stops[i].slice(0, 12)}
-                      </text>
-                    </motion.g>
-                  ))}
-                </svg>
-              </div>
-            </div>
-          );
-        })()}
 
         {(trip.companions.length > 0 || trip.isOwner) && (
           <div className="py-8 px-6 max-w-6xl mx-auto border-b border-border">
@@ -430,7 +390,7 @@ export default function Trip() {
                 <div className="space-y-6 font-mono text-sm">
                   {day.locationName && (
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Basecamp</div>
+                      <div className="text-xs text-foreground/55 uppercase tracking-widest mb-1">Basecamp</div>
                       <div className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                         <span>{day.locationName}</span>
@@ -440,7 +400,7 @@ export default function Trip() {
 
                   {day.weather && (
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Conditions</div>
+                      <div className="text-xs text-foreground/55 uppercase tracking-widest mb-2">Conditions</div>
                       <div className="grid grid-cols-2 gap-4">
                         {day.weather.tempMaxC !== undefined && (
                           <div className="flex items-center gap-2">
@@ -448,7 +408,7 @@ export default function Trip() {
                           </div>
                         )}
                         {day.weather.conditions && (
-                          <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground">
+                          <div className="flex items-center gap-2 text-xs uppercase text-foreground/55">
                             {day.weather.conditions}
                           </div>
                         )}
@@ -458,7 +418,7 @@ export default function Trip() {
 
                   {day.distanceKm !== null && day.distanceKm > 0 && (
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Traveled</div>
+                      <div className="text-xs text-foreground/55 uppercase tracking-widest mb-1">Traveled</div>
                       <div className="flex items-center gap-2">
                         <Navigation className="h-4 w-4 text-primary" />
                         {day.distanceKm < 1 ? '< 1' : Math.round(day.distanceKm)} km
@@ -472,7 +432,7 @@ export default function Trip() {
                 {day.landmarks && day.landmarks.length > 0 && (
 
                   <div>
-                    <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-4 border-b border-border pb-2">Waypoints</div>
+                    <div className="text-xs font-mono text-foreground/55 uppercase tracking-widest mb-4 border-b border-border pb-2">Waypoints</div>
                     <ul className="space-y-3 font-serif text-sm">
                       {day.landmarks.slice(0, 4).map((lm, i) => (
                         <li key={i} className="flex justify-between items-baseline gap-2">
@@ -541,13 +501,31 @@ export default function Trip() {
 
                 <EditableDayNarrative tripId={tripId} day={day} isOwner={trip.isOwner} />
 
-                {/* Film reel — scroll-driven horizontal photo strip (feature 4) */}
+                {/* Secondary photos — clean grid below the narrative */}
                 {(() => {
                   const dayPhotos = trip.photos
                     .filter(p => p.tripDayId === day.id && p.id !== day.heroPhotoId)
                     .slice(0, 6);
                   if (dayPhotos.length === 0) return null;
-                  return <FilmReel photos={dayPhotos} />;
+                  return (
+                    <div className="mt-12 pt-8 border-t border-border">
+                      <div className="text-[9px] font-mono uppercase tracking-[0.4em] text-foreground/50 mb-4">
+                        More from this day
+                      </div>
+                      <div className={`grid gap-2 ${dayPhotos.length === 1 ? 'grid-cols-1' : dayPhotos.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                        {dayPhotos.map(photo => (
+                          <div key={photo.id} className="aspect-[4/3] overflow-hidden bg-muted">
+                            <img
+                              src={`/api/storage${photo.objectPath}`}
+                              alt="Trip photograph"
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
                 })()}
 
               </div>
