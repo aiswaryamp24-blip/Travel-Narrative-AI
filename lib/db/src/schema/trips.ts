@@ -1,6 +1,7 @@
 import {
   date,
   doublePrecision,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -23,26 +24,39 @@ export type TripStatusValue = (typeof tripStatusValues)[number];
 export const tripPrivacyValues = ["private", "friends", "public"] as const;
 export type TripPrivacyValue = (typeof tripPrivacyValues)[number];
 
-export const tripsTable = pgTable("trips", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  status: text("status", { enum: tripStatusValues }).notNull().default("pending"),
-  coverObjectPath: text("cover_object_path"),
-  summary: text("summary"),
-  errorMessage: text("error_message"),
-  // Nullable so pre-existing trips created before accounts existed don't
-  // break — they simply have no owner and stay hidden from every listing
-  // until the app associates them with a real signed-in user.
-  userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
-  privacy: text("privacy", { enum: tripPrivacyValues }).notNull().default("private"),
-  // Visual style preset chosen when the trip is created (see digestStyleValues
-  // in ./users) — reuses the same 6 IDs as the wrapped-digest style system,
-  // but applied per-trip to the story page rather than per-user to a PDF.
-  visualStyle: text("visual_style", { enum: digestStyleValues })
-    .notNull()
-    .default("canon-camera"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const tripsTable = pgTable(
+  "trips",
+  {
+    id: serial("id").primaryKey(),
+    title: text("title").notNull(),
+    status: text("status", { enum: tripStatusValues }).notNull().default("pending"),
+    coverObjectPath: text("cover_object_path"),
+    summary: text("summary"),
+    errorMessage: text("error_message"),
+    // Nullable so pre-existing trips created before accounts existed don't
+    // break — they simply have no owner and stay hidden from every listing
+    // until the app associates them with a real signed-in user.
+    userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
+    privacy: text("privacy", { enum: tripPrivacyValues }).notNull().default("private"),
+    // Visual style preset chosen when the trip is created (see digestStyleValues
+    // in ./users) — reuses the same 6 IDs as the wrapped-digest style system,
+    // but applied per-trip to the story page rather than per-user to a PDF.
+    visualStyle: text("visual_style", { enum: digestStyleValues })
+      .notNull()
+      .default("canon-camera"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Covers feed queries that filter by user_id and privacy, ordered by recency
+    index("trips_user_id_privacy_created_at_idx").on(
+      table.userId,
+      table.privacy,
+      table.createdAt,
+    ),
+    // Covers the discover query that filters by privacy and orders by recency
+    index("trips_privacy_created_at_idx").on(table.privacy, table.createdAt),
+  ],
+);
 
 export const insertTripSchema = createInsertSchema(tripsTable).omit({
   id: true,

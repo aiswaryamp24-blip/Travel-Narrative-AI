@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -17,7 +17,11 @@ export const followsTable = pgTable(
       .references(() => usersTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.followerId, table.followedId)],
+  (table) => [
+    unique().on(table.followerId, table.followedId),
+    index("follows_follower_id_idx").on(table.followerId),
+    index("follows_followed_id_idx").on(table.followedId),
+  ],
 );
 
 export const insertFollowSchema = createInsertSchema(followsTable).omit({
