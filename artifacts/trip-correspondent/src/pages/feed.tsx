@@ -55,7 +55,11 @@ export default function Feed() {
         <CursorSpotlight color="180,160,255" opacity={0.18} radius={500} />
         <motion.img
           src="/feed-hero-sunset.jpg"
+          srcSet="/feed-hero-sunset-640w.jpg 640w, /feed-hero-sunset.jpg 1024w"
+          sizes="100vw"
           alt=""
+          fetchPriority="high"
+          loading="eager"
           className="absolute inset-0 h-full w-full object-cover object-center"
           initial={{ scale: 1.04 }}
           animate={{ scale: 1.10 }}

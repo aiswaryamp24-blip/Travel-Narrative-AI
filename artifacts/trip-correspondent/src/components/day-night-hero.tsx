@@ -155,6 +155,7 @@ function PortalContent({ items }: { items: StripItem[] }) {
 
 export function DayNightHero({
   daySrc,
+  daySrcSet,
   nightSrc: _nightSrc, // kept for API compat; no longer used for crossfade
   children,
   portalItems,
@@ -163,6 +164,8 @@ export function DayNightHero({
   windowY = DEFAULT_WIN_Y,
 }: {
   daySrc: string;
+  /** Optional srcset for responsive image loading. */
+  daySrcSet?: string;
   nightSrc: string;
   children: ReactNode;
   /** Real trip strip items from discoverFeed; falls back to curated samples. */
@@ -240,7 +243,11 @@ export function DayNightHero({
       <div className="relative h-screen w-full overflow-hidden">
         <img
           src={daySrc}
+          srcSet={daySrcSet}
+          sizes="100vw"
           alt="Airplane exterior"
+          fetchPriority="high"
+          loading="eager"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
@@ -277,7 +284,11 @@ export function DayNightHero({
         >
           <img
             src={daySrc}
+            srcSet={daySrcSet}
+            sizes="100vw"
             alt="Airplane exterior"
+            fetchPriority="high"
+            loading="eager"
             className="absolute inset-0 h-full w-full object-cover"
             draggable={false}
           />
