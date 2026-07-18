@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { useAuth } from '@clerk/clerk-react';
 import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
@@ -9,14 +10,19 @@ import { SparkleGlow } from '@/components/sparkle-glow';
 import { HowItWorksSection } from '@/components/how-it-works-section';
 
 export default function Landing() {
-  const { data: discoverTrips } = useGetDiscoverFeed();
-  const stripItems: StripItem[] = (Array.isArray(discoverTrips) ? discoverTrips : [])
-    .filter(trip => trip.coverObjectPath)
-    .map(trip => ({
-      id: trip.id,
-      src: `/api/storage${trip.coverObjectPath}`,
-      label: trip.title,
-    }));
+  const { isSignedIn } = useAuth();
+  // Only fetch and display community photos when the user is signed in —
+  // signed-out visitors see a blank hero window and no "From the field" strip.
+  const { data: discoverTrips } = useGetDiscoverFeed({ query: { enabled: !!isSignedIn } });
+  const stripItems: StripItem[] = isSignedIn
+    ? (Array.isArray(discoverTrips) ? discoverTrips : [])
+        .filter(trip => trip.coverObjectPath)
+        .map(trip => ({
+          id: trip.id,
+          src: `/api/storage${trip.coverObjectPath}`,
+          label: trip.title,
+        }))
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
