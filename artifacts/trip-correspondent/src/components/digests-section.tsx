@@ -7,8 +7,11 @@ import {
   getListDigestsQueryKey,
   getGetUserProfileQueryKey,
   downloadDigest,
+  useGetUserProfile,
+  useGetUserTripDayLocations,
+  getGetUserTripDayLocationsQueryKey,
 } from '@workspace/api-client-react';
-import type { Digest, DigestCadenceMonths, DigestStyle } from '@workspace/api-client-react';
+import type { Digest, DigestCadenceMonths, DigestStyle, UserProfile, TripDayLocation } from '@workspace/api-client-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useQueryClient } from '@tanstack/react-query';
@@ -138,7 +141,9 @@ const STYLE_DEFS: StyleDef[] = [
 
 // --- Large PDF page preview ---
 
-const SAMPLE_STATS = [
+type PreviewStat = { label: string; value: string };
+
+const SAMPLE_STATS: PreviewStat[] = [
   { label: 'Destinations', value: '12' },
   { label: 'Photos taken', value: '847' },
   { label: 'Days abroad', value: '143' },
@@ -147,7 +152,60 @@ const SAMPLE_STATS = [
   { label: 'Cities visited', value: '31' },
 ];
 
-function DigestPagePreview({ style }: { style: StyleDef }) {
+function computePreviewStats(
+  profile: UserProfile | undefined,
+  locations: TripDayLocation[] | undefined,
+): PreviewStat[] | null {
+  if (!profile) return null;
+
+  const allTrips = [...profile.trips, ...profile.companionTrips];
+  if (allTrips.length === 0) return null;
+
+  // Days abroad: sum over trips with known date ranges
+  let totalDays = 0;
+  for (const trip of allTrips) {
+    if (trip.startDate && trip.endDate) {
+      const start = new Date(trip.startDate).getTime();
+      const end = new Date(trip.endDate).getTime();
+      const days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      if (days > 0) totalDays += days;
+    }
+  }
+
+  // Unique locations & rough photo count from trip-day locations
+  const locs = locations ?? [];
+  const uniqueLocationNames = new Set(
+    locs.map((l) => l.locationName).filter((n): n is string => Boolean(n)),
+  );
+  const uniqueTripDayKeys = new Set(locs.map((l) => `${l.tripId}-${l.dayIndex}`));
+  const approxPhotos = uniqueTripDayKeys.size * 3;
+
+  // Try to extract countries from "City, Country" location names
+  const countries = new Set<string>();
+  for (const name of uniqueLocationNames) {
+    const parts = name.split(',');
+    if (parts.length >= 2) {
+      countries.add(parts[parts.length - 1].trim());
+    }
+  }
+
+  return [
+    { label: 'Trips covered', value: String(allTrips.length) },
+    { label: 'Days abroad', value: String(totalDays) },
+    { label: 'Destinations', value: String(uniqueLocationNames.size) },
+    {
+      label: 'Photos taken',
+      value: approxPhotos > 0 ? `~${approxPhotos}` : SAMPLE_STATS[1].value,
+    },
+    {
+      label: 'Countries',
+      value: countries.size > 0 ? String(countries.size) : SAMPLE_STATS[4].value,
+    },
+    { label: 'Cities visited', value: String(uniqueLocationNames.size) },
+  ];
+}
+
+function DigestPagePreview({ style, stats }: { style: StyleDef; stats: PreviewStat[] }) {
   return (
     <div className="w-full flex flex-col gap-3">
       {/* Cover page mock — A4 ratio ~0.707 */}
@@ -209,7 +267,7 @@ function DigestPagePreview({ style }: { style: StyleDef }) {
               Highlights inside
             </div>
             <div className="grid grid-cols-3 gap-1.5">
-              {SAMPLE_STATS.slice(0, 3).map((stat) => (
+              {stats.slice(0, 3).map((stat) => (
                 <div
                   key={stat.label}
                   className="p-2"
@@ -268,7 +326,7 @@ function DigestPagePreview({ style }: { style: StyleDef }) {
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-2 flex-1">
-            {SAMPLE_STATS.map((stat) => (
+            {stats.map((stat) => (
               <div
                 key={stat.label}
                 className="flex flex-col justify-between p-3"
@@ -319,15 +377,27 @@ function StylePickerModal({
   onClose,
   isPending,
   mode,
+  userId,
 }: {
   current: DigestStyle;
   onSelect: (style: DigestStyle) => void;
   onClose: () => void;
   isPending: boolean;
   mode: StylePickerMode;
+  userId?: string;
 }) {
   const [selected, setSelected] = useState<DigestStyle>(current);
   const selectedStyle = STYLE_DEFS.find((s) => s.id === selected)!;
+
+  const { data: profile } = useGetUserProfile(userId ?? '', {
+    query: { queryKey: getGetUserProfileQueryKey(userId ?? ''), enabled: Boolean(userId) },
+  });
+  const { data: locations } = useGetUserTripDayLocations(userId ?? '', {
+    query: { queryKey: getGetUserTripDayLocationsQueryKey(userId ?? ''), enabled: Boolean(userId) },
+  });
+  const computedStats = computePreviewStats(profile, locations);
+  const previewStats = computedStats ?? SAMPLE_STATS;
+  const isRealData = computedStats !== null;;
 
   const isRestyle = mode === 'restyle';
 
@@ -438,11 +508,13 @@ function StylePickerModal({
               </div>
 
               <div className="max-w-xs mx-auto">
-                <DigestPagePreview style={selectedStyle} />
+                <DigestPagePreview style={selectedStyle} stats={previewStats} />
               </div>
 
               <p className="text-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-4">
-                Sample data shown · your real trips &amp; stats will appear in the PDF
+                {isRealData
+                  ? 'Your real stats · same numbers will appear in the PDF'
+                  : 'Sample data shown · your real trips & stats will appear in the PDF'}
               </p>
             </div>
           </div>
@@ -601,6 +673,7 @@ export function DigestsSection({
           onClose={() => setShowStylePicker(false)}
           isPending={generateDigest.isPending}
           mode="generate"
+          userId={userId}
         />
       )}
       {restyleTarget && (
@@ -610,6 +683,7 @@ export function DigestsSection({
           onClose={() => setRestyleTarget(null)}
           isPending={restyleDigest.isPending}
           mode="restyle"
+          userId={userId}
         />
       )}
 
