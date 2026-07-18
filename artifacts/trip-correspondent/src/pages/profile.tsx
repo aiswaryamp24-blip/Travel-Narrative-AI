@@ -20,7 +20,7 @@ import { DigestsSection } from '@/components/digests-section';
 import { Logo } from '@/components/logo';
 import { EverywhereMap } from '@/components/everywhere-map';
 
-/** Compass-rose + fox SVG watermark, inspired by the indigo line-art reference. */
+/** Compass-rose + fox SVG watermark — light strokes for the dark navy backdrop. */
 function CompassFoxWatermark() {
   return (
     <svg
@@ -31,55 +31,55 @@ function CompassFoxWatermark() {
       preserveAspectRatio="xMidYMid meet"
     >
       {/* Outer circle */}
-      <circle cx="150" cy="150" r="118" stroke="hsl(243 75% 55%)" strokeWidth="1.2" opacity="0.18" />
+      <circle cx="150" cy="150" r="118" stroke="hsl(210 60% 75%)" strokeWidth="1.2" opacity="0.22" />
       {/* Inner circle */}
-      <circle cx="150" cy="150" r="90" stroke="hsl(243 75% 55%)" strokeWidth="0.8" opacity="0.12" />
+      <circle cx="150" cy="150" r="90" stroke="hsl(210 60% 75%)" strokeWidth="0.8" opacity="0.16" />
       {/* Meridian grid lines */}
-      <line x1="150" y1="32" x2="150" y2="268" stroke="hsl(243 75% 55%)" strokeWidth="0.6" opacity="0.1" />
-      <line x1="32" y1="150" x2="268" y2="150" stroke="hsl(243 75% 55%)" strokeWidth="0.6" opacity="0.1" />
-      <line x1="67" y1="67" x2="233" y2="233" stroke="hsl(243 75% 55%)" strokeWidth="0.6" opacity="0.08" />
-      <line x1="233" y1="67" x2="67" y2="233" stroke="hsl(243 75% 55%)" strokeWidth="0.6" opacity="0.08" />
+      <line x1="150" y1="32" x2="150" y2="268" stroke="hsl(210 60% 75%)" strokeWidth="0.6" opacity="0.14" />
+      <line x1="32" y1="150" x2="268" y2="150" stroke="hsl(210 60% 75%)" strokeWidth="0.6" opacity="0.14" />
+      <line x1="67" y1="67" x2="233" y2="233" stroke="hsl(210 60% 75%)" strokeWidth="0.6" opacity="0.10" />
+      <line x1="233" y1="67" x2="67" y2="233" stroke="hsl(210 60% 75%)" strokeWidth="0.6" opacity="0.10" />
 
-      {/* Compass star — 4 main points */}
-      <path d="M 150 32 L 158 140 L 150 150 L 142 140 Z" fill="hsl(243 75% 55%)" opacity="0.20" />
-      <path d="M 150 268 L 158 160 L 150 150 L 142 160 Z" fill="hsl(243 75% 55%)" opacity="0.12" />
-      <path d="M 32 150 L 140 142 L 150 150 L 140 158 Z" fill="hsl(243 75% 55%)" opacity="0.12" />
-      <path d="M 268 150 L 160 142 L 150 150 L 160 158 Z" fill="hsl(243 75% 55%)" opacity="0.12" />
+      {/* Compass star — 4 main points, north bright gold */}
+      <path d="M 150 32 L 158 140 L 150 150 L 142 140 Z" fill="hsl(45 85% 70%)" opacity="0.55" />
+      <path d="M 150 268 L 158 160 L 150 150 L 142 160 Z" fill="hsl(210 60% 75%)" opacity="0.25" />
+      <path d="M 32 150 L 140 142 L 150 150 L 140 158 Z" fill="hsl(210 60% 75%)" opacity="0.25" />
+      <path d="M 268 150 L 160 142 L 150 150 L 160 158 Z" fill="hsl(210 60% 75%)" opacity="0.25" />
       {/* 4 secondary compass points */}
-      <path d="M 67 67 L 145 145 L 150 150 L 144 146 Z" fill="hsl(243 75% 55%)" opacity="0.08" />
-      <path d="M 233 67 L 155 145 L 150 150 L 156 146 Z" fill="hsl(243 75% 55%)" opacity="0.08" />
-      <path d="M 67 233 L 145 155 L 150 150 L 144 156 Z" fill="hsl(243 75% 55%)" opacity="0.08" />
-      <path d="M 233 233 L 155 155 L 150 150 L 156 156 Z" fill="hsl(243 75% 55%)" opacity="0.08" />
+      <path d="M 67 67 L 145 145 L 150 150 L 144 146 Z" fill="hsl(210 60% 75%)" opacity="0.14" />
+      <path d="M 233 67 L 155 145 L 150 150 L 156 146 Z" fill="hsl(210 60% 75%)" opacity="0.14" />
+      <path d="M 67 233 L 145 155 L 150 150 L 144 156 Z" fill="hsl(210 60% 75%)" opacity="0.14" />
+      <path d="M 233 233 L 155 155 L 150 150 L 156 156 Z" fill="hsl(210 60% 75%)" opacity="0.14" />
 
       {/* Fox outline — minimal line art, sitting within the compass circle */}
       {/* Fox body (curled) */}
       <path
         d="M 138 170 Q 128 165 125 155 Q 122 145 128 138 Q 134 130 142 128 Q 150 126 158 130 Q 164 134 164 142 Q 164 150 158 158 Q 155 162 150 164 Q 145 166 140 170"
-        stroke="hsl(243 75% 55%)"
+        stroke="hsl(45 85% 72%)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.35"
+        opacity="0.55"
       />
       {/* Fox head */}
       <path
         d="M 155 130 Q 162 122 166 118 Q 163 124 168 124 Q 164 126 162 132"
-        stroke="hsl(243 75% 55%)"
+        stroke="hsl(45 85% 72%)"
         strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.35"
+        opacity="0.55"
       />
       {/* Fox ear left */}
-      <path d="M 155 128 L 152 118 L 160 126" stroke="hsl(243 75% 55%)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" />
+      <path d="M 155 128 L 152 118 L 160 126" stroke="hsl(45 85% 72%)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" />
       {/* Fox ear right */}
-      <path d="M 162 122 L 168 112 L 170 124" stroke="hsl(243 75% 55%)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" />
+      <path d="M 162 122 L 168 112 L 170 124" stroke="hsl(45 85% 72%)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" />
       {/* Fox tail — big sweeping arc to left */}
       <path
         d="M 138 170 Q 120 178 112 170 Q 104 162 112 154 Q 118 148 128 152"
-        stroke="hsl(243 75% 55%)"
+        stroke="hsl(45 85% 72%)"
         strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.28"
+        opacity="0.45"
       />
     </svg>
   );
@@ -145,31 +145,50 @@ function ProfileContent({
         <Logo className="text-lg" />
       </nav>
 
-      {/* Profile header — compass-rose + fox inspired background */}
+      {/* Profile header — navy night-sky backdrop */}
       <header className="relative overflow-hidden border-b border-border">
-        {/* Cream/indigo layered background */}
+        {/* Night-sky layered background */}
         <div className="absolute inset-0">
-          {/* Base: soft periwinkle-cream gradient */}
+          {/* Base: deep navy gradient */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(160deg, hsl(228 55% 8%) 0%, hsl(235 60% 11%) 40%, hsl(240 55% 9%) 100%)',
+            }}
+          />
+          {/* Nebula swirls — soft lighter-navy clouds */}
           <div
             className="absolute inset-0"
             style={{
               background: [
-                'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(243 60% 96%) 0%, hsl(240 30% 92%) 60%, hsl(234 25% 88%) 100%)',
+                'radial-gradient(ellipse 70% 55% at 20% 30%, hsl(230 60% 18% / 0.70) 0%, transparent 65%)',
+                'radial-gradient(ellipse 55% 65% at 80% 70%, hsl(245 55% 16% / 0.65) 0%, transparent 60%)',
+                'radial-gradient(ellipse 40% 35% at 60% 15%, hsl(220 50% 22% / 0.50) 0%, transparent 55%)',
+                'radial-gradient(ellipse 35% 40% at 10% 85%, hsl(250 50% 14% / 0.55) 0%, transparent 55%)',
               ].join(', '),
             }}
           />
-          {/* Subtle aurora wash */}
+          {/* Faint star-dust shimmer */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 opacity-30"
             style={{
-              background: [
-                'radial-gradient(ellipse 60% 50% at 15% 20%, hsl(243 75% 55% / 0.10) 0%, transparent 60%)',
-                'radial-gradient(ellipse 50% 60% at 85% 80%, hsl(260 70% 60% / 0.08) 0%, transparent 60%)',
+              backgroundImage: [
+                'radial-gradient(1px 1px at 12% 18%, hsl(210 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 35% 8%, hsl(210 70% 90%) 0%, transparent 100%)',
+                'radial-gradient(1.5px 1.5px at 55% 25%, hsl(45 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 72% 12%, hsl(210 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 88% 30%, hsl(210 70% 90%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 25% 55%, hsl(210 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1.5px 1.5px at 45% 72%, hsl(45 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 78% 65%, hsl(210 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 92% 78%, hsl(210 70% 90%) 0%, transparent 100%)',
+                'radial-gradient(1px 1px at 5% 90%, hsl(210 80% 85%) 0%, transparent 100%)',
+                'radial-gradient(1.5px 1.5px at 62% 88%, hsl(45 80% 85%) 0%, transparent 100%)',
               ].join(', '),
             }}
           />
           {/* Compass-rose + fox watermark */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-full max-w-xs h-64 relative">
               <CompassFoxWatermark />
             </div>
@@ -180,24 +199,24 @@ function ProfileContent({
           {/* Avatar */}
           <div className="relative">
             <div
-              className="absolute -inset-1 rounded-none opacity-40"
-              style={{ background: 'linear-gradient(135deg, hsl(243 75% 55%), hsl(260 70% 70%))' }}
+              className="absolute -inset-1 rounded-none opacity-50"
+              style={{ background: 'linear-gradient(135deg, hsl(45 85% 65%), hsl(210 60% 55%))' }}
             />
-            <Avatar className="h-24 w-24 relative border-2 border-primary/30 rounded-none shadow-lg">
+            <Avatar className="h-24 w-24 relative border-2 border-white/20 rounded-none shadow-lg">
               <AvatarImage src={profile.avatarUrl ?? undefined} alt={profile.displayName} className="rounded-none" />
-              <AvatarFallback className="rounded-none text-2xl font-serif bg-primary/10 text-primary">
+              <AvatarFallback className="rounded-none text-2xl font-serif bg-white/10 text-white">
                 {profile.displayName.slice(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-serif font-black uppercase tracking-tight text-foreground">
+            <h1 className="text-4xl font-serif font-black uppercase tracking-tight text-white drop-shadow-md">
               {profile.displayName}
             </h1>
-            <div className="flex items-center justify-center gap-6 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center justify-center gap-6 text-xs font-mono uppercase tracking-widest text-white/60">
               <span>{profile.followerCount} Followers</span>
-              <span className="h-1 w-1 rounded-full bg-primary" />
+              <span className="h-1 w-1 rounded-full bg-white/40" />
               <span>{profile.followingCount} Following</span>
             </div>
           </div>
@@ -288,6 +307,11 @@ function ProfileContent({
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                         <h3 className="text-2xl font-serif leading-tight drop-shadow-md">{trip.title}</h3>
                       </div>
+                      {trip.status === 'error' && (
+                        <div className="absolute top-3 right-3 bg-destructive text-destructive-foreground text-[9px] font-mono uppercase tracking-widest px-2 py-1 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" /> Error
+                        </div>
+                      )}
                     </div>
                   </article>
                 </Link>
@@ -314,7 +338,9 @@ function ProfileContent({
                 <h3 className="font-serif text-xl mb-1">No Stories Visible</h3>
                 <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
                   {profile.isSelf
-                    ? 'Submit a folder of photos to dispatch our correspondent.'
+                    ? (profile.companionTrips?.length ?? 0) > 0
+                      ? 'No stories filed yet — your tagged adventures appear above.'
+                      : 'Submit a folder of photos to dispatch our correspondent.'
                     : 'Follow this correspondent to see their friends-only stories.'}
                 </p>
               </div>
