@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/react';
 import { useGetDiscoverFeed } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
