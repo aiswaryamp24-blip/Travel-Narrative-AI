@@ -23,7 +23,7 @@ async function createTrip(
 ): Promise<number> {
   const [trip] = await db
     .insert(tripsTable)
-    .values({ userId, privacy, title, status: 'complete' })
+    .values({ userId, privacy, title, status: 'ready' })
     .returning({ id: tripsTable.id });
   return trip.id;
 }
