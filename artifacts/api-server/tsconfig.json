@@ -16,6 +16,9 @@
       "path": "../../lib/api-zod"
     },
     {
+      "path": "../../lib/digest-styles"
+    },
+    {
       "path": "../../lib/integrations-anthropic-ai"
     },
     {

@@ -187,6 +187,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
+      '@workspace/digest-styles':
+        specifier: workspace:*
+        version: link:../../lib/digest-styles
       '@workspace/integrations-anthropic-ai':
         specifier: workspace:*
         version: link:../../lib/integrations-anthropic-ai
@@ -452,6 +455,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@workspace/digest-styles':
+        specifier: workspace:*
+        version: link:../../lib/digest-styles
       animejs:
         specifier: ^4.0.0
         version: 4.5.0(three@0.185.1)
@@ -709,6 +715,8 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
+
+  lib/digest-styles: {}
 
   lib/integrations-anthropic-ai:
     dependencies:

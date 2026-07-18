@@ -28,115 +28,12 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { type DigestStylePreset, DIGEST_STYLES_LIST } from '@workspace/digest-styles';
 
 const CADENCE_OPTIONS = [
   { value: 3, label: 'Every 3 months' },
   { value: 4, label: 'Every 4 months' },
   { value: 6, label: 'Every 6 months' },
-];
-
-// --- Style definitions (mirrored from server) ---
-
-type StyleDef = {
-  id: DigestStyle;
-  name: string;
-  bg: string;
-  surface: string;
-  accent: string;
-  accentFg: string;
-  fg: string;
-  muted: string;
-  headlineFg: string;
-  subtitleFg: string;
-  darkCover: boolean;
-  description: string;
-};
-
-const STYLE_DEFS: StyleDef[] = [
-  {
-    id: 'pop-art',
-    name: 'Pop Art',
-    bg: '#FFEC00',
-    surface: '#FFFFFF',
-    accent: '#E8112D',
-    accentFg: '#FFFFFF',
-    fg: '#0D0D0D',
-    muted: '#3D3D3D',
-    headlineFg: '#0D0D0D',
-    subtitleFg: '#E8112D',
-    darkCover: false,
-    description: 'Bold primaries, thick borders, Ben-day energy',
-  },
-  {
-    id: 'supermarket',
-    name: 'Supermarket',
-    bg: '#F5F5F0',
-    surface: '#FFFFFF',
-    accent: '#CC0000',
-    accentFg: '#FFFFFF',
-    fg: '#111111',
-    muted: '#555555',
-    headlineFg: '#111111',
-    subtitleFg: '#555555',
-    darkCover: false,
-    description: 'Receipt paper white, barcode accents',
-  },
-  {
-    id: 'camera-interface',
-    name: 'Viewfinder Interface',
-    bg: '#0A0A0A',
-    surface: '#1A1A1A',
-    accent: '#00FF41',
-    accentFg: '#0A0A0A',
-    fg: '#E8E8E8',
-    muted: '#6B6B6B',
-    headlineFg: '#FFFFFF',
-    subtitleFg: '#6B6B6B',
-    darkCover: true,
-    description: 'Black EVF, green CRT readouts',
-  },
-  {
-    id: 'canon-camera',
-    name: 'Canon Camera',
-    bg: '#1A1A1A',
-    surface: '#2A2A2A',
-    accent: '#E0051E',
-    accentFg: '#FFFFFF',
-    fg: '#F0F0F0',
-    muted: '#8A8A8A',
-    headlineFg: '#FFFFFF',
-    subtitleFg: '#8A8A8A',
-    darkCover: true,
-    description: 'Classic body black, signature red',
-  },
-  {
-    id: 'ios-core',
-    name: 'iOS Core',
-    bg: '#F2F2F7',
-    surface: '#FFFFFF',
-    accent: '#007AFF',
-    accentFg: '#FFFFFF',
-    fg: '#1C1C1E',
-    muted: '#8E8E93',
-    headlineFg: '#1C1C1E',
-    subtitleFg: '#8E8E93',
-    darkCover: false,
-    description: 'Light grouped backgrounds, system blue',
-  },
-  {
-    id: 'android-core',
-    name: 'Android Core',
-    bg: '#1C1B1F',
-    surface: '#2B2930',
-    accent: '#D0BCFF',
-    accentFg: '#381E72',
-    fg: '#E6E1E5',
-    muted: '#938F99',
-    headlineFg: '#FFFFFF',
-    subtitleFg: '#938F99',
-    darkCover: true,
-    description: 'Material dark surface, tertiary purple',
-  },
 ];
 
 // --- Large PDF page preview ---
@@ -205,7 +102,7 @@ function computePreviewStats(
   ];
 }
 
-function DigestPagePreview({ style, stats }: { style: StyleDef; stats: PreviewStat[] }) {
+function DigestPagePreview({ style, stats }: { style: DigestStylePreset; stats: PreviewStat[] }) {
   return (
     <div className="w-full flex flex-col gap-3">
       {/* Cover page mock — A4 ratio ~0.707 */}
@@ -387,7 +284,7 @@ function StylePickerModal({
   userId?: string;
 }) {
   const [selected, setSelected] = useState<DigestStyle>(current);
-  const selectedStyle = STYLE_DEFS.find((s) => s.id === selected)!;
+  const selectedStyle = DIGEST_STYLES_LIST.find((s) => s.id === selected)!;
 
   const { data: profile } = useGetUserProfile(userId ?? '', {
     query: { queryKey: getGetUserProfileQueryKey(userId ?? ''), enabled: Boolean(userId) },
@@ -430,7 +327,7 @@ function StylePickerModal({
           {/* Left: style selector */}
           <div className="md:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r border-border overflow-y-auto">
             <div className="grid grid-cols-2 md:grid-cols-1 gap-0">
-              {STYLE_DEFS.map((style) => {
+              {DIGEST_STYLES_LIST.map((style) => {
                 const isSelected = selected === style.id;
                 const isCurrent = isRestyle && style.id === current;
                 return (
@@ -754,7 +651,7 @@ export function DigestsSection({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {digests.map((digest) => {
-              const styleDef = STYLE_DEFS.find((s) => s.id === digest.style);
+              const styleDef = DIGEST_STYLES_LIST.find((s) => s.id === digest.style);
               return (
                 <div key={digest.id} className="border border-border bg-card p-5 space-y-3">
                   <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
